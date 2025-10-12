@@ -134,15 +134,13 @@ See `design_guidelines.md` for complete design specifications.
 
 ## Test User Setup
 
-### Creating Test Users in Supabase
-The application requires test users to be manually created in Supabase:
+### Test User Accounts
+The following test users are configured in Supabase:
 
-1. Go to your Supabase Dashboard > Authentication > Users
-2. Click "Add User" → "Create new user"
-3. Create these two test accounts:
-   - **Practitioner**: chefmat2018@gmail.com / 12345678
-   - **Guest**: cheekyma@hotmail.com / 12345678
-4. After creating the auth users, run `server/create-test-users.sql` in Supabase SQL Editor to set up their profiles
+- **Practitioner**: chefmat2018@gmail.com / Rickrick01
+- **Guest**: cheekyma@hotmail.com / Rickrick01
+
+To set up their profiles, run `server/create-test-users.sql` in Supabase SQL Editor.
 
 ## Recent Changes
 
