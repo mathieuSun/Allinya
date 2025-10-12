@@ -1,0 +1,247 @@
+Beautifully received. Let’s translate your wish into a crisp, buildable spec you can hand to Replit (or any AI/dev agent) to create the root core right now—focused on instant 1-on-1 (and scaffolded for groups later), with video via Agora and no payments yet.
+
+One-Paragraph Mission (for the agent)
+
+Build Allinya: a realtime marketplace that lets practitioners (healers) toggle themselves online and lets guests (clients) instantly start a session with a practitioner they feel aligned with. Sessions use Agora live video. Core truths: two-phase flow (Waiting Room short countdown, then Live Video countdown), Rejoin while timers run, independent guest/practitioner profiles, simple online list, profile view, and a secure token server for Agora. No scheduling, no payments (yet). Start with 1-on-1; scaffold clean extension points for group sessions.
+
+⸻
+
+Tech Stack (MVP)
+	•	Frontend: Next.js 14 (App Router) + TypeScript + Tailwind CSS.
+	•	Backend: Next.js API routes (or /api routes in App Router) + Node/TypeScript.
+	•	Database/Auth/Realtime/Storage: Supabase (PostgreSQL, Auth, Realtime, Storage).
+	•	Video: Agora Web SDK NG (v4). Secure token server in API routes.
+	•	State: Server components + React Query on client where needed.
+	•	CI/Deploy: Vercel (or Replit’s Node environment).
+	•	Env: AGORA_APP_ID, AGORA_APP_CERTIFICATE, NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY (server only).
+
+⸻
+
+Core Concepts (non-negotiable for the root)
+	1.	Two Roles – one email = one role.
+	•	guest (clients)
+	•	practitioner (healers)
+	2.	Presence – practitioners can toggle Online / Offline. Guests see a live grid of online practitioners.
+	3.	Two Timers govern the session
+	•	Room Timer Countdown (Waiting Room): fixed 5:00 for 1-on-1.
+	•	Live Video Timer Countdown: equals selected duration (5/15/30/60). (We’ll expose 5/15/30/60; you can start with 5 and 15 in UI if you want to be ultra-minimal.)
+	4.	Transitions
+	•	1-on-1: Live Video starts when both press “I’m Ready.”
+	•	While any timer > 0 → Rejoin returns user to the correct phase (Waiting vs Live).
+	•	When Live hits 0 → end sheets (simple “Thank you / Leave a review” placeholders).
+	5.	Group (Scaffold only for now)
+	•	Store fields waiting_minutes and live_minutes; no UI yet beyond basic flags.
+	6.	Profiles stick – All edits write to DB and reflect immediately (no flicker).
+
+⸻
+
+Minimal Feature List (what to build now)
+	1.	Auth
+	•	Email/password signup & login via Supabase.
+	•	Role selection at first login → immutable profiles.role (guest | practitioner).
+	2.	Profiles
+	•	Guest: display name, country (free text), avatar.
+	•	Practitioner: display name, bio (single source of truth), specialties (up to 4 chips), avatar + up to 3 gallery images + 1 video URL (storage).
+	•	Public Practitioner Profile page: hero image, thumbnails, name, specialties, full bio (no truncation).
+	3.	Online Presence
+	•	Practitioner toggle Online/Offline → practitioners.online = true/false.
+	•	Guests see /explore grid of online practitioners (realtime).
+	4.	Start Session (1-on-1)
+	•	Guest clicks Start on a practitioner → create sessions row with phase=waiting, waiting_seconds = 300, live_seconds = 300/900/1800/3600, agora_channel, agora_uid_guest/practitioner.
+	•	Token server endpoint returns Agora tokens per role.
+	•	Waiting Room UI: 5:00 countdown, text chat box (optional stub), I’m Ready buttons for both.
+	•	When both ready OR waiting hits 0 (failsafe), transition: phase=live, start Live countdown.
+	•	Rejoin: route user back based on phase and remaining time.
+	•	End when live hits 0 → simple end sheet (guest: rate/comment placeholder; practitioner: thank-you).
+	5.	Security
+	•	Token server validates that caller is a participant of the session and signs tokens server-side only.
+	•	Supabase RLS policies to protect rows per user/role.
+
+⸻
+
+Database Schema (Supabase / SQL)
+
+-- Roles: guest | practitioner
+create table profiles (
+  id uuid primary key references auth.users(id) on delete cascade,
+  role text check (role in ('guest','practitioner')) not null,
+  display_name text not null,
+  country text,
+  bio text, -- practitioners only; guests can leave null
+  avatar_url text,
+  gallery_urls text[] default array[]::text[],
+  video_url text,
+  specialties text[] default array[]::text[],
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
+);
+
+-- Practitioners-only presence
+create table practitioners (
+  user_id uuid primary key references profiles(id) on delete cascade,
+  online boolean not null default false,
+  in_service boolean not null default false, -- true during waiting/live
+  rating numeric(3,2) default 0.0,
+  review_count int default 0,
+  updated_at timestamptz default now()
+);
+
+-- Sessions (1-on-1 for MVP; group later)
+-- phase: waiting | live | ended
+create table sessions (
+  id uuid primary key default gen_random_uuid(),
+  practitioner_id uuid not null references profiles(id),
+  guest_id uuid not null references profiles(id),
+  is_group boolean not null default false,
+  phase text not null check (phase in ('waiting','live','ended')),
+  waiting_seconds int not null default 300, -- 5:00
+  live_seconds int not null, -- 300/900/1800/3600
+  waiting_started_at timestamptz,
+  live_started_at timestamptz,
+  ended_at timestamptz,
+  agora_channel text not null,
+  agora_uid_practitioner text not null,
+  agora_uid_guest text not null,
+  ready_practitioner boolean not null default false,
+  ready_guest boolean not null default false,
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
+);
+
+-- (Optional) Simple reviews placeholder
+create table reviews (
+  id uuid primary key default gen_random_uuid(),
+  session_id uuid not null references sessions(id) on delete cascade,
+  guest_id uuid not null references profiles(id),
+  practitioner_id uuid not null references profiles(id),
+  rating int check (rating between 1 and 5),
+  comment text,
+  created_at timestamptz default now()
+);
+
+RLS Policy Hints
+	•	profiles: users can select public fields; update only their own row.
+	•	practitioners: practitioner can update own presence; everyone can select online list.
+	•	sessions: only guest_id or practitioner_id can select/update that row.
+
+⸻
+
+API Routes (Next.js App Router)
+
+POST   /api/auth/role-init         { role } → set role on first login
+POST   /api/presence/toggle        { online:boolean } (practitioner only)
+GET    /api/practitioners/online   → list {id, name, avatar, specialties, rating}
+
+POST   /api/sessions/start         { practitionerId, liveSeconds } → { sessionId }
+POST   /api/sessions/ready         { sessionId, who } → marks ready_guest / ready_practitioner
+GET    /api/sessions/:id           → session state (phase, timers, participants)
+POST   /api/sessions/rejoin        { sessionId } → returns phase & remaining times
+POST   /api/sessions/end           { sessionId } → force end (admin/dev only for now)
+
+GET    /api/agora/token            ?channel=&role=host|audience&uid=
+
+Notes
+	•	/api/sessions/start generates agora_channel = sess_{uuid5}, allocates agora_uid_*, sets phase='waiting', stamps waiting_started_at = now().
+	•	A small server cron (or edge timer) isn’t required; clients keep timer state with authoritative timestamps from DB (compute remaining = start + duration − now()).
+	•	/api/agora/token checks caller is participant in sessionId bound to that channel, then returns a short-lived token.
+
+⸻
+
+Frontend Pages (MVP)
+	•	/auth – sign up / login.
+	•	/onboarding – pick role (once).
+	•	/profile – edit profile (fields per role).
+	•	/explore – grid of online practitioners (realtime).
+	•	/p/[practitionerId] – practitioner public profile with Start Session.
+	•	/s/[sessionId]
+	•	Waiting Room: 5:00 countdown, “I’m Ready” for both, text hint.
+	•	Live Video: Agora call, live timer countdown, Rejoin supported.
+	•	End Sheet: rating/comment placeholder.
+
+⸻
+
+Agora Integration (MVP)
+	•	Use Agora Web SDK NG.
+	•	On Live start, both join agora_channel with role host (publisher) for 1-on-1.
+	•	Tokens: RTC token with short TTL (e.g., 2–5 minutes) and renew on demand.
+	•	Store no secrets in client; token endpoint signs with AGORA_APP_CERTIFICATE server-side only.
+
+⸻
+
+Realtime & Rejoin Logic
+	•	Use Supabase Realtime on sessions row to reflect phase changes and readiness flags.
+	•	Authoritative time: server timestamps (waiting_started_at, live_started_at).
+	•	On page load (or rejoin), compute remaining by max(0, duration - (now - started_at)).
+	•	If phase='waiting' and both ready → transition to live (server write).
+	•	If timers hit zero on either phase, client triggers end (server write) and navigates to End Sheet.
+
+⸻
+
+Minimal UI States
+	•	Practitioner Card (in grid): avatar, name, specialties chips, star rating (placeholder), Start button.
+	•	Practitioner Profile: hero image + 5 thumbnails (1 avatar, 3 gallery, 1 video placeholder), name, specialties, full bio.
+	•	Waiting Room: big 5:00 timer, both “I’m Ready” indicators.
+	•	Live: embedded video, big countdown, Leave button.
+	•	End Sheet: “Thanks for sharing energy” + (optional) rating textbox.
+
+⸻
+
+Environment & Config
+	•	.env.local
+	•	NEXT_PUBLIC_SUPABASE_URL=
+	•	NEXT_PUBLIC_SUPABASE_ANON_KEY=
+	•	SUPABASE_SERVICE_ROLE_KEY= (server only)
+	•	AGORA_APP_ID=
+	•	AGORA_APP_CERTIFICATE= (server only)
+
+⸻
+
+Acceptance Tests (MVP)
+	1.	Practitioner logs in → sets role → edits profile → toggles Online → appears in /explore for guests in <2s.
+	2.	Guest sees online grid → opens a profile → presses Start (chooses duration) → session row created with phase='waiting', 5:00 timer starts.
+	3.	Both land in Waiting Room → press I’m Ready → instantly transition to Live, live timer equals chosen duration.
+	4.	Either user reloads → Rejoin returns them to the correct phase with correct remaining time.
+	5.	Live timer reaches 0 → session ends → end sheet shows; presence resets (in_service=false).
+	6.	Security: guests cannot fetch tokens for sessions they’re not part of; practitioners cannot toggle someone else.
+
+⸻
+
+Nice-to-Have (scaffold only, do not build fully now)
+	•	Group session flags (is_group, waiting_minutes, live_minutes) and a practitioner “Start Group” toggle (hidden from guest UI for now).
+	•	Reviews list on profile; rating aggregation triggers on new review.
+	•	Simple text chat in Waiting Room.
+
+⸻
+
+Quick Start Commands (for Replit/Node or local)
+
+# 1) Bootstrap Next.js + Tailwind + Supabase client
+npx create-next-app@latest allinya --ts --eslint
+cd allinya
+npm i @supabase/supabase-js @tanstack/react-query uuid
+npm i agora-rtc-sdk-ng
+npm i -D tailwindcss postcss autoprefixer
+npx tailwindcss init -p
+
+# 2) Create .env.local and paste keys
+
+# 3) Add Supabase tables via SQL (use Supabase SQL editor)
+
+# 4) Implement API routes from the list above
+
+# 5) Build pages: /auth, /onboarding, /profile, /explore, /p/[id], /s/[id]
+
+npm run dev
+
+
+⸻
+
+Single Copy-Paste Prompt (give this to Replit)
+
+“Create a Next.js 14 + TypeScript app called Allinya that enables instant 1-on-1 healing sessions between guests and practitioners using Agora video, with Supabase for auth/db/realtime/storage, and no payments. Implement: roles (guest/practitioner, immutable after first set), practitioner online toggle + realtime /explore grid, persistent profiles (guest: name/country/avatar; practitioner: name/bio/specialties[≤4]/avatar+gallery[≤3]+video), session flow with two timers (Waiting Room 5:00 → Live Video for 5/15/30/60), ‘I’m Ready’ for both to start live, Rejoin while timers > 0, and secure Agora token API. Build DB exactly as in the schema I provide below; implement the listed API routes; pages: /auth, /onboarding, /profile, /explore, /p/[id], /s/[id]. Use server timestamps as the truth for timers. Add RLS policies so only session participants can read/update their session. Keep UI clean with Tailwind, show big countdowns, and keep code modular for a future group mode. Then output: the project file tree, all key files, and a README with setup steps and environment variables.”
+
+Paste the Database Schema block from above right after that prompt.
+
+⸻
+
+If you want, I can also generate the initial file tree and skeleton code (pages, API handlers, types, and timer helpers) in the next message so you can drop it in directly.
