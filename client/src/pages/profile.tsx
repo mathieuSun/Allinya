@@ -13,7 +13,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Badge } from '@/components/ui/badge';
 import { apiRequest, queryClient } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Plus, X, Power, PowerOff } from 'lucide-react';
+import { Loader2, Plus, X, Power, PowerOff, LogOut } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useQuery, useMutation } from '@tanstack/react-query';
 
@@ -34,7 +34,7 @@ const practitionerProfileSchema = z.object({
 
 export default function ProfilePage() {
   const [, setLocation] = useLocation();
-  const { profile, user, refreshProfile } = useAuth();
+  const { profile, user, refreshProfile, signOut } = useAuth();
   const { toast } = useToast();
   const [specialtyInput, setSpecialtyInput] = useState('');
   const [galleryInput, setGalleryInput] = useState('');
@@ -173,6 +173,17 @@ export default function ProfilePage() {
                   )}
                 </Button>
               )}
+              <Button
+                variant="ghost"
+                onClick={async () => {
+                  await signOut();
+                  setLocation('/login');
+                }}
+                data-testid="button-logout"
+              >
+                <LogOut className="mr-2 h-4 w-4" />
+                Logout
+              </Button>
             </div>
           </div>
         </div>

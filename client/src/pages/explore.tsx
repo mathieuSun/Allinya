@@ -6,13 +6,13 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { Star, Loader2 } from 'lucide-react';
+import { Star, Loader2, LogOut } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import type { PractitionerWithProfile } from '@shared/schema';
 
 export default function ExplorePage() {
   const [, setLocation] = useLocation();
-  const { profile } = useAuth();
+  const { profile, signOut } = useAuth();
   const [onlinePractitioners, setOnlinePractitioners] = useState<PractitionerWithProfile[]>([]);
 
   // Fetch online practitioners
@@ -67,9 +67,22 @@ export default function ExplorePage() {
         <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between">
             <h1 className="text-2xl font-bold">Allinya</h1>
-            <Button variant="outline" onClick={() => setLocation('/profile')} data-testid="button-profile">
-              My Profile
-            </Button>
+            <div className="flex items-center gap-4">
+              <Button variant="outline" onClick={() => setLocation('/profile')} data-testid="button-profile">
+                My Profile
+              </Button>
+              <Button
+                variant="ghost"
+                onClick={async () => {
+                  await signOut();
+                  setLocation('/login');
+                }}
+                data-testid="button-logout"
+              >
+                <LogOut className="mr-2 h-4 w-4" />
+                Logout
+              </Button>
+            </div>
           </div>
         </div>
       </header>
@@ -95,10 +108,10 @@ export default function ExplorePage() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {onlinePractitioners.map((practitioner) => (
               <Card
-                key={practitioner.user_id}
+                key={practitioner.userId}
                 className="hover-elevate transition-all cursor-pointer overflow-hidden"
-                onClick={() => setLocation(`/p/${practitioner.user_id}`)}
-                data-testid={`card-practitioner-${practitioner.user_id}`}
+                onClick={() => setLocation(`/p/${practitioner.userId}`)}
+                data-testid={`card-practitioner-${practitioner.userId}`}
               >
                 <div className="aspect-[3/4] relative">
                   {practitioner.profile.avatarUrl ? (
@@ -118,7 +131,7 @@ export default function ExplorePage() {
                   )}
                   <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
                   <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
-                    <h3 className="text-2xl font-semibold mb-2" data-testid={`text-practitioner-name-${practitioner.user_id}`}>
+                    <h3 className="text-2xl font-semibold mb-2" data-testid={`text-practitioner-name-${practitioner.userId}`}>
                       {practitioner.profile.displayName}
                     </h3>
                     <div className="flex items-center gap-2 mb-3">
@@ -144,7 +157,7 @@ export default function ExplorePage() {
                   </div>
                 </div>
                 <CardContent className="p-6">
-                  <Button className="w-full" data-testid={`button-start-${practitioner.user_id}`}>
+                  <Button className="w-full" data-testid={`button-start-${practitioner.userId}`}>
                     Start Session
                   </Button>
                 </CardContent>
