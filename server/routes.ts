@@ -59,6 +59,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // GET /api/profile - Get user profile
+  app.get('/api/profile', requireAuth, async (req: Request, res: Response) => {
+    try {
+      const userId = req.user!.id;
+      const profile = await storage.getProfile(userId);
+      
+      if (!profile) {
+        return res.status(404).json({ error: 'Profile not found' });
+      }
+      
+      res.json(profile);
+    } catch (error: any) {
+      res.status(400).json({ error: error.message });
+    }
+  });
+
   // PUT /api/profile - Update user profile
   app.put('/api/profile', requireAuth, async (req: Request, res: Response) => {
     try {

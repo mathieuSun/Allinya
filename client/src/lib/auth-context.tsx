@@ -26,17 +26,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return;
     }
 
-    const { data, error } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', user.id)
-      .single();
+    try {
+      const response = await fetch('/api/profile', {
+        credentials: 'include',
+      });
 
-    if (error) {
+      if (!response.ok) {
+        console.error('Error fetching profile:', response.status);
+        setProfile(null);
+        return;
+      }
+
+      const data = await response.json();
+      setProfile(data);
+    } catch (error) {
       console.error('Error fetching profile:', error);
       setProfile(null);
-    } else {
-      setProfile(data);
     }
   };
 

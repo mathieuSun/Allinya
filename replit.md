@@ -144,14 +144,23 @@ To set up their profiles, run `server/create-test-users.sql` in Supabase SQL Edi
 
 ## Recent Changes
 
-### 2024-10-12 (Latest Updates)
+### 2024-10-12 (Testing & Bug Fixes)
+- **Authentication fixes**:
+  - Added /login route (aliased to /auth)
+  - Added logout buttons to all authenticated pages (profile, explore)
+- **Critical data persistence fix**:
+  - Added `toCamelCase()` helper to convert snake_case DB fields to camelCase for frontend
+  - Applied conversion to ALL storage layer GET operations (profiles, practitioners, sessions, reviews)
+  - Fixed AuthContext to use backend API (/api/profile) instead of direct Supabase queries
+  - Added missing GET /api/profile endpoint
+- **Known issue**: Auth session persistence needs investigation (Supabase session not properly restored on page reload)
+
+### 2024-10-12 (Schema & Configuration)
 - Fixed practitioners table missing created_at/updated_at timestamps
-- Resolved all camelCase/snake_case field name mismatches between backend and database
-- Created centralized backend configuration (`server/config.ts`) for all environment variables
-- Fixed all TypeScript/LSP errors (0 errors remaining)
-- Generated production-ready SQL schema (`server/final-schema.sql`)
-- Created test user setup scripts and documentation
-- Backend consistently uses snake_case for DB fields, frontend uses camelCase with automatic conversion
+- Created centralized backend configuration (`server/config.ts`)  
+- Fixed all TypeScript/LSP errors
+- Generated production-ready SQL schemas
+- Backend: snake_case for DB, frontend: camelCase with automatic conversion
 
 ### 2024-10-12 (Initial)
 - Initial full-stack setup completed

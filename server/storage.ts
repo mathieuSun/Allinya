@@ -53,6 +53,20 @@ function toSnakeCase(obj: any): any {
   return converted;
 }
 
+// Helper function to convert snake_case to camelCase
+function toCamelCase(obj: any): any {
+  if (obj === null || obj === undefined) return obj;
+  if (Array.isArray(obj)) return obj.map(toCamelCase);
+  if (typeof obj !== 'object') return obj;
+  
+  const converted: any = {};
+  for (const key in obj) {
+    const camelKey = key.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase());
+    converted[camelKey] = toCamelCase(obj[key]);
+  }
+  return converted;
+}
+
 export class DbStorage implements IStorage {
   async getProfile(id: string): Promise<Profile | undefined> {
     const { data, error } = await supabase
@@ -66,7 +80,7 @@ export class DbStorage implements IStorage {
       return undefined;
     }
     
-    return data as Profile;
+    return toCamelCase(data) as Profile;
   }
 
   async createProfile(profile: InsertProfile & { id: string }): Promise<Profile> {
@@ -84,14 +98,14 @@ export class DbStorage implements IStorage {
       .single();
     
     if (error) throw error;
-    return data as Profile;
+    return toCamelCase(data) as Profile;
   }
 
   async updateProfile(id: string, updates: Partial<Profile>): Promise<Profile> {
     // Convert camelCase to snake_case for database
     const snakeCaseUpdates = toSnakeCase(updates);
     
-    const { data, error } = await supabase
+    const { data, error} = await supabase
       .from('profiles')
       .update({
         ...snakeCaseUpdates,
@@ -102,7 +116,7 @@ export class DbStorage implements IStorage {
       .single();
     
     if (error) throw error;
-    return data as Profile;
+    return toCamelCase(data) as Profile;
   }
 
   async getPractitioner(userId: string): Promise<Practitioner | undefined> {
@@ -117,7 +131,7 @@ export class DbStorage implements IStorage {
       return undefined;
     }
     
-    return data as Practitioner;
+    return toCamelCase(data) as Practitioner;
   }
 
   async createPractitioner(practitioner: InsertPractitioner): Promise<Practitioner> {
@@ -134,7 +148,7 @@ export class DbStorage implements IStorage {
       .single();
     
     if (error) throw error;
-    return data as Practitioner;
+    return toCamelCase(data) as Practitioner;
   }
 
   async updatePractitioner(userId: string, updates: Partial<Practitioner>): Promise<Practitioner> {
@@ -152,7 +166,7 @@ export class DbStorage implements IStorage {
       .single();
     
     if (error) throw error;
-    return data as Practitioner;
+    return toCamelCase(data) as Practitioner;
   }
 
   async getOnlinePractitioners(): Promise<PractitionerWithProfile[]> {
@@ -166,10 +180,7 @@ export class DbStorage implements IStorage {
     
     if (error) throw error;
     
-    return (data || []).map((item: any) => ({
-      ...item,
-      profile: item.profile
-    })) as PractitionerWithProfile[];
+    return toCamelCase(data || []) as PractitionerWithProfile[];
   }
 
   async getPractitionerWithProfile(userId: string): Promise<PractitionerWithProfile | undefined> {
@@ -187,10 +198,7 @@ export class DbStorage implements IStorage {
       return undefined;
     }
     
-    return {
-      ...data,
-      profile: data.profile
-    } as PractitionerWithProfile;
+    return toCamelCase(data) as PractitionerWithProfile;
   }
 
   async getSession(id: string): Promise<SessionWithParticipants | undefined> {
@@ -209,14 +217,16 @@ export class DbStorage implements IStorage {
       return undefined;
     }
     
-    return data as SessionWithParticipants;
+    return toCamelCase(data) as SessionWithParticipants;
   }
 
   async createSession(session: InsertSession): Promise<Session> {
+    const snakeCaseSession = toSnakeCase(session);
+    
     const { data, error } = await supabase
       .from('sessions')
       .insert({
-        ...session,
+        ...snakeCaseSession,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       })
@@ -224,14 +234,16 @@ export class DbStorage implements IStorage {
       .single();
     
     if (error) throw error;
-    return data as Session;
+    return toCamelCase(data) as Session;
   }
 
   async updateSession(id: string, updates: Partial<Session>): Promise<Session> {
+    const snakeCaseUpdates = toSnakeCase(updates);
+    
     const { data, error } = await supabase
       .from('sessions')
       .update({
-        ...updates,
+        ...snakeCaseUpdates,
         updated_at: new Date().toISOString()
       })
       .eq('id', id)
@@ -239,21 +251,23 @@ export class DbStorage implements IStorage {
       .single();
     
     if (error) throw error;
-    return data as Session;
+    return toCamelCase(data) as Session;
   }
 
   async createReview(review: InsertReview): Promise<Review> {
+    const snakeCaseReview = toSnakeCase(review);
+    
     const { data, error } = await supabase
       .from('reviews')
       .insert({
-        ...review,
+        ...snakeCaseReview,
         created_at: new Date().toISOString()
       })
       .select()
       .single();
     
     if (error) throw error;
-    return data as Review;
+    return toCamelCase(data) as Review;
   }
 
   async getSessionReviews(sessionId: string): Promise<Review[]> {
@@ -263,7 +277,7 @@ export class DbStorage implements IStorage {
       .eq('session_id', sessionId);
     
     if (error) throw error;
-    return data as Review[];
+    return toCamelCase(data) as Review[];
   }
 }
 
