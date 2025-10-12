@@ -33,8 +33,8 @@ export class SessionFactory {
   static createSession(overrides?: Partial<TestSession>): TestSession {
     const status = overrides?.status || faker.helpers.arrayElement(['waiting_room', 'live', 'ended']);
     
-    let live_started_at = null;
-    let ended_at = null;
+    let live_started_at: Date | null = null;
+    let ended_at: Date | null = null;
     
     if (status === 'live') {
       live_started_at = faker.date.recent({ days: 1 });

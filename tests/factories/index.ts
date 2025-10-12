@@ -4,6 +4,11 @@
  * All IDs are UUID-based for consistency
  */
 
+import { UserFactory } from './user-factory';
+import type { TestUser, TestPractitioner } from './user-factory';
+import { SessionFactory } from './session-factory';
+import type { TestSession, TestReview } from './session-factory';
+
 export { UserFactory } from './user-factory';
 export type { TestUser, TestPractitioner } from './user-factory';
 
