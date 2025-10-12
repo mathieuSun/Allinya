@@ -132,9 +132,30 @@ The platform follows a wellness-focused design with:
 
 See `design_guidelines.md` for complete design specifications.
 
+## Test User Setup
+
+### Creating Test Users in Supabase
+The application requires test users to be manually created in Supabase:
+
+1. Go to your Supabase Dashboard > Authentication > Users
+2. Click "Add User" → "Create new user"
+3. Create these two test accounts:
+   - **Practitioner**: chefmat2018@gmail.com / 12345678
+   - **Guest**: cheekyma@hotmail.com / 12345678
+4. After creating the auth users, run `server/create-test-users.sql` in Supabase SQL Editor to set up their profiles
+
 ## Recent Changes
 
-### 2024-10-12
+### 2024-10-12 (Latest Updates)
+- Fixed practitioners table missing created_at/updated_at timestamps
+- Resolved all camelCase/snake_case field name mismatches between backend and database
+- Created centralized backend configuration (`server/config.ts`) for all environment variables
+- Fixed all TypeScript/LSP errors (0 errors remaining)
+- Generated production-ready SQL schema (`server/final-schema.sql`)
+- Created test user setup scripts and documentation
+- Backend consistently uses snake_case for DB fields, frontend uses camelCase with automatic conversion
+
+### 2024-10-12 (Initial)
 - Initial full-stack setup completed
 - All authentication, session, and profile flows implemented
 - Video integration with Agora configured
