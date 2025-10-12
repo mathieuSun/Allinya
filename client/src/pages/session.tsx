@@ -48,7 +48,7 @@ export default function SessionPage() {
   // Mark ready mutation
   const markReadyMutation = useMutation({
     mutationFn: async () => {
-      const who = currentUser?.id === session?.guestId ? 'guest' : 'practitioner';
+      const who = currentUser?.id === session?.guest_id ? 'guest' : 'practitioner';
       return apiRequest('POST', '/api/sessions/ready', { sessionId, who });
     },
     onSuccess: () => {
@@ -156,12 +156,12 @@ export default function SessionPage() {
       const client = AgoraRTC.createClient({ mode: 'rtc', codec: 'vp8' });
       setAgoraClient(client);
 
-      const isGuest = currentUser.id === session.guestId;
-      const uid = isGuest ? session.agoraUidGuest : session.agoraUidPractitioner;
+      const isGuest = currentUser.id === session.guest_id;
+      const uid = isGuest ? session.agora_uid_guest : session.agora_uid_practitioner;
 
       // Get token from server
       const tokenResponse = await fetch(
-        `/api/agora/token?channel=${session.agoraChannel}&role=host&uid=${uid}`
+        `/api/agora/token?channel=${session.agora_channel}&role=host&uid=${uid}`
       );
       const { token } = await tokenResponse.json();
 
@@ -274,10 +274,10 @@ export default function SessionPage() {
     );
   }
 
-  const isGuest = currentUser.id === session.guestId;
+  const isGuest = currentUser.id === session.guest_id;
   const otherUser = isGuest ? session.practitioner : session.guest;
-  const isReady = isGuest ? session.readyGuest : session.readyPractitioner;
-  const otherReady = isGuest ? session.readyPractitioner : session.readyGuest;
+  const isReady = isGuest ? session.ready_guest : session.ready_practitioner;
+  const otherReady = isGuest ? session.ready_practitioner : session.ready_guest;
 
   // Waiting Room
   if (session.phase === 'waiting') {
