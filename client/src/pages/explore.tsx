@@ -111,7 +111,7 @@ export default function ExplorePage() {
                     <div className="w-full h-full bg-muted flex items-center justify-center">
                       <Avatar className="h-32 w-32">
                         <AvatarFallback className="text-4xl">
-                          {practitioner.profile.displayName[0]?.toUpperCase()}
+                          {practitioner.profile.displayName?.[0]?.toUpperCase() || 'P'}
                         </AvatarFallback>
                       </Avatar>
                     </div>
