@@ -39,13 +39,16 @@ export interface IStorage {
   getSession(id: string): Promise<SessionWithParticipants | undefined>;
   createSession(session: InsertSession): Promise<Session>;
   updateSession(id: string, updates: Partial<Session>): Promise<Session>;
+  getActiveSessionsForUser(userId: string): Promise<Session[]>;
+  getActiveSessionsForPractitioner(practitionerId: string): Promise<Session[]>;
 
   // Review operations
   createReview(review: InsertReview): Promise<Review>;
   getSessionReviews(sessionId: string): Promise<Review[]>;
+  getPractitionerReviews(practitionerId: string): Promise<Review[]>;
 }
 
-export class DbStorage implements IStorage {
+export class SupabaseStorage implements IStorage {
   async getProfile(id: string): Promise<Profile | undefined> {
     const { data, error } = await supabase
       .from('profiles')
@@ -222,6 +225,28 @@ export class DbStorage implements IStorage {
     return data as Session;
   }
 
+  async getActiveSessionsForUser(userId: string): Promise<Session[]> {
+    const { data, error } = await supabase
+      .from('sessions')
+      .select('*')
+      .or(`guest_id.eq.${userId},practitioner_id.eq.${userId}`)
+      .neq('phase', 'ended');
+    
+    if (error) throw error;
+    return data as Session[];
+  }
+
+  async getActiveSessionsForPractitioner(practitionerId: string): Promise<Session[]> {
+    const { data, error } = await supabase
+      .from('sessions')
+      .select('*')
+      .eq('practitioner_id', practitionerId)
+      .neq('phase', 'ended');
+    
+    if (error) throw error;
+    return data as Session[];
+  }
+
   async createReview(review: InsertReview): Promise<Review> {
     const { data, error } = await supabase
       .from('reviews')
@@ -245,6 +270,17 @@ export class DbStorage implements IStorage {
     if (error) throw error;
     return data as Review[];
   }
+
+  async getPractitionerReviews(practitionerId: string): Promise<Review[]> {
+    const { data, error } = await supabase
+      .from('reviews')
+      .select('*')
+      .eq('practitioner_id', practitionerId)
+      .order('created_at', { ascending: false });
+    
+    if (error) throw error;
+    return data as Review[];
+  }
 }
 
-export const storage = new DbStorage();
+export const storage = new SupabaseStorage();
