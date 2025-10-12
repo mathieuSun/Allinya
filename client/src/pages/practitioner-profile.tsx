@@ -39,10 +39,11 @@ export default function PractitionerProfilePage() {
   // Start session mutation
   const startSessionMutation = useMutation({
     mutationFn: async () => {
-      return apiRequest('POST', '/api/sessions/start', {
+      const response = await apiRequest('POST', '/api/sessions/start', {
         practitionerId,
         liveSeconds: selectedDuration,
       });
+      return response.json();
     },
     onSuccess: (data: any) => {
       toast({ title: 'Session starting!' });
@@ -120,7 +121,7 @@ export default function PractitionerProfilePage() {
         <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
         <Avatar className="absolute -bottom-12 left-1/2 transform -translate-x-1/2 h-24 w-24 border-4 border-background">
           <AvatarImage src={practitioner.avatarUrl || undefined} />
-          <AvatarFallback className="text-3xl">{practitioner.displayName[0]?.toUpperCase()}</AvatarFallback>
+          <AvatarFallback className="text-3xl">{practitioner.displayName?.[0]?.toUpperCase() || 'P'}</AvatarFallback>
         </Avatar>
       </div>
 

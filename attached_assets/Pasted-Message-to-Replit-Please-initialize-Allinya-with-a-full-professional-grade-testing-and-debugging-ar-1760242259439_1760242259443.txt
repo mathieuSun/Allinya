@@ -1,0 +1,37 @@
+Message to Replit
+
+Please initialize Allinya with a full professional-grade testing and debugging architecture from the very beginning, even if it temporarily makes the app heavier. The goal is to guarantee total observability and rapid troubleshooting at every level. All this will be cleaned and trimmed later, but right now we need absolute structural clarity.
+
+Testing & Debug Framework (install and configure):
+	1.	Unit and Integration Testing —
+• Use Vitest (preferred over Jest for Vite/Next 14 performance).
+• Add @testing-library/react for UI component testing.
+• Add supertest for API route testing.
+• Include full coverage reports (vitest --coverage).
+	2.	End-to-End Testing —
+• Integrate Playwright for browser automation.
+• Add sample flows: sign-up/login, toggle practitioner online, start 1-on-1 session, rejoin flow.
+• Store E2E tests in /tests/e2e.
+	3.	Type Safety & Validation —
+• Enforce strict TypeScript everywhere ("strict": true in tsconfig.json).
+• Add Zod schemas for runtime validation of all API payloads.
+• Add eslint + prettier with strict formatting rules and pre-commit hook (Husky).
+	4.	Debug & Logging Tools —
+• Add React Query Devtools (client state debugging).
+• Add Supabase Realtime logs (subscribe to key events).
+• Add console logger wrapper (/lib/logger.ts) that supports levels: debug/info/warn/error with timestamps.
+• Add Next.js error overlay (keep enabled in all dev modes).
+• Optionally, include OpenReplay or Sentry (in debug-only mode) for runtime tracing.
+	5.	Performance Profiling (temporary) —
+• Enable React Profiler.
+• Add /dev/inspector route exposing basic timings (render time, rejoin logic, Supabase latency).
+• Add logTimers() utility that reports Room vs Live timer drift every 10 s in console during tests.
+	6.	Test Data Factories —
+• Create /tests/factories with data builders (e.g., createPractitioner(), createGuest(), createSession()) for quick fixture generation.
+• Use UUID generation consistently in all factories.
+	7.	CI & Reporting —
+• Configure a GitHub Actions (or Replit task runner) that runs all tests on every commit.
+• Output clear pass/fail summary with coverage percent.
+
+Overall directive:
+Implement all of the above immediately so that the project launches with complete observability and validation. Even if it makes the repository heavier now, this foundation ensures that every new feature is automatically testable and traceable. We will remove or slim down these systems later once stability is confirmed.

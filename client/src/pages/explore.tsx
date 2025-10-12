@@ -95,10 +95,10 @@ export default function ExplorePage() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {onlinePractitioners.map((practitioner) => (
               <Card
-                key={practitioner.userId}
+                key={practitioner.user_id}
                 className="hover-elevate transition-all cursor-pointer overflow-hidden"
-                onClick={() => setLocation(`/p/${practitioner.userId}`)}
-                data-testid={`card-practitioner-${practitioner.userId}`}
+                onClick={() => setLocation(`/p/${practitioner.user_id}`)}
+                data-testid={`card-practitioner-${practitioner.user_id}`}
               >
                 <div className="aspect-[3/4] relative">
                   {practitioner.profile.avatarUrl ? (
@@ -118,7 +118,7 @@ export default function ExplorePage() {
                   )}
                   <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
                   <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
-                    <h3 className="text-2xl font-semibold mb-2" data-testid={`text-practitioner-name-${practitioner.userId}`}>
+                    <h3 className="text-2xl font-semibold mb-2" data-testid={`text-practitioner-name-${practitioner.user_id}`}>
                       {practitioner.profile.displayName}
                     </h3>
                     <div className="flex items-center gap-2 mb-3">
@@ -144,7 +144,7 @@ export default function ExplorePage() {
                   </div>
                 </div>
                 <CardContent className="p-6">
-                  <Button className="w-full" data-testid={`button-start-${practitioner.userId}`}>
+                  <Button className="w-full" data-testid={`button-start-${practitioner.user_id}`}>
                     Start Session
                   </Button>
                 </CardContent>
