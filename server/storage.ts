@@ -45,6 +45,20 @@ export interface IStorage {
   getSessionReviews(sessionId: string): Promise<Review[]>;
 }
 
+// Helper function to convert camelCase to snake_case
+function toSnakeCase(obj: any): any {
+  if (obj === null || obj === undefined) return obj;
+  if (Array.isArray(obj)) return obj.map(toSnakeCase);
+  if (typeof obj !== 'object') return obj;
+  
+  const converted: any = {};
+  for (const key in obj) {
+    const snakeKey = key.replace(/([A-Z])/g, '_$1').toLowerCase();
+    converted[snakeKey] = toSnakeCase(obj[key]);
+  }
+  return converted;
+}
+
 export class DbStorage implements IStorage {
   async getProfile(id: string): Promise<Profile | undefined> {
     const { data, error } = await supabase
@@ -62,10 +76,13 @@ export class DbStorage implements IStorage {
   }
 
   async createProfile(profile: InsertProfile & { id: string }): Promise<Profile> {
+    // Convert camelCase to snake_case for database
+    const snakeCaseProfile = toSnakeCase(profile);
+    
     const { data, error } = await supabase
       .from('profiles')
       .insert({
-        ...profile,
+        ...snakeCaseProfile,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       })
@@ -77,10 +94,13 @@ export class DbStorage implements IStorage {
   }
 
   async updateProfile(id: string, updates: Partial<Profile>): Promise<Profile> {
+    // Convert camelCase to snake_case for database
+    const snakeCaseUpdates = toSnakeCase(updates);
+    
     const { data, error } = await supabase
       .from('profiles')
       .update({
-        ...updates,
+        ...snakeCaseUpdates,
         updated_at: new Date().toISOString()
       })
       .eq('id', id)
@@ -107,10 +127,13 @@ export class DbStorage implements IStorage {
   }
 
   async createPractitioner(practitioner: InsertPractitioner): Promise<Practitioner> {
+    // Convert camelCase to snake_case for database
+    const snakeCasePractitioner = toSnakeCase(practitioner);
+    
     const { data, error } = await supabase
       .from('practitioners')
       .insert({
-        ...practitioner,
+        ...snakeCasePractitioner,
         updated_at: new Date().toISOString()
       })
       .select()
@@ -121,10 +144,13 @@ export class DbStorage implements IStorage {
   }
 
   async updatePractitioner(userId: string, updates: Partial<Practitioner>): Promise<Practitioner> {
+    // Convert camelCase to snake_case for database
+    const snakeCaseUpdates = toSnakeCase(updates);
+    
     const { data, error } = await supabase
       .from('practitioners')
       .update({
-        ...updates,
+        ...snakeCaseUpdates,
         updated_at: new Date().toISOString()
       })
       .eq('user_id', userId)
