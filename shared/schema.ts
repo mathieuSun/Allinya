@@ -5,7 +5,7 @@ import { z } from "zod";
 
 // Profiles table - supports both guest and practitioner roles
 export const profiles = pgTable("profiles", {
-  id: uuid("id").primaryKey().references(() => sql`auth.users(id)`, { onDelete: "cascade" }),
+  id: uuid("id").primaryKey(),
   role: text("role", { enum: ["guest", "practitioner"] }).notNull(),
   displayName: text("display_name").notNull(),
   country: text("country"),
