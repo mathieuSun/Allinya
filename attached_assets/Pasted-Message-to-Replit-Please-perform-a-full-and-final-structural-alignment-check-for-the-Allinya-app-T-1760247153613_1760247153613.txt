@@ -1,0 +1,87 @@
+Message to Replit
+
+Please perform a full and final structural alignment check for the Allinya app. The goal is absolute coherence — every file, function, database field, and environment variable must speak the exact same unified language, following the rules below. This must be verified across the entire app (frontend, backend, database, API, and schema). Any inconsistencies should be corrected immediately, and the SQL schema regenerated cleanly to match.
+
+⸻
+
+🔷 Global Structural & Naming Conventions (Absolute Truth)
+	1.	UUID Everywhere
+	•	Every table’s id, foreign key, and relationship column must use UUID.
+	•	No serial, int, or auto-increment fields.
+	•	All data relationships (sessions, profiles, reviews, media, etc.) must strictly use UUID references.
+	•	Verify that every Supabase migration and relation enforces UUIDs consistently.
+	2.	Naming Consistency
+	•	File, folder, route, and URL names → kebab-case (kml case).
+Example: /waiting-room, /live-video, /start-session.
+	•	Code variables, functions, and constants → camelCase (JavaScript/TypeScript standard).
+Example: roomTimer, liveDuration, guestProfile.
+	•	Database columns → snake_case only.
+Example: created_at, updated_at, practitioner_id.
+	•	These three patterns must never overlap — verify across all files, APIs, schema, and frontend calls.
+	3.	Single Source of Truth
+	•	Only one record per concept:
+profiles for all user roles, sessions for all 1-on-1 and group data, reviews for feedback.
+	•	One /lib/config.ts file exporting all environment variables.
+	•	One shared type definition in /types — referenced everywhere (no duplicates in components).
+	•	All Supabase RLS policies, triggers, and schema definitions must align with this exact naming and type structure.
+	4.	Environment Variables
+	•	Frontend → VITE_ prefix for Replit or NEXT_PUBLIC_ for Vercel.
+	•	Backend → plain names (no prefix).
+	•	Remove any duplicate or legacy variable names.
+	5.	Folder Hierarchy
+
+/app            → Next.js routes
+/api            → API endpoints
+/lib            → utilities (Supabase client, Agora, logger)
+/components     → reusable UI elements
+/types          → TypeScript definitions
+/tests          → unit, integration, e2e
+/styles         → Tailwind setup
+/sql            → schema + migration scripts (must reflect UUID + naming standards)
+
+
+	6.	Database Timestamps
+	•	Always created_at and updated_at (snake_case, lowercase).
+	•	Use default now() everywhere.
+	7.	Timers & Rejoin Logic
+	•	The server time is the single truth. Clients only mirror.
+	•	Verify every countdown computation derives from server timestamps.
+
+⸻
+
+🔷 Testing & Debugging Infrastructure (Keep Fully Active)
+	1.	Unit / Integration Tests
+	•	Use Vitest, @testing-library/react, and supertest.
+	•	Full coverage enabled (vitest --coverage).
+	2.	E2E Tests
+	•	Use Playwright for signup/login, session start, rejoin, and timer flow verification.
+	•	Place all scripts in /tests/e2e.
+	3.	Type Safety & Validation
+	•	strict: true in tsconfig.json.
+	•	Use Zod for runtime API payload validation.
+	•	ESLint + Prettier + Husky hooks to enforce formatting before commit.
+	4.	Debug Tools
+	•	React Query Devtools.
+	•	Supabase realtime log console.
+	•	/lib/logger.ts for timestamped debug/info/warn/error logs.
+	•	Optional Sentry/OpenReplay for temporary runtime tracing.
+	5.	Profiling & Diagnostics
+	•	Enable React Profiler.
+	•	/dev/inspector route: render time, latency, and timer drift stats.
+	•	logTimers() utility reporting sync drift every 10 seconds during tests.
+	6.	Test Data Factories
+	•	/tests/factories: UUID-based mock generators (createPractitioner, createGuest, createSession).
+	7.	Continuous Integration
+	•	GitHub Actions or Replit runner executes the full test suite on every commit.
+	•	Output coverage %, errors, and test time.
+
+⸻
+
+🔷 Final Verification & Schema Rebuild
+	•	Perform a full sweep of the app — every page, API, component, schema, and helper.
+	•	Ensure UUIDs, naming conventions, and type patterns are followed everywhere.
+	•	After verification, regenerate the entire SQL schema to reflect these rules perfectly (fresh migration, no legacy naming).
+	•	Rebuild Supabase tables to match the final schema and test all foreign key relationships again.
+
+This check must be absolute — every inconsistency corrected before moving forward.
+Once complete, the app will have a single coherent language and can evolve without naming or structural conflicts ever returning.

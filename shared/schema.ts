@@ -25,6 +25,7 @@ export const practitioners = pgTable("practitioners", {
   inService: boolean("in_service").notNull().default(false),
   rating: numeric("rating", { precision: 3, scale: 2 }).default("0.0"),
   reviewCount: integer("review_count").default(0),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
 });
 
@@ -68,6 +69,7 @@ export const insertProfileSchema = createInsertSchema(profiles).omit({
 });
 
 export const insertPractitionerSchema = createInsertSchema(practitioners).omit({
+  createdAt: true,
   updatedAt: true,
 });
 
