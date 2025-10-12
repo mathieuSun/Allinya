@@ -1,6 +1,7 @@
 import { Switch, Route } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
+import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/lib/auth-context";
@@ -11,6 +12,7 @@ import ExplorePage from "@/pages/explore";
 import PractitionerProfilePage from "@/pages/practitioner-profile";
 import SessionPage from "@/pages/session";
 import NotFound from "@/pages/not-found";
+import DevInspector from "@/pages/dev-inspector";
 
 function Router() {
   return (
@@ -21,6 +23,7 @@ function Router() {
       <Route path="/explore" component={ExplorePage} />
       <Route path="/p/:id" component={PractitionerProfilePage} />
       <Route path="/s/:id" component={SessionPage} />
+      <Route path="/dev/inspector" component={DevInspector} />
       <Route path="/" component={AuthPage} />
       <Route component={NotFound} />
     </Switch>
@@ -34,6 +37,8 @@ function App() {
         <AuthProvider>
           <Toaster />
           <Router />
+          {/* React Query DevTools for debugging */}
+          <ReactQueryDevtools initialIsOpen={false} />
         </AuthProvider>
       </TooltipProvider>
     </QueryClientProvider>
