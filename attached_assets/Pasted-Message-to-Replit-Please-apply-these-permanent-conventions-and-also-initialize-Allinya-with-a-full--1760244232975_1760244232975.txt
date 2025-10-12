@@ -1,0 +1,77 @@
+Message to Replit
+
+Please apply these permanent conventions and also initialize Allinya with a full professional-grade debugging and testing architecture from the very beginning. The intention is to keep the app completely minimalistic, coherent, and unified, while also making it fully observable and testable. Even if it feels heavy at first, this guarantees structural integrity and easy debugging later.
+
+⸻
+
+🔷 Global Structural & Naming Conventions
+	1.	Database IDs
+	•	Every primary and foreign key across the app must use UUID.
+	•	No incremental IDs anywhere — everything universal and consistent.
+	2.	Naming Convention
+	•	File, folder, and URL names → kebab-case (kml case) (e.g. waiting-room, live-video).
+	•	Variables, functions, and constants → camelCase (standard JS/TS).
+	3.	Single Source of Truth
+	•	One table per concept (no duplicates).
+	•	profiles for all user roles, sessions for all live/waiting logic, etc.
+	•	One /lib/config.ts file re-exports all environment variables from process.env.
+	•	One environment variable per purpose — no duplicates or overlaps between client/server.
+	4.	Folder Structure
+	•	/app — Next.js routes (App Router)
+	•	/api — backend endpoints
+	•	/lib — utilities (Supabase client, Agora, logger, helpers)
+	•	/components — UI blocks
+	•	/types — TypeScript definitions
+	•	/tests — all testing files (unit, integration, e2e)
+	•	/styles — Tailwind setup
+	5.	Environment Variable Rules
+	•	Frontend vars → VITE_ (for Replit) or NEXT_PUBLIC_ (for Vercel).
+	•	Server-only vars → plain names (no prefix).
+	6.	Database Timestamps
+	•	Always created_at and updated_at in lowercase snake_case, auto-generated with default now().
+	7.	Timers & Rejoin Logic
+	•	The server timestamp is truth. Clients only mirror it. No secondary local timing states.
+
+⸻
+
+🔷 Full Expert-Level Testing & Debug Architecture
+	1.	Unit & Integration Testing
+	•	Use Vitest (faster Jest alternative) with full coverage.
+	•	Add @testing-library/react for component testing.
+	•	Add supertest for API testing.
+	•	Store all tests in /tests/unit and /tests/integration.
+	2.	End-to-End Testing (E2E)
+	•	Integrate Playwright for browser automation.
+	•	Preload flows: sign-up/login, toggle practitioner online, start/rejoin session.
+	•	Store under /tests/e2e.
+	3.	Type Safety & Validation
+	•	Strict TypeScript ("strict": true in tsconfig.json).
+	•	Add Zod for runtime schema validation (API and forms).
+	•	Use ESLint + Prettier with Husky pre-commit hooks for consistent formatting.
+	4.	Debug & Logging Tools
+	•	Integrate React Query Devtools.
+	•	Add Supabase Realtime console event logs for session phases.
+	•	Create /lib/logger.ts with debug/info/warn/error levels and timestamps.
+	•	Keep Next.js error overlay active in dev mode.
+	•	Optionally add Sentry or OpenReplay (temporary dev mode) for runtime tracing.
+	5.	Performance Profiling
+	•	Enable React Profiler.
+	•	Add /dev/inspector route for render time, Supabase latency, and timer drift.
+	•	Add utility logTimers() that reports countdown drift every 10 seconds during test sessions.
+	6.	Test Data Factories
+	•	Create /tests/factories folder with reusable builders:
+createPractitioner(), createGuest(), createSession() (all UUID-based).
+	7.	Continuous Integration (CI)
+	•	Add GitHub Actions (or Replit task runner) to execute full test suite on every commit.
+	•	Generate a summary: pass/fail, coverage %, and test time.
+
+⸻
+
+🔷 Overall Directive
+
+Build Allinya using these conventions and tools so the project:
+	•	stays unified under one structural language,
+	•	can be debugged instantly from any layer (frontend, backend, realtime, or timer logic),
+	•	and provides complete observability for developers and future QA phases.
+
+Once stability is confirmed, we’ll safely remove or slim down the testing stack — but at the start, everything must be included and active to guarantee total clarity and speed in development.
