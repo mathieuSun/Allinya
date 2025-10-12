@@ -162,24 +162,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const agoraChannel = `sess_${sessionId.substring(0, 8)}`;
       
       const session = await storage.createSession({
-        practitioner_id: practitionerId,
-        guest_id: guestId,
-        is_group: false,
+        practitionerId: practitionerId,
+        guestId: guestId,
+        isGroup: false,
         phase: 'waiting',
-        waiting_seconds: 300,
-        live_seconds: liveSeconds,
-        waiting_started_at: new Date(),
-        live_started_at: null,
-        ended_at: null,
-        agora_channel: agoraChannel,
-        agora_uid_practitioner: `p_${randomUUID().substring(0, 8)}`,
-        agora_uid_guest: `g_${randomUUID().substring(0, 8)}`,
-        ready_practitioner: false,
-        ready_guest: false,
+        waitingSeconds: 300,
+        liveSeconds: liveSeconds,
+        waitingStartedAt: new Date(),
+        liveStartedAt: null,
+        endedAt: null,
+        agoraChannel: agoraChannel,
+        agoraUidPractitioner: `p_${randomUUID().substring(0, 8)}`,
+        agoraUidGuest: `g_${randomUUID().substring(0, 8)}`,
+        readyPractitioner: false,
+        readyGuest: false,
       });
 
       // Mark practitioner as in service
-      await storage.updatePractitioner(practitionerId, { in_service: true });
+      await storage.updatePractitioner(practitionerId, { inService: true });
 
       res.json({ sessionId: session.id });
     } catch (error: any) {
@@ -203,25 +203,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Verify user is participant
-      if (userId !== session.guest_id && userId !== session.practitioner_id) {
+      if (userId !== session.guestId && userId !== session.practitionerId) {
         return res.status(403).json({ error: 'Not a session participant' });
       }
 
       const updates: Partial<typeof session> = {};
       
       if (who === 'guest') {
-        updates.ready_guest = true;
+        updates.readyGuest = true;
       } else {
-        updates.ready_practitioner = true;
+        updates.readyPractitioner = true;
       }
 
       // Check if both ready, transition to live
-      const bothReady = (who === 'guest' ? true : session.ready_guest) && 
-                        (who === 'practitioner' ? true : session.ready_practitioner);
+      const bothReady = (who === 'guest' ? true : session.readyGuest) && 
+                        (who === 'practitioner' ? true : session.readyPractitioner);
 
       if (bothReady && session.phase === 'waiting') {
         updates.phase = 'live';
-        updates.live_started_at = new Date();
+        updates.liveStartedAt = new Date();
       }
 
       const updatedSession = await storage.updateSession(sessionId, updates);
@@ -244,7 +244,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Verify user is participant
-      if (userId !== session.guest_id && userId !== session.practitioner_id) {
+      if (userId !== session.guestId && userId !== session.practitionerId) {
         return res.status(403).json({ error: 'Not a session participant' });
       }
 
@@ -269,17 +269,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Verify user is participant
-      if (userId !== session.guest_id && userId !== session.practitioner_id) {
+      if (userId !== session.guestId && userId !== session.practitionerId) {
         return res.status(403).json({ error: 'Not a session participant' });
       }
 
       const updatedSession = await storage.updateSession(sessionId, {
         phase: 'ended',
-        ended_at: new Date(),
+        endedAt: new Date(),
       });
 
       // Mark practitioner as not in service
-      await storage.updatePractitioner(session.practitioner_id, { in_service: false });
+      await storage.updatePractitioner(session.practitionerId, { inService: false });
 
       res.json(updatedSession);
     } catch (error: any) {
@@ -344,14 +344,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Verify user is the guest
-      if (userId !== session.guest_id) {
+      if (userId !== session.guestId) {
         return res.status(403).json({ error: 'Only guests can submit reviews' });
       }
 
       const review = await storage.createReview({
-        session_id: sessionId,
-        guest_id: userId,
-        practitioner_id: session.practitioner_id,
+        sessionId: sessionId,
+        guestId: userId,
+        practitionerId: session.practitionerId,
         rating,
         comment: comment || null,
       });
