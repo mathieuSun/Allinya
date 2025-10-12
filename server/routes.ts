@@ -5,6 +5,7 @@ import { requireAuth } from "./auth";
 import { z } from "zod";
 import { randomUUID } from "crypto";
 import { createRequire } from "module";
+import { agoraConfig } from "./config";
 
 // Import Agora token builder (CommonJS module)
 const require = createRequire(import.meta.url);
@@ -302,8 +303,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // In a real implementation, you'd query sessions by agoraChannel
       // For now, we'll trust the request is valid since we verify user is authenticated
 
-      const appId = process.env.AGORA_APP_ID;
-      const appCertificate = process.env.AGORA_APP_CERTIFICATE;
+      const { appId, appCertificate } = agoraConfig;
 
       if (!appId || !appCertificate) {
         return res.status(500).json({ error: 'Agora credentials not configured' });
