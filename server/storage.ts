@@ -9,10 +9,13 @@ import {
   type InsertReview,
   type PractitionerWithProfile,
   type SessionWithParticipants,
+  profiles,
+  practitioners,
+  sessions,
+  reviews,
 } from "@shared/schema";
-import { db } from "@db";
-import { profiles, practitioners, sessions, reviews } from "@shared/schema";
-import { eq, and } from "drizzle-orm";
+import { db } from "./db";
+import { eq } from "drizzle-orm";
 
 export interface IStorage {
   // Profile operations

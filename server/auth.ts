@@ -1,17 +1,11 @@
 import { createClient } from '@supabase/supabase-js';
 import type { Request, Response, NextFunction } from 'express';
 
-// Extract Supabase URL from DATABASE_URL if needed
-let supabaseUrl = process.env.SUPABASE_URL;
-if (!supabaseUrl && process.env.DATABASE_URL) {
-  // Extract from postgres://... format
-  const dbUrl = new URL(process.env.DATABASE_URL);
-  supabaseUrl = `https://${dbUrl.hostname.split('.')[0]}.supabase.co`;
-}
-
+const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 if (!supabaseUrl || !supabaseServiceKey) {
+  console.error('Missing Supabase configuration. Please set SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY');
   throw new Error('Missing Supabase configuration');
 }
 

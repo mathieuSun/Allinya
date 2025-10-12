@@ -4,7 +4,13 @@ import { storage } from "./storage";
 import { requireAuth } from "./auth";
 import { z } from "zod";
 import { randomUUID } from "crypto";
-import { RtcTokenBuilder, RtcRole } from "agora-access-token";
+import { createRequire } from "module";
+
+// Import Agora token builder (CommonJS module)
+const require = createRequire(import.meta.url);
+const AgoraToken = require("agora-token");
+const RtcTokenBuilder = AgoraToken.RtcTokenBuilder;
+const Role = AgoraToken.Role;
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // POST /api/auth/role-init - Set user role on first login
@@ -304,7 +310,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const privilegeExpireTime = Math.floor(Date.now() / 1000) + 3600; // 1 hour
-      const agoraRole = role === 'host' ? RtcRole.PUBLISHER : RtcRole.SUBSCRIBER;
+      const agoraRole = role === 'host' ? Role.PUBLISHER : Role.SUBSCRIBER;
 
       const token = RtcTokenBuilder.buildTokenWithUid(
         appId,
