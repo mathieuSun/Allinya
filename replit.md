@@ -144,6 +144,21 @@ To set up their profiles, run `server/create-test-users.sql` in Supabase SQL Edi
 
 ## Recent Changes
 
+### 2024-10-13 (Critical Bug Fixes - File Upload, Logout, Session Creation)
+- **Fixed file upload modal not displaying**:
+  - Added Uppy CSS CDN link to index.html
+  - Modal now properly displays file picker for avatar/video/gallery uploads
+- **Fixed session creation timestamp error**:
+  - Updated toSnakeCase() to properly handle Date objects by converting to ISO strings
+  - Resolved "Invalid input syntax for type timestamp" database error
+- **Fixed logout error handling**:
+  - Added try-catch block with toast notifications for logout failures
+  - Removed redundant manual navigation (auth listener handles redirect)
+  - Prevents silent logout failures
+- **Added file type restrictions**:
+  - Images: .jpg, .jpeg, .png, .gif, .webp
+  - Videos: .mp4, .mov, .avi, .mkv, .webm
+
 ### 2024-10-13 (Auth & UX Overhaul)
 - **Fixed critical auth token forwarding**:
   - AuthContext now properly attaches Supabase access_token as Bearer header to all API requests
