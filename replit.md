@@ -144,6 +144,22 @@ To set up their profiles, run `server/create-test-users.sql` in Supabase SQL Edi
 
 ## Recent Changes
 
+### 2024-10-13 (Auth & UX Overhaul)
+- **Fixed critical auth token forwarding**:
+  - AuthContext now properly attaches Supabase access_token as Bearer header to all API requests
+  - Fixed refresh loops by gracefully handling transient token unavailability during sign-in/sign-up
+  - Profile data now persists correctly after page reload
+- **Redesigned auth page with role selection**:
+  - Two-step flow: first select Guest vs Practitioner role, then sign in/up
+  - Clear visual cards showing "I'm a Guest" vs "I'm a Practitioner"
+  - Role-specific messaging and automatic role initialization
+- **Enhanced explore page**:
+  - Now shows ALL practitioners (not just online ones)
+  - Visual distinction: online practitioners in full color with green badge, offline greyed out with grey badge
+  - Disabled "Start Session" button for offline practitioners
+  - Real-time updates for practitioner status changes
+- **All critical bugs fixed**: Auth flow works end-to-end, data persists correctly
+
 ### 2024-10-12 (Testing & Bug Fixes)
 - **Authentication fixes**:
   - Added /login route (aliased to /auth)
@@ -153,7 +169,6 @@ To set up their profiles, run `server/create-test-users.sql` in Supabase SQL Edi
   - Applied conversion to ALL storage layer GET operations (profiles, practitioners, sessions, reviews)
   - Fixed AuthContext to use backend API (/api/profile) instead of direct Supabase queries
   - Added missing GET /api/profile endpoint
-- **Known issue**: Auth session persistence needs investigation (Supabase session not properly restored on page reload)
 
 ### 2024-10-12 (Schema & Configuration)
 - Fixed practitioners table missing created_at/updated_at timestamps
