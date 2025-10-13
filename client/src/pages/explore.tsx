@@ -13,21 +13,21 @@ import type { PractitionerWithProfile } from '@shared/schema';
 export default function ExplorePage() {
   const [, setLocation] = useLocation();
   const { profile, signOut } = useAuth();
-  const [onlinePractitioners, setOnlinePractitioners] = useState<PractitionerWithProfile[]>([]);
+  const [allPractitioners, setAllPractitioners] = useState<PractitionerWithProfile[]>([]);
 
-  // Fetch online practitioners
+  // Fetch all practitioners (online and offline)
   const { data: practitioners, isLoading } = useQuery<PractitionerWithProfile[]>({
-    queryKey: ['/api/practitioners/online'],
+    queryKey: ['/api/practitioners'],
   });
 
   // Subscribe to realtime updates
   useEffect(() => {
     if (practitioners) {
-      setOnlinePractitioners(practitioners);
+      setAllPractitioners(practitioners);
     }
 
     const channel = supabase
-      .channel('practitioners-online')
+      .channel('practitioners-status')
       .on(
         'postgres_changes',
         {
@@ -37,10 +37,10 @@ export default function ExplorePage() {
         },
         async () => {
           // Refetch when practitioners table changes
-          const response = await fetch('/api/practitioners/online');
+          const response = await fetch('/api/practitioners');
           if (response.ok) {
             const data = await response.json();
-            setOnlinePractitioners(data);
+            setAllPractitioners(data);
           }
         }
       )
@@ -89,9 +89,9 @@ export default function ExplorePage() {
 
       <main className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8 py-12">
         <div className="mb-8">
-          <h2 className="text-4xl font-bold tracking-tight mb-4">Online Practitioners</h2>
+          <h2 className="text-4xl font-bold tracking-tight mb-4">Practitioners</h2>
           <p className="text-xl text-muted-foreground">
-            Connect with available practitioners for an instant healing session
+            Connect with healing practitioners • Online practitioners shown in full color
           </p>
         </div>
 
@@ -99,17 +99,19 @@ export default function ExplorePage() {
           <div className="flex items-center justify-center py-20">
             <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
           </div>
-        ) : onlinePractitioners.length === 0 ? (
+        ) : allPractitioners.length === 0 ? (
           <div className="text-center py-20">
-            <p className="text-xl text-muted-foreground">No practitioners are currently online</p>
+            <p className="text-xl text-muted-foreground">No practitioners available</p>
             <p className="text-sm text-muted-foreground mt-2">Please check back later</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {onlinePractitioners.map((practitioner) => (
+            {allPractitioners.map((practitioner) => {
+              const isOnline = practitioner.online;
+              return (
               <Card
                 key={practitioner.userId}
-                className="hover-elevate transition-all cursor-pointer overflow-hidden"
+                className={`hover-elevate transition-all cursor-pointer overflow-hidden ${!isOnline ? 'opacity-50 grayscale' : ''}`}
                 onClick={() => setLocation(`/p/${practitioner.userId}`)}
                 data-testid={`card-practitioner-${practitioner.userId}`}
               >
@@ -130,6 +132,20 @@ export default function ExplorePage() {
                     </div>
                   )}
                   <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+                  {isOnline && (
+                    <div className="absolute top-4 right-4">
+                      <Badge className="bg-green-500 text-white" data-testid="badge-online">
+                        Online
+                      </Badge>
+                    </div>
+                  )}
+                  {!isOnline && (
+                    <div className="absolute top-4 right-4">
+                      <Badge variant="secondary" className="bg-gray-500 text-white" data-testid="badge-offline">
+                        Offline
+                      </Badge>
+                    </div>
+                  )}
                   <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
                     <h3 className="text-2xl font-semibold mb-2" data-testid={`text-practitioner-name-${practitioner.userId}`}>
                       {practitioner.profile.displayName}
@@ -157,12 +173,17 @@ export default function ExplorePage() {
                   </div>
                 </div>
                 <CardContent className="p-6">
-                  <Button className="w-full" data-testid={`button-start-${practitioner.userId}`}>
-                    Start Session
+                  <Button 
+                    className="w-full" 
+                    disabled={!isOnline}
+                    data-testid={`button-start-${practitioner.userId}`}
+                  >
+                    {isOnline ? 'Start Session' : 'Offline'}
                   </Button>
                 </CardContent>
               </Card>
-            ))}
+            );
+            })}
           </div>
         )}
       </main>

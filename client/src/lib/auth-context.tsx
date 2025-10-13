@@ -27,13 +27,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     try {
+      // Get Supabase session token
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session?.access_token) {
+        // Token not available yet (happens during sign-up/sign-in transitions)
+        // Don't null the profile, just wait for next refresh
+        console.log('Waiting for session token...');
+        return;
+      }
+
       const response = await fetch('/api/profile', {
         credentials: 'include',
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`,
+        },
       });
 
       if (!response.ok) {
-        console.error('Error fetching profile:', response.status);
-        setProfile(null);
+        if (response.status === 404) {
+          // Profile doesn't exist yet - this is okay for new users
+          setProfile(null);
+        } else {
+          console.error('Error fetching profile:', response.status);
+        }
         return;
       }
 
@@ -41,7 +58,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setProfile(data);
     } catch (error) {
       console.error('Error fetching profile:', error);
-      setProfile(null);
     }
   };
 

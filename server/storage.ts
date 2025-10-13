@@ -26,6 +26,7 @@ export interface IStorage {
   getPractitioner(userId: string): Promise<Practitioner | undefined>;
   createPractitioner(practitioner: InsertPractitioner): Promise<Practitioner>;
   updatePractitioner(userId: string, updates: Partial<Practitioner>): Promise<Practitioner>;
+  getAllPractitioners(): Promise<PractitionerWithProfile[]>;
   getOnlinePractitioners(): Promise<PractitionerWithProfile[]>;
   getPractitionerWithProfile(userId: string): Promise<PractitionerWithProfile | undefined>;
 
@@ -167,6 +168,21 @@ export class DbStorage implements IStorage {
     
     if (error) throw error;
     return toCamelCase(data) as Practitioner;
+  }
+
+  async getAllPractitioners(): Promise<PractitionerWithProfile[]> {
+    const { data, error } = await supabase
+      .from('practitioners')
+      .select(`
+        *,
+        profile:profiles!user_id (*)
+      `)
+      .order('online', { ascending: false })
+      .order('rating', { ascending: false });
+    
+    if (error) throw error;
+    
+    return toCamelCase(data || []) as PractitionerWithProfile[];
   }
 
   async getOnlinePractitioners(): Promise<PractitionerWithProfile[]> {

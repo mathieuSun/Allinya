@@ -126,6 +126,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // GET /api/practitioners - Get all practitioners (online first, then offline)
+  app.get('/api/practitioners', async (req: Request, res: Response) => {
+    try {
+      const practitioners = await storage.getAllPractitioners();
+      res.json(practitioners);
+    } catch (error: any) {
+      res.status(400).json({ error: error.message });
+    }
+  });
+
   // GET /api/practitioners/online - Get online practitioners
   app.get('/api/practitioners/online', async (req: Request, res: Response) => {
     try {

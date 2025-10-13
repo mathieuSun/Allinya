@@ -7,7 +7,10 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Heart, User } from 'lucide-react';
+import { apiRequest } from '@/lib/queryClient';
+
+type UserRole = 'guest' | 'practitioner';
 
 export default function AuthPage() {
   const [, setLocation] = useLocation();
@@ -16,6 +19,7 @@ export default function AuthPage() {
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [selectedRole, setSelectedRole] = useState<UserRole | null>(null);
 
   // Redirect if already has profile
   if (profile) {
@@ -49,13 +53,21 @@ export default function AuthPage() {
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!selectedRole) return;
+    
     setLoading(true);
 
     try {
       await signUp(email, password);
+      
+      // Initialize role
+      await apiRequest('POST', '/api/auth/role-init', { role: selectedRole });
+      
       toast({
         title: 'Account created!',
-        description: 'Please check your email to verify your account.',
+        description: selectedRole === 'guest' 
+          ? 'Welcome! You can now explore practitioners.' 
+          : 'Welcome! Please complete your practitioner profile.',
       });
     } catch (error: any) {
       toast({
@@ -68,13 +80,82 @@ export default function AuthPage() {
     }
   };
 
+  // Role selection screen
+  if (!selectedRole) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background p-4">
+        <Card className="w-full max-w-2xl">
+          <CardHeader className="space-y-1 text-center">
+            <CardTitle className="text-3xl font-bold">Allinya</CardTitle>
+            <CardDescription>
+              Connect with healing practitioners for instant sessions
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="grid md:grid-cols-2 gap-4">
+            <Card 
+              className="cursor-pointer hover-elevate active-elevate-2 transition-all"
+              onClick={() => setSelectedRole('guest')}
+              data-testid="card-role-guest"
+            >
+              <CardHeader className="text-center">
+                <div className="mx-auto w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-4">
+                  <User className="w-8 h-8 text-primary" />
+                </div>
+                <CardTitle>I'm a Guest</CardTitle>
+                <CardDescription>
+                  Looking for healing sessions
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="text-center text-sm text-muted-foreground">
+                Browse available practitioners and book instant sessions
+              </CardContent>
+            </Card>
+
+            <Card 
+              className="cursor-pointer hover-elevate active-elevate-2 transition-all"
+              onClick={() => setSelectedRole('practitioner')}
+              data-testid="card-role-practitioner"
+            >
+              <CardHeader className="text-center">
+                <div className="mx-auto w-16 h-16 rounded-full bg-secondary/10 flex items-center justify-center mb-4">
+                  <Heart className="w-8 h-8 text-secondary" />
+                </div>
+                <CardTitle>I'm a Practitioner</CardTitle>
+                <CardDescription>
+                  Offering healing services
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="text-center text-sm text-muted-foreground">
+                Share your gifts and connect with people seeking healing
+              </CardContent>
+            </Card>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  // Auth form screen
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-1">
-          <CardTitle className="text-3xl font-bold text-center">Allinya</CardTitle>
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={() => setSelectedRole(null)}
+            className="w-fit"
+            data-testid="button-back"
+          >
+            ← Back
+          </Button>
+          <CardTitle className="text-2xl font-bold text-center">
+            {selectedRole === 'guest' ? 'Guest Account' : 'Practitioner Account'}
+          </CardTitle>
           <CardDescription className="text-center">
-            Connect with healing practitioners for instant sessions
+            {selectedRole === 'guest' 
+              ? 'Find and connect with healing practitioners' 
+              : 'Share your healing gifts with those in need'}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -155,7 +236,7 @@ export default function AuthPage() {
                       Creating account...
                     </>
                   ) : (
-                    'Create Account'
+                    `Sign Up as ${selectedRole === 'guest' ? 'Guest' : 'Practitioner'}`
                   )}
                 </Button>
               </form>
