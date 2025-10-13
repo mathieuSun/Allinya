@@ -240,10 +240,17 @@ export default function ProfilePage() {
               )}
               <Button
                 variant="ghost"
-                onClick={() => {
-                  signOut().then(() => {
-                    setLocation('/auth');
-                  });
+                onClick={async () => {
+                  try {
+                    await signOut();
+                    // Navigation will be handled by auth state listener
+                  } catch (error: any) {
+                    toast({
+                      title: 'Logout failed',
+                      description: error.message,
+                      variant: 'destructive',
+                    });
+                  }
                 }}
                 data-testid="button-logout"
               >

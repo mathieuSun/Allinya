@@ -43,6 +43,7 @@ export interface IStorage {
 // Helper function to convert camelCase to snake_case
 function toSnakeCase(obj: any): any {
   if (obj === null || obj === undefined) return obj;
+  if (obj instanceof Date) return obj.toISOString();
   if (Array.isArray(obj)) return obj.map(toSnakeCase);
   if (typeof obj !== 'object') return obj;
   
