@@ -76,19 +76,8 @@ export default function ProfilePage() {
     },
   });
 
-  useEffect(() => {
-    if (profile) {
-      form.reset({
-        displayName: profile.displayName || '',
-        country: profile.country || '',
-        bio: profile.bio || '',
-        specialties: profile.specialties || [],
-        avatarUrl: profile.avatarUrl || '',
-        galleryUrls: profile.galleryUrls || [],
-        videoUrl: profile.videoUrl || '',
-      });
-    }
-  }, [profile]);
+  // Only reset form values when component first mounts with profile data
+  // No need for useEffect - form initializes with profile data already
 
   useEffect(() => {
     if (!profile || !user) {
@@ -251,9 +240,10 @@ export default function ProfilePage() {
               )}
               <Button
                 variant="ghost"
-                onClick={async () => {
-                  await signOut();
-                  setLocation('/login');
+                onClick={() => {
+                  signOut().then(() => {
+                    setLocation('/auth');
+                  });
                 }}
                 data-testid="button-logout"
               >
@@ -293,6 +283,7 @@ export default function ProfilePage() {
                       <ObjectUploader
                         maxNumberOfFiles={1}
                         maxFileSize={5242880} // 5MB
+                        allowedFileTypes={['image/*', '.jpg', '.jpeg', '.png', '.gif', '.webp']}
                         onGetUploadParameters={handleGetUploadParameters}
                         onComplete={handleAvatarUpload}
                       >
@@ -401,6 +392,7 @@ export default function ProfilePage() {
                       <ObjectUploader
                         maxNumberOfFiles={3}
                         maxFileSize={5242880} // 5MB
+                        allowedFileTypes={['image/*', '.jpg', '.jpeg', '.png', '.gif', '.webp']}
                         onGetUploadParameters={handleGetUploadParameters}
                         onComplete={handleGalleryUpload}
                       >
@@ -431,6 +423,7 @@ export default function ProfilePage() {
                       <ObjectUploader
                         maxNumberOfFiles={1}
                         maxFileSize={104857600} // 100MB for videos
+                        allowedFileTypes={['video/*', '.mp4', '.mov', '.avi', '.mkv', '.webm']}
                         onGetUploadParameters={handleGetUploadParameters}
                         onComplete={handleVideoUpload}
                       >
