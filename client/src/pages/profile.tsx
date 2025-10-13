@@ -13,23 +13,25 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Badge } from '@/components/ui/badge';
 import { apiRequest, queryClient } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Plus, X, Power, PowerOff, LogOut } from 'lucide-react';
+import { Loader2, Plus, X, Power, PowerOff, LogOut, Upload, ImageIcon, VideoIcon } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useQuery, useMutation } from '@tanstack/react-query';
+import { ObjectUploader } from '@/components/ObjectUploader';
+import type { UploadResult } from '@uppy/core';
 
 const guestProfileSchema = z.object({
   displayName: z.string().min(1, 'Display name is required'),
   country: z.string().optional(),
-  avatarUrl: z.string().url().optional().or(z.literal('')),
+  avatarUrl: z.string().optional(),
 });
 
 const practitionerProfileSchema = z.object({
   displayName: z.string().min(1, 'Display name is required'),
   bio: z.string().min(10, 'Bio must be at least 10 characters'),
   specialties: z.array(z.string()).max(4, 'Maximum 4 specialties allowed'),
-  avatarUrl: z.string().url().optional().or(z.literal('')),
-  galleryUrls: z.array(z.string().url()).max(3, 'Maximum 3 gallery images allowed'),
-  videoUrl: z.string().url().optional().or(z.literal('')),
+  avatarUrl: z.string().optional(),
+  galleryUrls: z.array(z.string()).max(3, 'Maximum 3 gallery images allowed'),
+  videoUrl: z.string().optional(),
 });
 
 export default function ProfilePage() {
@@ -37,7 +39,9 @@ export default function ProfilePage() {
   const { profile, user, refreshProfile, signOut } = useAuth();
   const { toast } = useToast();
   const [specialtyInput, setSpecialtyInput] = useState('');
-  const [galleryInput, setGalleryInput] = useState('');
+  const [uploadedAvatarUrl, setUploadedAvatarUrl] = useState<string | null>(null);
+  const [uploadedVideoUrl, setUploadedVideoUrl] = useState<string | null>(null);
+  const [uploadedGalleryUrls, setUploadedGalleryUrls] = useState<string[]>([]);
 
   // Fetch practitioner status if applicable
   const { data: practitionerStatus } = useQuery({
@@ -52,7 +56,8 @@ export default function ProfilePage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/practitioners/status'] });
-      toast({ title: practitionerStatus?.online ? 'You are now offline' : 'You are now online' });
+      const isOnline = (practitionerStatus as any)?.online;
+      toast({ title: isOnline ? 'You are now offline' : 'You are now online' });
     },
   });
 
@@ -85,13 +90,19 @@ export default function ProfilePage() {
     }
   }, [profile]);
 
+  useEffect(() => {
+    if (!profile || !user) {
+      setLocation('/auth');
+    } else if (!profile.role) {
+      setLocation('/onboarding');
+    }
+  }, [profile, user, setLocation]);
+
   if (!profile || !user) {
-    setLocation('/auth');
     return null;
   }
 
   if (!profile.role) {
-    setLocation('/onboarding');
     return null;
   }
 
@@ -126,11 +137,7 @@ export default function ProfilePage() {
   };
 
   const addGalleryUrl = () => {
-    const current = form.getValues('galleryUrls') || [];
-    if (galleryInput.trim() && current.length < 3) {
-      form.setValue('galleryUrls', [...current, galleryInput.trim()]);
-      setGalleryInput('');
-    }
+    // Removed - using file upload instead
   };
 
   const removeGalleryUrl = (index: number) => {
@@ -139,6 +146,75 @@ export default function ProfilePage() {
       'galleryUrls',
       current.filter((_, i) => i !== index)
     );
+  };
+
+  // File upload handlers
+  const handleGetUploadParameters = async () => {
+    const response = await fetch('/api/objects/upload', {
+      method: 'POST',
+      credentials: 'include',
+    });
+    const { uploadURL } = await response.json();
+    return { method: 'PUT' as const, url: uploadURL };
+  };
+
+  const handleAvatarUpload = async (result: UploadResult<Record<string, unknown>, Record<string, unknown>>) => {
+    if (result.successful && result.successful.length > 0) {
+      const uploadedFile = result.successful[0];
+      const uploadURL = uploadedFile.uploadURL;
+      
+      const response: any = await apiRequest('PUT', '/api/profile/avatar', {
+        avatarURL: uploadURL,
+      });
+      
+      setUploadedAvatarUrl(response.avatarUrl);
+      form.setValue('avatarUrl', response.avatarUrl);
+      await refreshProfile();
+      
+      toast({
+        title: 'Avatar uploaded successfully',
+      });
+    }
+  };
+
+  const handleVideoUpload = async (result: UploadResult<Record<string, unknown>, Record<string, unknown>>) => {
+    if (result.successful && result.successful.length > 0) {
+      const uploadedFile = result.successful[0];
+      const uploadURL = uploadedFile.uploadURL;
+      
+      const response: any = await apiRequest('PUT', '/api/profile/video', {
+        videoURL: uploadURL,
+      });
+      
+      setUploadedVideoUrl(response.videoUrl);
+      form.setValue('videoUrl', response.videoUrl);
+      await refreshProfile();
+      
+      toast({
+        title: 'Video uploaded successfully',
+      });
+    }
+  };
+
+  const handleGalleryUpload = async (result: UploadResult<Record<string, unknown>, Record<string, unknown>>) => {
+    if (result.successful && result.successful.length > 0) {
+      const uploadURLs = result.successful.map(file => file.uploadURL);
+      
+      const existingUrls = form.getValues('galleryUrls') || [];
+      const newUrls = [...existingUrls, ...uploadURLs].slice(0, 3);
+      
+      const response: any = await apiRequest('PUT', '/api/profile/gallery', {
+        galleryURLs: newUrls,
+      });
+      
+      setUploadedGalleryUrls(response.galleryUrls);
+      form.setValue('galleryUrls', response.galleryUrls);
+      await refreshProfile();
+      
+      toast({
+        title: 'Gallery images uploaded successfully',
+      });
+    }
   };
 
   return (
@@ -155,12 +231,12 @@ export default function ProfilePage() {
               )}
               {profile.role === 'practitioner' && (
                 <Button
-                  variant={practitionerStatus?.online ? 'default' : 'outline'}
-                  onClick={() => toggleOnlineMutation.mutate(!practitionerStatus?.online)}
+                  variant={(practitionerStatus as any)?.online ? 'default' : 'outline'}
+                  onClick={() => toggleOnlineMutation.mutate(!(practitionerStatus as any)?.online)}
                   disabled={toggleOnlineMutation.isPending}
                   data-testid="button-toggle-online"
                 >
-                  {practitionerStatus?.online ? (
+                  {(practitionerStatus as any)?.online ? (
                     <>
                       <Power className="mr-2 h-4 w-4" />
                       Online
@@ -206,25 +282,29 @@ export default function ProfilePage() {
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                 <div className="flex items-center gap-6 mb-6">
                   <Avatar className="h-24 w-24">
-                    <AvatarImage src={form.watch('avatarUrl')} />
+                    <AvatarImage src={uploadedAvatarUrl || form.watch('avatarUrl')} />
                     <AvatarFallback className="text-2xl">
                       {profile.displayName?.[0]?.toUpperCase() || 'U'}
                     </AvatarFallback>
                   </Avatar>
                   <div className="flex-1">
-                    <FormField
-                      control={form.control}
-                      name="avatarUrl"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Avatar URL</FormLabel>
-                          <FormControl>
-                            <Input placeholder="https://example.com/avatar.jpg" {...field} data-testid="input-avatar-url" />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
+                    <div className="space-y-2">
+                      <Label>Avatar Picture</Label>
+                      <ObjectUploader
+                        maxNumberOfFiles={1}
+                        maxFileSize={5242880} // 5MB
+                        onGetUploadParameters={handleGetUploadParameters}
+                        onComplete={handleAvatarUpload}
+                      >
+                        <div className="flex items-center gap-2">
+                          <Upload className="h-4 w-4" />
+                          <span>Upload Avatar from Computer</span>
+                        </div>
+                      </ObjectUploader>
+                      {(uploadedAvatarUrl || form.watch('avatarUrl')) && (
+                        <p className="text-sm text-muted-foreground">Current avatar uploaded</p>
                       )}
-                    />
+                    </div>
                   </div>
                 </div>
 
@@ -318,26 +398,19 @@ export default function ProfilePage() {
 
                     <div className="space-y-2">
                       <Label>Gallery Images (max 3)</Label>
-                      <div className="flex gap-2">
-                        <Input
-                          placeholder="https://example.com/image.jpg"
-                          value={galleryInput}
-                          onChange={(e) => setGalleryInput(e.target.value)}
-                          onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addGalleryUrl())}
-                          data-testid="input-gallery-url"
-                        />
-                        <Button
-                          type="button"
-                          variant="outline"
-                          onClick={addGalleryUrl}
-                          disabled={(form.watch('galleryUrls') || []).length >= 3}
-                          data-testid="button-add-gallery"
-                        >
-                          <Plus className="h-4 w-4" />
-                        </Button>
-                      </div>
+                      <ObjectUploader
+                        maxNumberOfFiles={3}
+                        maxFileSize={5242880} // 5MB
+                        onGetUploadParameters={handleGetUploadParameters}
+                        onComplete={handleGalleryUpload}
+                      >
+                        <div className="flex items-center gap-2">
+                          <ImageIcon className="h-4 w-4" />
+                          <span>Upload Gallery Images from Computer</span>
+                        </div>
+                      </ObjectUploader>
                       <div className="grid grid-cols-3 gap-4 mt-2">
-                        {(form.watch('galleryUrls') || []).map((url, index) => (
+                        {(uploadedGalleryUrls.length > 0 ? uploadedGalleryUrls : form.watch('galleryUrls') || []).map((url, index) => (
                           <div key={index} className="relative aspect-square rounded-lg overflow-hidden border border-border" data-testid={`gallery-image-${index}`}>
                             <img src={url} alt={`Gallery ${index + 1}`} className="w-full h-full object-cover" />
                             <button
@@ -353,19 +426,23 @@ export default function ProfilePage() {
                       </div>
                     </div>
 
-                    <FormField
-                      control={form.control}
-                      name="videoUrl"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Video URL (optional)</FormLabel>
-                          <FormControl>
-                            <Input placeholder="https://youtube.com/..." {...field} data-testid="input-video-url" />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
+                    <div className="space-y-2">
+                      <Label>Introduction Video (optional)</Label>
+                      <ObjectUploader
+                        maxNumberOfFiles={1}
+                        maxFileSize={104857600} // 100MB for videos
+                        onGetUploadParameters={handleGetUploadParameters}
+                        onComplete={handleVideoUpload}
+                      >
+                        <div className="flex items-center gap-2">
+                          <VideoIcon className="h-4 w-4" />
+                          <span>Upload Video from Computer</span>
+                        </div>
+                      </ObjectUploader>
+                      {(uploadedVideoUrl || form.watch('videoUrl')) && (
+                        <p className="text-sm text-muted-foreground">Video uploaded successfully</p>
                       )}
-                    />
+                    </div>
                   </>
                 )}
 

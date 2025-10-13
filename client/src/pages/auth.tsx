@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useLocation } from 'wouter';
 import { useAuth } from '@/lib/auth-context';
 import { Button } from '@/components/ui/button';
@@ -22,16 +22,17 @@ export default function AuthPage() {
   const [selectedRole, setSelectedRole] = useState<UserRole | null>(null);
 
   // Redirect if already has profile
-  if (profile) {
-    if (!profile.role) {
-      setLocation('/onboarding');
-    } else if (profile.role === 'guest') {
-      setLocation('/explore');
-    } else {
-      setLocation('/profile');
+  useEffect(() => {
+    if (profile) {
+      if (!profile.role) {
+        setLocation('/onboarding');
+      } else if (profile.role === 'guest') {
+        setLocation('/explore');
+      } else {
+        setLocation('/profile');
+      }
     }
-    return null;
-  }
+  }, [profile, setLocation]);
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();

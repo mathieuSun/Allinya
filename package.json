@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@faker-js/faker": "^10.0.0",
+    "@google-cloud/storage": "^7.17.2",
     "@hookform/resolvers": "^3.10.0",
     "@jridgewell/trace-mapping": "^0.3.25",
     "@neondatabase/serverless": "^0.10.4",
@@ -51,6 +52,10 @@
     "@testing-library/user-event": "^14.6.1",
     "@types/dotenv": "^6.1.1",
     "@types/supertest": "^6.0.3",
+    "@uppy/aws-s3": "^5.0.1",
+    "@uppy/core": "^5.1.0",
+    "@uppy/dashboard": "^5.0.2",
+    "@uppy/react": "^5.1.0",
     "@vitest/ui": "^3.2.4",
     "agora-rtc-sdk-ng": "^4.24.0",
     "agora-token": "^2.0.5",

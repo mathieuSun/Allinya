@@ -6,6 +6,8 @@ import { z } from "zod";
 import { randomUUID } from "crypto";
 import { createRequire } from "module";
 import { agoraConfig } from "./config";
+import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage";
+import { ObjectPermission } from "./objectAcl";
 
 // Import Agora token builder (CommonJS module)
 const require = createRequire(import.meta.url);
@@ -385,6 +387,149 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(review);
     } catch (error: any) {
       res.status(400).json({ error: error.message });
+    }
+  });
+
+  // Object Storage Endpoints
+  
+  // Serve public objects
+  app.get("/public-objects/:filePath(*)", async (req, res) => {
+    const filePath = req.params.filePath;
+    const objectStorageService = new ObjectStorageService();
+    try {
+      const file = await objectStorageService.searchPublicObject(filePath);
+      if (!file) {
+        return res.status(404).json({ error: "File not found" });
+      }
+      objectStorageService.downloadObject(file, res);
+    } catch (error) {
+      console.error("Error searching for public object:", error);
+      return res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  // Serve private objects with ACL check  
+  app.get("/objects/:objectPath(*)", requireAuth, async (req: Request, res: Response) => {
+    const userId = req.user?.id;
+    const objectStorageService = new ObjectStorageService();
+    try {
+      const objectFile = await objectStorageService.getObjectEntityFile(req.path);
+      const canAccess = await objectStorageService.canAccessObjectEntity({
+        objectFile,
+        userId: userId,
+        requestedPermission: ObjectPermission.READ,
+      });
+      if (!canAccess) {
+        return res.sendStatus(401);
+      }
+      objectStorageService.downloadObject(objectFile, res);
+    } catch (error) {
+      console.error("Error checking object access:", error);
+      if (error instanceof ObjectNotFoundError) {
+        return res.sendStatus(404);
+      }
+      return res.sendStatus(500);
+    }
+  });
+
+  // Get upload URL for object entity
+  app.post("/api/objects/upload", requireAuth, async (req: Request, res: Response) => {
+    const objectStorageService = new ObjectStorageService();
+    const uploadURL = await objectStorageService.getObjectEntityUploadURL();
+    res.json({ uploadURL });
+  });
+
+  // Update profile with uploaded avatar
+  app.put("/api/profile/avatar", requireAuth, async (req: Request, res: Response) => {
+    if (!req.body.avatarURL) {
+      return res.status(400).json({ error: "avatarURL is required" });
+    }
+
+    const userId = req.user!.id;
+
+    try {
+      const objectStorageService = new ObjectStorageService();
+      const objectPath = await objectStorageService.trySetObjectEntityAclPolicy(
+        req.body.avatarURL,
+        {
+          owner: userId,
+          visibility: "public", // Profile avatars should be public
+          aclRules: [],
+        }
+      );
+
+      // Update profile with the avatar path
+      const profile = await storage.updateProfile(userId, {
+        avatarUrl: objectPath,
+      });
+
+      res.status(200).json(profile);
+    } catch (error) {
+      console.error("Error setting avatar:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  // Update profile with uploaded video
+  app.put("/api/profile/video", requireAuth, async (req: Request, res: Response) => {
+    if (!req.body.videoURL) {
+      return res.status(400).json({ error: "videoURL is required" });
+    }
+
+    const userId = req.user!.id;
+
+    try {
+      const objectStorageService = new ObjectStorageService();
+      const objectPath = await objectStorageService.trySetObjectEntityAclPolicy(
+        req.body.videoURL,
+        {
+          owner: userId,
+          visibility: "public", // Profile videos should be public
+          aclRules: [],
+        }
+      );
+
+      // Update profile with the video path
+      const profile = await storage.updateProfile(userId, {
+        videoUrl: objectPath,
+      });
+
+      res.status(200).json(profile);
+    } catch (error) {
+      console.error("Error setting video:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  // Update profile with gallery images
+  app.put("/api/profile/gallery", requireAuth, async (req: Request, res: Response) => {
+    if (!req.body.galleryURLs || !Array.isArray(req.body.galleryURLs)) {
+      return res.status(400).json({ error: "galleryURLs array is required" });
+    }
+
+    const userId = req.user!.id;
+
+    try {
+      const objectStorageService = new ObjectStorageService();
+      const galleryPaths = await Promise.all(
+        req.body.galleryURLs.map(async (url: string) => {
+          return await objectStorageService.trySetObjectEntityAclPolicy(url, {
+            owner: userId,
+            visibility: "public", // Gallery images should be public
+            aclRules: [],
+          });
+        })
+      );
+
+      // Update profile with the gallery paths
+      const profile = await storage.updateProfile(userId, {
+        galleryUrls: galleryPaths,
+      });
+
+      res.status(200).json(profile);
+    } catch (error) {
+      console.error("Error setting gallery images:", error);
+      res.status(500).json({ error: "Internal server error" });
     }
   });
 
