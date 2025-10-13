@@ -144,6 +144,21 @@ To set up their profiles, run `server/create-test-users.sql` in Supabase SQL Edi
 
 ## Recent Changes
 
+### 2024-10-13 (Media & Session Flow Fixes)
+- **Fixed media upload and display**:
+  - Migrated public images (avatars, gallery, videos) from private to public object storage
+  - Created `getPublicObjectUploadURL()` method and `/api/objects/upload-public` endpoint
+  - Updated profile endpoints to accept `publicPath` and save as `/public-objects/<path>`
+  - Images/videos now accessible via `/public-objects/*` route without authentication
+  - Resolves 404 errors where `<img>` and `<video>` tags couldn't send auth headers
+- **Fixed session flow property mismatches**:
+  - Corrected all snake_case properties to camelCase in session.tsx (guestId, agoraUidGuest, readyGuest, etc.)
+  - Fixed Date object serialization for timer calculations
+  - Resolved all 12 LSP errors, session flow now progresses correctly to live video
+- **Added Remember Email feature**:
+  - Checkbox on login screens persists email to localStorage
+  - Auto-fills email field on return visits
+
 ### 2024-10-13 (Critical Bug Fixes - File Upload, Logout, Session Creation)
 - **Fixed file upload modal not displaying**:
   - Added Uppy CSS CDN link to index.html
