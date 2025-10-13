@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, Heart, User } from 'lucide-react';
 import { apiRequest } from '@/lib/queryClient';
@@ -20,6 +21,16 @@ export default function AuthPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [selectedRole, setSelectedRole] = useState<UserRole | null>(null);
+  const [rememberEmail, setRememberEmail] = useState(false);
+
+  // Load remembered email on mount
+  useEffect(() => {
+    const rememberedEmail = localStorage.getItem('allinya_remembered_email');
+    if (rememberedEmail) {
+      setEmail(rememberedEmail);
+      setRememberEmail(true);
+    }
+  }, []);
 
   // Redirect if already has profile
   useEffect(() => {
@@ -39,6 +50,13 @@ export default function AuthPage() {
     setLoading(true);
 
     try {
+      // Save or clear email based on checkbox
+      if (rememberEmail) {
+        localStorage.setItem('allinya_remembered_email', email);
+      } else {
+        localStorage.removeItem('allinya_remembered_email');
+      }
+
       await signIn(email, password);
       toast({ title: 'Welcome back!' });
     } catch (error: any) {
@@ -190,6 +208,20 @@ export default function AuthPage() {
                     required
                     data-testid="input-signin-password"
                   />
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="remember-email"
+                    checked={rememberEmail}
+                    onCheckedChange={(checked) => setRememberEmail(checked as boolean)}
+                    data-testid="checkbox-remember-email"
+                  />
+                  <Label
+                    htmlFor="remember-email"
+                    className="text-sm font-normal cursor-pointer"
+                  >
+                    Remember my email
+                  </Label>
                 </div>
                 <Button type="submit" className="w-full" disabled={loading} data-testid="button-signin">
                   {loading ? (

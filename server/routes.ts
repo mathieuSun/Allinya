@@ -432,35 +432,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get upload URL for object entity
+  // Get upload URL for object entity (private)
   app.post("/api/objects/upload", requireAuth, async (req: Request, res: Response) => {
     const objectStorageService = new ObjectStorageService();
     const uploadURL = await objectStorageService.getObjectEntityUploadURL();
     res.json({ uploadURL });
   });
 
+  // Get upload URL for public objects (avatars, gallery, videos)
+  app.post("/api/objects/upload-public", requireAuth, async (req: Request, res: Response) => {
+    const objectStorageService = new ObjectStorageService();
+    const { uploadURL, publicPath } = await objectStorageService.getPublicObjectUploadURL();
+    res.json({ uploadURL, publicPath });
+  });
+
   // Update profile with uploaded avatar
   app.put("/api/profile/avatar", requireAuth, async (req: Request, res: Response) => {
-    if (!req.body.avatarURL) {
-      return res.status(400).json({ error: "avatarURL is required" });
+    if (!req.body.publicPath) {
+      return res.status(400).json({ error: "publicPath is required" });
     }
 
     const userId = req.user!.id;
 
     try {
-      const objectStorageService = new ObjectStorageService();
-      const objectPath = await objectStorageService.trySetObjectEntityAclPolicy(
-        req.body.avatarURL,
-        {
-          owner: userId,
-          visibility: "public", // Profile avatars should be public
-          aclRules: [],
-        }
-      );
+      // Construct the public URL path
+      const avatarUrl = `/public-objects/${req.body.publicPath}`;
 
       // Update profile with the avatar path
       const profile = await storage.updateProfile(userId, {
-        avatarUrl: objectPath,
+        avatarUrl,
       });
 
       res.status(200).json(profile);
@@ -472,26 +472,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Update profile with uploaded video
   app.put("/api/profile/video", requireAuth, async (req: Request, res: Response) => {
-    if (!req.body.videoURL) {
-      return res.status(400).json({ error: "videoURL is required" });
+    if (!req.body.publicPath) {
+      return res.status(400).json({ error: "publicPath is required" });
     }
 
     const userId = req.user!.id;
 
     try {
-      const objectStorageService = new ObjectStorageService();
-      const objectPath = await objectStorageService.trySetObjectEntityAclPolicy(
-        req.body.videoURL,
-        {
-          owner: userId,
-          visibility: "public", // Profile videos should be public
-          aclRules: [],
-        }
-      );
+      // Construct the public URL path
+      const videoUrl = `/public-objects/${req.body.publicPath}`;
 
       // Update profile with the video path
       const profile = await storage.updateProfile(userId, {
-        videoUrl: objectPath,
+        videoUrl,
       });
 
       res.status(200).json(profile);
@@ -503,27 +496,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Update profile with gallery images
   app.put("/api/profile/gallery", requireAuth, async (req: Request, res: Response) => {
-    if (!req.body.galleryURLs || !Array.isArray(req.body.galleryURLs)) {
-      return res.status(400).json({ error: "galleryURLs array is required" });
+    if (!req.body.galleryPaths || !Array.isArray(req.body.galleryPaths)) {
+      return res.status(400).json({ error: "galleryPaths array is required" });
     }
 
     const userId = req.user!.id;
 
     try {
-      const objectStorageService = new ObjectStorageService();
-      const galleryPaths = await Promise.all(
-        req.body.galleryURLs.map(async (url: string) => {
-          return await objectStorageService.trySetObjectEntityAclPolicy(url, {
-            owner: userId,
-            visibility: "public", // Gallery images should be public
-            aclRules: [],
-          });
-        })
-      );
+      // Construct the public URL paths
+      const galleryUrls = req.body.galleryPaths.map((path: string) => `/public-objects/${path}`);
 
       // Update profile with the gallery paths
       const profile = await storage.updateProfile(userId, {
-        galleryUrls: galleryPaths,
+        galleryUrls,
       });
 
       res.status(200).json(profile);

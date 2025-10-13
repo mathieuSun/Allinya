@@ -154,6 +154,35 @@ export class ObjectStorageService {
     });
   }
 
+  // Gets the upload URL for a public object and returns both upload URL and public path.
+  async getPublicObjectUploadURL(): Promise<{ uploadURL: string; publicPath: string }> {
+    const publicSearchPaths = this.getPublicObjectSearchPaths();
+    if (publicSearchPaths.length === 0) {
+      throw new Error(
+        "PUBLIC_OBJECT_SEARCH_PATHS not set. Create a bucket in 'Object Storage' " +
+          "tool and set PUBLIC_OBJECT_SEARCH_PATHS env var."
+      );
+    }
+
+    // Use the first public search path
+    const publicDir = publicSearchPaths[0];
+    const objectId = randomUUID();
+    const publicPath = `uploads/${objectId}`;
+    const fullPath = `${publicDir}/${publicPath}`;
+
+    const { bucketName, objectName } = parseObjectPath(fullPath);
+
+    // Sign URL for PUT method with TTL
+    const uploadURL = await signObjectURL({
+      bucketName,
+      objectName,
+      method: "PUT",
+      ttlSec: 900,
+    });
+
+    return { uploadURL, publicPath };
+  }
+
   // Gets the object entity file from the object path.
   async getObjectEntityFile(objectPath: string): Promise<File> {
     if (!objectPath.startsWith("/objects/")) {

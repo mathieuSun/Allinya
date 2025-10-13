@@ -42,6 +42,8 @@ export default function ProfilePage() {
   const [uploadedAvatarUrl, setUploadedAvatarUrl] = useState<string | null>(null);
   const [uploadedVideoUrl, setUploadedVideoUrl] = useState<string | null>(null);
   const [uploadedGalleryUrls, setUploadedGalleryUrls] = useState<string[]>([]);
+  const [currentUploadPublicPath, setCurrentUploadPublicPath] = useState<string | null>(null);
+  const [currentGalleryPublicPaths, setCurrentGalleryPublicPaths] = useState<string[]>([]);
 
   // Fetch practitioner status if applicable
   const { data: practitionerStatus } = useQuery({
@@ -138,26 +140,45 @@ export default function ProfilePage() {
   };
 
   // File upload handlers
-  const handleGetUploadParameters = async () => {
-    const response = await fetch('/api/objects/upload', {
+  const handleGetUploadParametersForAvatar = async () => {
+    const response = await fetch('/api/objects/upload-public', {
       method: 'POST',
       credentials: 'include',
     });
-    const { uploadURL } = await response.json();
-    return { method: 'PUT' as const, url: uploadURL };
+    const data = await response.json();
+    setCurrentUploadPublicPath(data.publicPath);
+    return { method: 'PUT' as const, url: data.uploadURL };
+  };
+
+  const handleGetUploadParametersForVideo = async () => {
+    const response = await fetch('/api/objects/upload-public', {
+      method: 'POST',
+      credentials: 'include',
+    });
+    const data = await response.json();
+    setCurrentUploadPublicPath(data.publicPath);
+    return { method: 'PUT' as const, url: data.uploadURL };
+  };
+
+  const handleGetUploadParametersForGallery = async () => {
+    const response = await fetch('/api/objects/upload-public', {
+      method: 'POST',
+      credentials: 'include',
+    });
+    const data = await response.json();
+    setCurrentGalleryPublicPaths(prev => [...prev, data.publicPath]);
+    return { method: 'PUT' as const, url: data.uploadURL };
   };
 
   const handleAvatarUpload = async (result: UploadResult<Record<string, unknown>, Record<string, unknown>>) => {
-    if (result.successful && result.successful.length > 0) {
-      const uploadedFile = result.successful[0];
-      const uploadURL = uploadedFile.uploadURL;
-      
+    if (result.successful && result.successful.length > 0 && currentUploadPublicPath) {
       const response: any = await apiRequest('PUT', '/api/profile/avatar', {
-        avatarURL: uploadURL,
+        publicPath: currentUploadPublicPath,
       });
       
       setUploadedAvatarUrl(response.avatarUrl);
       form.setValue('avatarUrl', response.avatarUrl);
+      setCurrentUploadPublicPath(null);
       await refreshProfile();
       
       toast({
@@ -167,16 +188,14 @@ export default function ProfilePage() {
   };
 
   const handleVideoUpload = async (result: UploadResult<Record<string, unknown>, Record<string, unknown>>) => {
-    if (result.successful && result.successful.length > 0) {
-      const uploadedFile = result.successful[0];
-      const uploadURL = uploadedFile.uploadURL;
-      
+    if (result.successful && result.successful.length > 0 && currentUploadPublicPath) {
       const response: any = await apiRequest('PUT', '/api/profile/video', {
-        videoURL: uploadURL,
+        publicPath: currentUploadPublicPath,
       });
       
       setUploadedVideoUrl(response.videoUrl);
       form.setValue('videoUrl', response.videoUrl);
+      setCurrentUploadPublicPath(null);
       await refreshProfile();
       
       toast({
@@ -186,18 +205,14 @@ export default function ProfilePage() {
   };
 
   const handleGalleryUpload = async (result: UploadResult<Record<string, unknown>, Record<string, unknown>>) => {
-    if (result.successful && result.successful.length > 0) {
-      const uploadURLs = result.successful.map(file => file.uploadURL);
-      
-      const existingUrls = form.getValues('galleryUrls') || [];
-      const newUrls = [...existingUrls, ...uploadURLs].slice(0, 3);
-      
+    if (result.successful && result.successful.length > 0 && currentGalleryPublicPaths.length > 0) {
       const response: any = await apiRequest('PUT', '/api/profile/gallery', {
-        galleryURLs: newUrls,
+        galleryPaths: currentGalleryPublicPaths,
       });
       
       setUploadedGalleryUrls(response.galleryUrls);
       form.setValue('galleryUrls', response.galleryUrls);
+      setCurrentGalleryPublicPaths([]);
       await refreshProfile();
       
       toast({
@@ -291,7 +306,7 @@ export default function ProfilePage() {
                         maxNumberOfFiles={1}
                         maxFileSize={5242880} // 5MB
                         allowedFileTypes={['image/*', '.jpg', '.jpeg', '.png', '.gif', '.webp']}
-                        onGetUploadParameters={handleGetUploadParameters}
+                        onGetUploadParameters={handleGetUploadParametersForAvatar}
                         onComplete={handleAvatarUpload}
                       >
                         <div className="flex items-center gap-2">
@@ -400,7 +415,7 @@ export default function ProfilePage() {
                         maxNumberOfFiles={3}
                         maxFileSize={5242880} // 5MB
                         allowedFileTypes={['image/*', '.jpg', '.jpeg', '.png', '.gif', '.webp']}
-                        onGetUploadParameters={handleGetUploadParameters}
+                        onGetUploadParameters={handleGetUploadParametersForGallery}
                         onComplete={handleGalleryUpload}
                       >
                         <div className="flex items-center gap-2">
@@ -431,7 +446,7 @@ export default function ProfilePage() {
                         maxNumberOfFiles={1}
                         maxFileSize={104857600} // 100MB for videos
                         allowedFileTypes={['video/*', '.mp4', '.mov', '.avi', '.mkv', '.webm']}
-                        onGetUploadParameters={handleGetUploadParameters}
+                        onGetUploadParameters={handleGetUploadParametersForVideo}
                         onComplete={handleVideoUpload}
                       >
                         <div className="flex items-center gap-2">
