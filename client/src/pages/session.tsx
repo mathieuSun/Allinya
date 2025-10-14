@@ -84,7 +84,7 @@ export default function SessionPage() {
 
   // Subscribe to session updates
   useEffect(() => {
-    if (!sessionId) return;
+    if (!sessionId || !session) return;
 
     const channel = supabase
       .channel(`session-${sessionId}`)
@@ -96,8 +96,39 @@ export default function SessionPage() {
           table: 'sessions',
           filter: `id=eq.${sessionId}`,
         },
-        () => {
+        async (payload) => {
           queryClient.invalidateQueries({ queryKey: [`/api/sessions/${sessionId}`] });
+          
+          // Show notifications for important events
+          const updatedSession = payload.new as any;
+          
+          if (updatedSession.phase === 'live' && session.phase === 'waiting') {
+            toast({
+              title: '🎥 Session Starting!',
+              description: 'Video connection is being established...',
+            });
+          }
+          
+          if (updatedSession.ready_practitioner && !session.readyPractitioner) {
+            toast({
+              title: '✅ Practitioner is ready',
+              description: 'Waiting for both parties to be ready...',
+            });
+          }
+          
+          if (updatedSession.ready_guest && !session.readyGuest) {
+            toast({
+              title: '✅ Guest is ready',
+              description: 'Waiting for both parties to be ready...',
+            });
+          }
+          
+          if (updatedSession.phase === 'ended') {
+            toast({
+              title: '📱 Session Ended',
+              description: 'The session has been completed',
+            });
+          }
         }
       )
       .subscribe();
@@ -105,7 +136,7 @@ export default function SessionPage() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [sessionId]);
+  }, [sessionId, session, toast]);
 
   // Timer countdown
   useEffect(() => {
