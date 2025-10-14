@@ -316,6 +316,94 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // GET /api/sessions/practitioner - Get sessions for logged-in practitioner
+  app.get('/api/sessions/practitioner', requireAuth, async (req: Request, res: Response) => {
+    try {
+      const userId = req.user!.id;
+      
+      // Verify practitioner role
+      const profile = await storage.getProfile(userId);
+      if (!profile || profile.role !== 'practitioner') {
+        return res.status(403).json({ error: 'Only practitioners can access this endpoint' });
+      }
+
+      // Get all sessions for this practitioner (waiting and live phases)
+      const sessions = await storage.getSessionsForPractitioner(userId);
+      res.json(sessions);
+    } catch (error: any) {
+      res.status(400).json({ error: error.message });
+    }
+  });
+
+  // POST /api/sessions/accept - Accept a session request
+  app.post('/api/sessions/accept', requireAuth, async (req: Request, res: Response) => {
+    try {
+      const { sessionId } = z.object({
+        sessionId: z.string().uuid(),
+      }).parse(req.body);
+
+      const userId = req.user!.id;
+      const session = await storage.getSession(sessionId);
+
+      if (!session) {
+        return res.status(404).json({ error: 'Session not found' });
+      }
+
+      // Verify user is the practitioner
+      if (userId !== session.practitionerId) {
+        return res.status(403).json({ error: 'Only the practitioner can accept the session' });
+      }
+
+      // Verify session is in waiting phase
+      if (session.phase !== 'waiting') {
+        return res.status(400).json({ error: 'Session is not in waiting phase' });
+      }
+
+      // Mark practitioner as ready and transition to waiting room
+      const updatedSession = await storage.updateSession(sessionId, {
+        readyPractitioner: true,
+      });
+
+      res.json(updatedSession);
+    } catch (error: any) {
+      res.status(400).json({ error: error.message });
+    }
+  });
+
+  // POST /api/sessions/reject - Reject a session request
+  app.post('/api/sessions/reject', requireAuth, async (req: Request, res: Response) => {
+    try {
+      const { sessionId } = z.object({
+        sessionId: z.string().uuid(),
+      }).parse(req.body);
+
+      const userId = req.user!.id;
+      const session = await storage.getSession(sessionId);
+
+      if (!session) {
+        return res.status(404).json({ error: 'Session not found' });
+      }
+
+      // Verify user is the practitioner
+      if (userId !== session.practitionerId) {
+        return res.status(403).json({ error: 'Only the practitioner can reject the session' });
+      }
+
+      // End the session
+      const updatedSession = await storage.updateSession(sessionId, {
+        phase: 'ended',
+        endedAt: new Date(),
+      });
+
+      // Mark practitioner as not in service
+      await storage.updatePractitioner(session.practitionerId, { inService: false });
+
+      res.json(updatedSession);
+    } catch (error: any) {
+      res.status(400).json({ error: error.message });
+    }
+  });
+
   // GET /api/agora/token - Generate Agora RTC token
   app.get('/api/agora/token', requireAuth, async (req: Request, res: Response) => {
     try {

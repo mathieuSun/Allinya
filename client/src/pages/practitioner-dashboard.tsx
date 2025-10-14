@@ -1,0 +1,327 @@
+import { useEffect, useState } from 'react';
+import { useLocation } from 'wouter';
+import { useAuth } from '@/lib/auth-context';
+import { useQuery, useMutation } from '@tanstack/react-query';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Bell, Clock, Video, Check, X, Loader2, Power, PowerOff } from 'lucide-react';
+import { supabase } from '@/lib/supabase';
+import { apiRequest, queryClient } from '@/lib/queryClient';
+import { useToast } from '@/hooks/use-toast';
+import type { SessionWithParticipants } from '@shared/schema';
+
+export default function PractitionerDashboard() {
+  const [, setLocation] = useLocation();
+  const { profile, signOut } = useAuth();
+  const { toast } = useToast();
+  const [pendingSessions, setPendingSessions] = useState<SessionWithParticipants[]>([]);
+
+  // Check if practitioner
+  if (!profile || profile.role !== 'practitioner') {
+    setLocation('/profile');
+    return null;
+  }
+
+  // Fetch practitioner status
+  const { data: practitionerStatus } = useQuery({
+    queryKey: ['/api/practitioners/status'],
+  });
+
+  // Fetch active/pending sessions
+  const { data: sessions, isLoading } = useQuery<SessionWithParticipants[]>({
+    queryKey: ['/api/sessions/practitioner'],
+    refetchInterval: 2000, // Poll every 2 seconds
+  });
+
+  // Subscribe to realtime session updates
+  useEffect(() => {
+    if (!profile) return;
+
+    const channel = supabase
+      .channel('practitioner-sessions')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'sessions',
+          filter: `practitioner_id=eq.${profile.id}`,
+        },
+        async (payload) => {
+          // Refresh sessions when changes occur
+          queryClient.invalidateQueries({ queryKey: ['/api/sessions/practitioner'] });
+          
+          // Show notification for new sessions
+          if (payload.eventType === 'INSERT') {
+            toast({
+              title: '🔔 New Session Request!',
+              description: 'A guest is requesting a healing session',
+            });
+            
+            // Play notification sound if available
+            try {
+              const audio = new Audio('/notification.mp3');
+              audio.play().catch(() => {});
+            } catch {}
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [profile, toast]);
+
+  // Update pending sessions
+  useEffect(() => {
+    if (sessions) {
+      const pending = sessions.filter(s => s.phase === 'waiting');
+      setPendingSessions(pending);
+    }
+  }, [sessions]);
+
+  // Toggle online status
+  const toggleOnlineMutation = useMutation({
+    mutationFn: async (online: boolean) => {
+      return apiRequest('POST', '/api/presence/toggle', { online });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/practitioners/status'] });
+      toast({ 
+        title: practitionerStatus?.online ? 'You are now offline' : 'You are now online',
+      });
+    },
+  });
+
+  // Accept session
+  const acceptSessionMutation = useMutation({
+    mutationFn: async (sessionId: string) => {
+      return apiRequest('POST', '/api/sessions/accept', { sessionId });
+    },
+    onSuccess: (data: any, sessionId: string) => {
+      toast({ title: 'Session accepted!' });
+      setLocation(`/s/${sessionId}`);
+    },
+    onError: (error: any) => {
+      toast({
+        title: 'Failed to accept session',
+        description: error.message,
+        variant: 'destructive',
+      });
+    },
+  });
+
+  // Reject session
+  const rejectSessionMutation = useMutation({
+    mutationFn: async (sessionId: string) => {
+      return apiRequest('POST', '/api/sessions/reject', { sessionId });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/sessions/practitioner'] });
+      toast({ title: 'Session declined' });
+    },
+  });
+
+  const activeSessions = sessions?.filter(s => s.phase === 'live') || [];
+
+  return (
+    <div className="min-h-screen bg-background">
+      <header className="border-b border-border backdrop-blur-lg bg-background/80 sticky top-0 z-50">
+        <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8 py-4">
+          <div className="flex items-center justify-between">
+            <h1 className="text-2xl font-bold">Practitioner Dashboard</h1>
+            <div className="flex items-center gap-4">
+              <Button
+                variant={practitionerStatus?.online ? 'default' : 'outline'}
+                onClick={() => toggleOnlineMutation.mutate(!practitionerStatus?.online)}
+                disabled={toggleOnlineMutation.isPending}
+                data-testid="button-toggle-online"
+              >
+                {practitionerStatus?.online ? (
+                  <>
+                    <Power className="mr-2 h-4 w-4" />
+                    Online
+                  </>
+                ) : (
+                  <>
+                    <PowerOff className="mr-2 h-4 w-4" />
+                    Offline
+                  </>
+                )}
+              </Button>
+              <Button variant="outline" onClick={() => setLocation('/profile')} data-testid="button-profile">
+                My Profile
+              </Button>
+              <Button
+                variant="ghost"
+                onClick={async () => {
+                  await signOut();
+                  setLocation('/login');
+                }}
+                data-testid="button-logout"
+              >
+                Logout
+              </Button>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <main className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8 py-8">
+        {/* Status Banner */}
+        <Card className="mb-8 border-primary/20 bg-primary/5">
+          <CardContent className="py-6">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <div className={`h-3 w-3 rounded-full ${practitionerStatus?.online ? 'bg-green-500' : 'bg-gray-400'} animate-pulse`} />
+                <div>
+                  <p className="font-semibold">
+                    You are {practitionerStatus?.online ? 'online' : 'offline'}
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    {practitionerStatus?.online 
+                      ? 'Guests can request sessions with you'
+                      : 'Go online to receive session requests'}
+                  </p>
+                </div>
+              </div>
+              {pendingSessions.length > 0 && (
+                <Badge variant="destructive" className="animate-pulse">
+                  <Bell className="mr-1 h-3 w-3" />
+                  {pendingSessions.length} Pending
+                </Badge>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Pending Sessions */}
+        {pendingSessions.length > 0 && (
+          <div className="mb-8">
+            <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
+              <Bell className="h-5 w-5 text-primary" />
+              Incoming Session Requests
+            </h2>
+            <div className="grid gap-4">
+              {pendingSessions.map((session) => (
+                <Card key={session.id} className="border-primary/20">
+                  <CardContent className="py-6">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-4">
+                        <Avatar>
+                          <AvatarImage src={session.guest?.avatarUrl || undefined} />
+                          <AvatarFallback>
+                            {session.guest?.displayName?.[0]?.toUpperCase() || 'G'}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div>
+                          <p className="font-semibold">{session.guest?.displayName || 'Guest'}</p>
+                          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                            <Clock className="h-3 w-3" />
+                            {Math.floor(session.liveSeconds / 60)} minute session
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex gap-2">
+                        <Button
+                          size="sm"
+                          variant="default"
+                          onClick={() => acceptSessionMutation.mutate(session.id)}
+                          disabled={acceptSessionMutation.isPending}
+                          data-testid={`button-accept-${session.id}`}
+                        >
+                          {acceptSessionMutation.isPending ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <>
+                              <Check className="mr-1 h-4 w-4" />
+                              Accept
+                            </>
+                          )}
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => rejectSessionMutation.mutate(session.id)}
+                          disabled={rejectSessionMutation.isPending}
+                          data-testid={`button-reject-${session.id}`}
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Active Sessions */}
+        {activeSessions.length > 0 && (
+          <div className="mb-8">
+            <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
+              <Video className="h-5 w-5 text-green-500" />
+              Active Sessions
+            </h2>
+            <div className="grid gap-4">
+              {activeSessions.map((session) => (
+                <Card key={session.id}>
+                  <CardContent className="py-6">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-4">
+                        <Avatar>
+                          <AvatarImage src={session.guest?.avatarUrl || undefined} />
+                          <AvatarFallback>
+                            {session.guest?.displayName?.[0]?.toUpperCase() || 'G'}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div>
+                          <p className="font-semibold">{session.guest?.displayName || 'Guest'}</p>
+                          <Badge variant="default" className="bg-green-500">
+                            Live Now
+                          </Badge>
+                        </div>
+                      </div>
+                      <Button
+                        onClick={() => setLocation(`/s/${session.id}`)}
+                        data-testid={`button-join-${session.id}`}
+                      >
+                        <Video className="mr-2 h-4 w-4" />
+                        Join Session
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Empty State */}
+        {isLoading ? (
+          <div className="flex items-center justify-center py-20">
+            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+          </div>
+        ) : (
+          !pendingSessions.length && !activeSessions.length && (
+            <Card>
+              <CardContent className="py-20 text-center">
+                <Bell className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                <h3 className="text-lg font-semibold mb-2">No active sessions</h3>
+                <p className="text-muted-foreground">
+                  {practitionerStatus?.online 
+                    ? "You'll be notified when guests request sessions"
+                    : "Go online to start receiving session requests"}
+                </p>
+              </CardContent>
+            </Card>
+          )
+        )}
+      </main>
+    </div>
+  );
+}

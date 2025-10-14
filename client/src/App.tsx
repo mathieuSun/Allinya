@@ -11,6 +11,7 @@ import ProfilePage from "@/pages/profile";
 import ExplorePage from "@/pages/explore";
 import PractitionerProfilePage from "@/pages/practitioner-profile";
 import SessionPage from "@/pages/session";
+import PractitionerDashboard from "@/pages/practitioner-dashboard";
 import NotFound from "@/pages/not-found";
 import DevInspector from "@/pages/dev-inspector";
 
@@ -22,6 +23,7 @@ function Router() {
       <Route path="/onboarding" component={OnboardingPage} />
       <Route path="/profile" component={ProfilePage} />
       <Route path="/explore" component={ExplorePage} />
+      <Route path="/dashboard" component={PractitionerDashboard} />
       <Route path="/p/:id" component={PractitionerProfilePage} />
       <Route path="/s/:id" component={SessionPage} />
       <Route path="/dev/inspector" component={DevInspector} />
