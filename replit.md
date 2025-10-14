@@ -144,6 +144,35 @@ To set up their profiles, run `server/create-test-users.sql` in Supabase SQL Edi
 
 ## Recent Changes
 
+### 2024-10-14 (Session Flow & Dashboard Implementation - Complete)
+- **Created practitioner dashboard with real-time session management**:
+  - Added `/dashboard` route for practitioners to manage incoming sessions
+  - Implemented `/api/sessions/practitioner` endpoint to fetch pending/active sessions
+  - Added accept/reject buttons with dedicated endpoints (`/api/sessions/accept`, `/api/sessions/reject`)
+  - Dashboard shows real-time updates via Supabase subscriptions
+  - Added navigation button from profile to dashboard for practitioners
+
+- **Fixed automatic video transition**:
+  - Sessions now automatically transition from waiting room to live video when both parties mark ready
+  - Added timer logic to check both `readyPractitioner` and `readyGuest` states
+  - Query invalidation triggers automatic phase change to "live"
+
+- **Added real-time toast notifications**:
+  - Practitioner ready notification shows when practitioner marks ready
+  - Guest ready notification shows when guest marks ready  
+  - Session starting notification when transitioning to video
+  - Session ended notification when session completes
+  - All notifications use Supabase realtime subscriptions for instant updates
+
+- **Session Flow Working End-to-End**:
+  - Guest requests session from explore page
+  - Practitioner sees request on dashboard with accept/reject options
+  - Accept creates waiting room, reject cancels session
+  - Both parties mark ready in waiting room
+  - Automatic transition to live video when both ready
+  - Either party can end session
+  - Review prompt after session ends
+
 ### 2024-10-14 (Media Persistence Fix - Complete)
 - **Fixed uploaded media not persisting after form submission**:
   - **Root cause**: Form's defaultValues were set only on mount and not synced when profile refreshed after uploads
