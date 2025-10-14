@@ -39,9 +39,6 @@ export default function ProfilePage() {
   const { profile, user, refreshProfile, signOut } = useAuth();
   const { toast } = useToast();
   const [specialtyInput, setSpecialtyInput] = useState('');
-  const [uploadedAvatarUrl, setUploadedAvatarUrl] = useState<string | null>(null);
-  const [uploadedVideoUrl, setUploadedVideoUrl] = useState<string | null>(null);
-  const [uploadedGalleryUrls, setUploadedGalleryUrls] = useState<string[]>([]);
   const [currentUploadPublicPath, setCurrentUploadPublicPath] = useState<string | null>(null);
   const [currentGalleryPublicPaths, setCurrentGalleryPublicPaths] = useState<string[]>([]);
 
@@ -78,8 +75,21 @@ export default function ProfilePage() {
     },
   });
 
-  // Only reset form values when component first mounts with profile data
-  // No need for useEffect - form initializes with profile data already
+  // Sync form with profile data when profile updates
+  useEffect(() => {
+    if (profile) {
+      // Reset form with current profile data to sync after uploads
+      form.reset({
+        displayName: profile.displayName || '',
+        country: profile.country || '',
+        bio: profile.bio || '',
+        specialties: profile.specialties || [],
+        avatarUrl: profile.avatarUrl || '',
+        galleryUrls: profile.galleryUrls || [],
+        videoUrl: profile.videoUrl || '',
+      });
+    }
+  }, [profile, form]);
 
   useEffect(() => {
     if (!profile || !user) {
@@ -186,12 +196,10 @@ export default function ProfilePage() {
 
   const handleAvatarUpload = async (result: UploadResult<Record<string, unknown>, Record<string, unknown>>) => {
     if (result.successful && result.successful.length > 0 && currentUploadPublicPath) {
-      const response: any = await apiRequest('PUT', '/api/profile/avatar', {
+      await apiRequest('PUT', '/api/profile/avatar', {
         publicPath: currentUploadPublicPath,
       });
       
-      setUploadedAvatarUrl(response.avatarUrl);
-      form.setValue('avatarUrl', response.avatarUrl);
       setCurrentUploadPublicPath(null);
       await refreshProfile();
       
@@ -203,12 +211,10 @@ export default function ProfilePage() {
 
   const handleVideoUpload = async (result: UploadResult<Record<string, unknown>, Record<string, unknown>>) => {
     if (result.successful && result.successful.length > 0 && currentUploadPublicPath) {
-      const response: any = await apiRequest('PUT', '/api/profile/video', {
+      await apiRequest('PUT', '/api/profile/video', {
         publicPath: currentUploadPublicPath,
       });
       
-      setUploadedVideoUrl(response.videoUrl);
-      form.setValue('videoUrl', response.videoUrl);
       setCurrentUploadPublicPath(null);
       await refreshProfile();
       
@@ -220,12 +226,9 @@ export default function ProfilePage() {
 
   const handleGalleryUpload = async (result: UploadResult<Record<string, unknown>, Record<string, unknown>>) => {
     if (result.successful && result.successful.length > 0 && currentGalleryPublicPaths.length > 0) {
-      const response: any = await apiRequest('PUT', '/api/profile/gallery', {
+      await apiRequest('PUT', '/api/profile/gallery', {
         galleryPaths: currentGalleryPublicPaths,
       });
-      
-      setUploadedGalleryUrls(response.galleryUrls);
-      form.setValue('galleryUrls', response.galleryUrls);
       setCurrentGalleryPublicPaths([]);
       await refreshProfile();
       
@@ -308,7 +311,7 @@ export default function ProfilePage() {
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                 <div className="flex items-center gap-6 mb-6">
                   <Avatar className="h-24 w-24">
-                    <AvatarImage src={uploadedAvatarUrl || form.watch('avatarUrl')} />
+                    <AvatarImage src={form.watch('avatarUrl')} />
                     <AvatarFallback className="text-2xl">
                       {profile.displayName?.[0]?.toUpperCase() || 'U'}
                     </AvatarFallback>
@@ -328,7 +331,7 @@ export default function ProfilePage() {
                           <span>Upload Avatar from Computer</span>
                         </div>
                       </ObjectUploader>
-                      {(uploadedAvatarUrl || form.watch('avatarUrl')) && (
+                      {form.watch('avatarUrl') && (
                         <p className="text-sm text-muted-foreground">Current avatar uploaded</p>
                       )}
                     </div>
@@ -438,7 +441,7 @@ export default function ProfilePage() {
                         </div>
                       </ObjectUploader>
                       <div className="grid grid-cols-3 gap-4 mt-2">
-                        {(uploadedGalleryUrls.length > 0 ? uploadedGalleryUrls : form.watch('galleryUrls') || []).map((url, index) => (
+                        {(form.watch('galleryUrls') || []).map((url: string, index: number) => (
                           <div key={index} className="relative aspect-square rounded-lg overflow-hidden border border-border" data-testid={`gallery-image-${index}`}>
                             <img src={url} alt={`Gallery ${index + 1}`} className="w-full h-full object-cover" />
                             <button
@@ -468,7 +471,7 @@ export default function ProfilePage() {
                           <span>Upload Video from Computer</span>
                         </div>
                       </ObjectUploader>
-                      {(uploadedVideoUrl || form.watch('videoUrl')) && (
+                      {form.watch('videoUrl') && (
                         <p className="text-sm text-muted-foreground">Video uploaded successfully</p>
                       )}
                     </div>

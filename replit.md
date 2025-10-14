@@ -144,11 +144,16 @@ To set up their profiles, run `server/create-test-users.sql` in Supabase SQL Edi
 
 ## Recent Changes
 
-### 2024-10-14 (Media Persistence Fix)
-- **Fixed uploaded media not persisting**:
-  - Root cause: Profile form submission was sending empty values for avatarUrl/videoUrl/galleryUrls, overwriting uploaded media
-  - Solution: Added empty value filtering in onSubmit() to prevent overwriting uploaded files
-  - Uploaded avatars, videos, and gallery images now persist correctly after "Save Profile"
+### 2024-10-14 (Media Persistence Fix - Complete)
+- **Fixed uploaded media not persisting after form submission**:
+  - **Root cause**: Form's defaultValues were set only on mount and not synced when profile refreshed after uploads
+  - **Secondary issue**: When form submitted, it sent stale values that overwrote the newly uploaded media
+  - **Solution implemented**: 
+    1. Added useEffect to sync form values with profile data whenever profile updates
+    2. Removed redundant state variables (uploadedAvatarUrl, uploadedVideoUrl, uploadedGalleryUrls)
+    3. Form now properly resets with fresh data after each upload via `form.reset()`
+    4. Simplified upload handlers to only save to DB and refresh profile
+  - **Result**: Uploaded avatars, videos, and gallery images now persist correctly through all operations
 
 ### 2024-10-13 (Media & Session Flow Fixes)
 - **Fixed media upload and display**:
