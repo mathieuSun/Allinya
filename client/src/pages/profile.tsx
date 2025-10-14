@@ -99,7 +99,21 @@ export default function ProfilePage() {
 
   const onSubmit = async (data: any) => {
     try {
-      await apiRequest('PUT', '/api/profile', data);
+      // Filter out empty values to prevent overwriting uploaded media
+      const filteredData = Object.fromEntries(
+        Object.entries(data).filter(([_, value]) => {
+          // Keep the field if:
+          // - It's a non-empty string
+          // - It's a non-empty array
+          // - It's a boolean
+          if (typeof value === 'string') return value.trim() !== '';
+          if (Array.isArray(value)) return value.length > 0;
+          if (typeof value === 'boolean') return true;
+          return value != null;
+        })
+      );
+
+      await apiRequest('PUT', '/api/profile', filteredData);
       await refreshProfile();
       toast({ title: 'Profile updated successfully!' });
     } catch (error: any) {

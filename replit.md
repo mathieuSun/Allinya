@@ -144,6 +144,12 @@ To set up their profiles, run `server/create-test-users.sql` in Supabase SQL Edi
 
 ## Recent Changes
 
+### 2024-10-14 (Media Persistence Fix)
+- **Fixed uploaded media not persisting**:
+  - Root cause: Profile form submission was sending empty values for avatarUrl/videoUrl/galleryUrls, overwriting uploaded media
+  - Solution: Added empty value filtering in onSubmit() to prevent overwriting uploaded files
+  - Uploaded avatars, videos, and gallery images now persist correctly after "Save Profile"
+
 ### 2024-10-13 (Media & Session Flow Fixes)
 - **Fixed media upload and display**:
   - Migrated public images (avatars, gallery, videos) from private to public object storage
