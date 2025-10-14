@@ -117,8 +117,14 @@ export default function SessionPage() {
         const remaining = calculateRemainingTime(startedAt, session.waitingSeconds);
         setRemainingTime(remaining);
         
+        // Check if both are ready to transition to live
+        if (session.readyPractitioner && session.readyGuest && !agoraJoined) {
+          // Both ready - transition should happen automatically
+          queryClient.invalidateQueries({ queryKey: [`/api/sessions/${sessionId}`] });
+        }
+        
         if (remaining === 0 && !session.readyPractitioner && !session.readyGuest) {
-          // Auto-transition failsafe
+          // Auto-transition failsafe - end session if time runs out with nobody ready
           endSessionMutation.mutate();
         }
       } else if (session.phase === 'live') {
@@ -136,7 +142,7 @@ export default function SessionPage() {
     const interval = setInterval(updateTimer, 1000);
 
     return () => clearInterval(interval);
-  }, [session]);
+  }, [session, agoraJoined, sessionId]);
 
   // Agora setup for live phase
   useEffect(() => {
