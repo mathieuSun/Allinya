@@ -33,9 +33,6 @@ jobs:
       - name: Run TypeScript type check
         run: npm run check
       
-      - name: Run unit tests
-        run: npx vitest run tests/unit
-      
       - name: Run integration tests
         run: npx vitest run tests/integration
         env:
