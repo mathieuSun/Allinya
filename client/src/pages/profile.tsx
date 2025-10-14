@@ -251,24 +251,29 @@ export default function ProfilePage() {
                 </Button>
               )}
               {profile.role === 'practitioner' && (
-                <Button
-                  variant={(practitionerStatus as any)?.online ? 'default' : 'outline'}
-                  onClick={() => toggleOnlineMutation.mutate(!(practitionerStatus as any)?.online)}
-                  disabled={toggleOnlineMutation.isPending}
-                  data-testid="button-toggle-online"
-                >
-                  {(practitionerStatus as any)?.online ? (
-                    <>
-                      <Power className="mr-2 h-4 w-4" />
-                      Online
-                    </>
-                  ) : (
-                    <>
-                      <PowerOff className="mr-2 h-4 w-4" />
-                      Offline
-                    </>
-                  )}
-                </Button>
+                <>
+                  <Button variant="outline" onClick={() => setLocation('/dashboard')} data-testid="button-dashboard">
+                    Go to Dashboard
+                  </Button>
+                  <Button
+                    variant={(practitionerStatus as any)?.online ? 'default' : 'outline'}
+                    onClick={() => toggleOnlineMutation.mutate(!(practitionerStatus as any)?.online)}
+                    disabled={toggleOnlineMutation.isPending}
+                    data-testid="button-toggle-online"
+                  >
+                    {(practitionerStatus as any)?.online ? (
+                      <>
+                        <Power className="mr-2 h-4 w-4" />
+                        Online
+                      </>
+                    ) : (
+                      <>
+                        <PowerOff className="mr-2 h-4 w-4" />
+                        Offline
+                      </>
+                    )}
+                  </Button>
+                </>
               )}
               <Button
                 variant="ghost"
