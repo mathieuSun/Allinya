@@ -196,9 +196,14 @@ export default function ProfilePage() {
 
   const handleAvatarUpload = async (result: UploadResult<Record<string, unknown>, Record<string, unknown>>) => {
     if (result.successful && result.successful.length > 0 && currentUploadPublicPath) {
+      const avatarUrl = `/public-objects/${currentUploadPublicPath}`;
+      
       await apiRequest('PUT', '/api/profile/avatar', {
         publicPath: currentUploadPublicPath,
       });
+      
+      // Immediately update form state
+      form.setValue('avatarUrl', avatarUrl, { shouldDirty: true });
       
       setCurrentUploadPublicPath(null);
       await refreshProfile();
@@ -211,9 +216,14 @@ export default function ProfilePage() {
 
   const handleVideoUpload = async (result: UploadResult<Record<string, unknown>, Record<string, unknown>>) => {
     if (result.successful && result.successful.length > 0 && currentUploadPublicPath) {
+      const videoUrl = `/public-objects/${currentUploadPublicPath}`;
+      
       await apiRequest('PUT', '/api/profile/video', {
         publicPath: currentUploadPublicPath,
       });
+      
+      // Immediately update form state
+      form.setValue('videoUrl', videoUrl, { shouldDirty: true });
       
       setCurrentUploadPublicPath(null);
       await refreshProfile();
@@ -226,9 +236,16 @@ export default function ProfilePage() {
 
   const handleGalleryUpload = async (result: UploadResult<Record<string, unknown>, Record<string, unknown>>) => {
     if (result.successful && result.successful.length > 0 && currentGalleryPublicPaths.length > 0) {
+      const galleryUrls = currentGalleryPublicPaths.map(path => `/public-objects/${path}`);
+      
       await apiRequest('PUT', '/api/profile/gallery', {
         galleryPaths: currentGalleryPublicPaths,
       });
+      
+      // Immediately update form state - append to existing gallery
+      const existingGallery = form.getValues('galleryUrls') || [];
+      form.setValue('galleryUrls', [...existingGallery, ...galleryUrls], { shouldDirty: true });
+      
       setCurrentGalleryPublicPaths([]);
       await refreshProfile();
       

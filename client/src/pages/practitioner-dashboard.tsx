@@ -32,56 +32,39 @@ export default function PractitionerDashboard() {
   // Fetch active/pending sessions
   const { data: sessions, isLoading } = useQuery<SessionWithParticipants[]>({
     queryKey: ['/api/sessions/practitioner'],
-    refetchInterval: 2000, // Poll every 2 seconds
+    refetchInterval: 1000, // Poll every 1 second for better responsiveness
   });
 
-  // Subscribe to realtime session updates
-  useEffect(() => {
-    if (!profile) return;
+  // Track session state for notification logic
+  const [hasLoadedSessions, setHasLoadedSessions] = useState(false);
+  const [previousSessionCount, setPreviousSessionCount] = useState(0);
 
-    const channel = supabase
-      .channel('practitioner-sessions')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'sessions',
-          filter: `practitioner_id=eq.${profile.id}`,
-        },
-        async (payload) => {
-          // Refresh sessions when changes occur
-          queryClient.invalidateQueries({ queryKey: ['/api/sessions/practitioner'] });
-          
-          // Show notification for new sessions
-          if (payload.eventType === 'INSERT') {
-            toast({
-              title: '🔔 New Session Request!',
-              description: 'A guest is requesting a healing session',
-            });
-            
-            // Play notification sound if available
-            try {
-              const audio = new Audio('/notification.mp3');
-              audio.play().catch(() => {});
-            } catch {}
-          }
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [profile, toast]);
-
-  // Update pending sessions
+  // Update pending sessions and show notifications for new ones
   useEffect(() => {
     if (sessions) {
       const pending = sessions.filter(s => s.phase === 'waiting');
       setPendingSessions(pending);
+      
+      // Check if there are NEW sessions (count increased)
+      // Show notification if: we've loaded before AND count increased
+      if (hasLoadedSessions && pending.length > previousSessionCount) {
+        toast({
+          title: '🔔 New Session Request!',
+          description: 'A guest is requesting a healing session',
+        });
+        
+        // Play notification sound if available
+        try {
+          const audio = new Audio('/notification.mp3');
+          audio.play().catch(() => {});
+        } catch {}
+      }
+      
+      // Mark as loaded and update count
+      setHasLoadedSessions(true);
+      setPreviousSessionCount(pending.length);
     }
-  }, [sessions]);
+  }, [sessions, toast, hasLoadedSessions, previousSessionCount]);
 
   // Toggle online status
   const toggleOnlineMutation = useMutation({

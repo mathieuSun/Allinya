@@ -144,6 +144,26 @@ To set up their profiles, run `server/create-test-users.sql` in Supabase SQL Edi
 
 ## Recent Changes
 
+### 2024-10-14 (Critical Bug Fixes - Complete)
+- **Fixed image upload persistence**:
+  - Added `form.setValue()` in all upload handlers (avatar, video, gallery)
+  - Uploads now immediately update form state with public URLs
+  - Gallery images append to existing instead of replacing
+  - Fixed issue where uploaded media was lost on subsequent form submissions
+
+- **Fixed practitioner session notifications**:
+  - Replaced unreliable Supabase realtime with robust polling system
+  - Increased poll frequency to 1 second for immediate updates
+  - Tracks session count changes to detect new incoming requests
+  - Shows toast notification + plays audio for new session alerts
+  - Fixed critical bug where first session wouldn't trigger notification
+  - Uses `hasLoadedSessions` flag to properly detect initial sessions
+
+- **Verified session transition notifications**:
+  - Toast notifications work for all phase changes (waiting → live)
+  - Real-time updates via Supabase subscriptions for session state
+  - Notifications for: practitioner ready, guest ready, session starting, session ended
+
 ### 2024-10-14 (Session Flow & Dashboard Implementation - Complete)
 - **Created practitioner dashboard with real-time session management**:
   - Added `/dashboard` route for practitioners to manage incoming sessions
