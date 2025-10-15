@@ -105,8 +105,13 @@ export class DbStorage implements IStorage {
   }
 
   async updateProfile(id: string, updates: Partial<Profile>): Promise<Profile> {
+    // Debug logging for field mapping issue
+    console.log('updateProfile called with updates:', JSON.stringify(updates, null, 2));
+    
     // Convert camelCase to snake_case for database
     const snakeCaseUpdates = toSnakeCase(updates);
+    
+    console.log('After conversion to snake_case:', JSON.stringify(snakeCaseUpdates, null, 2));
     
     const { data, error} = await supabase
       .from('profiles')
@@ -118,7 +123,10 @@ export class DbStorage implements IStorage {
       .select()
       .single();
     
-    if (error) throw error;
+    if (error) {
+      console.error('Supabase update error:', error);
+      throw error;
+    }
     return toCamelCase(data) as Profile;
   }
 
@@ -155,8 +163,12 @@ export class DbStorage implements IStorage {
   }
 
   async updatePractitioner(userId: string, updates: Partial<Practitioner>): Promise<Practitioner> {
+    console.log('updatePractitioner called with updates:', JSON.stringify(updates, null, 2));
+    
     // Convert camelCase to snake_case for database
     const snakeCaseUpdates = toSnakeCase(updates);
+    
+    console.log('After conversion to snake_case:', JSON.stringify(snakeCaseUpdates, null, 2));
     
     const { data, error } = await supabase
       .from('practitioners')
@@ -168,7 +180,10 @@ export class DbStorage implements IStorage {
       .select()
       .single();
     
-    if (error) throw error;
+    if (error) {
+      console.error('Supabase updatePractitioner error:', error);
+      throw error;
+    }
     return toCamelCase(data) as Practitioner;
   }
 

@@ -261,10 +261,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = req.user!.id;
       const updates = req.body;
+      
+      console.log(`PUT /api/profile - userId: ${userId}, updates:`, JSON.stringify(updates, null, 2));
 
       const profile = await storage.updateProfile(userId, updates);
       res.json(profile);
     } catch (error: any) {
+      console.error('PUT /api/profile error:', error);
       res.status(400).json({ error: error.message });
     }
   });
@@ -811,6 +814,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { id } = req.params;
       const userId = req.user!.id;
       
+      console.log(`PATCH /api/profiles/${id} - userId: ${userId}, original updates:`, JSON.stringify(req.body, null, 2));
+      
       // Verify user is updating their own profile
       if (id !== userId) {
         return res.status(403).json({ error: 'You can only update your own profile' });
@@ -836,12 +841,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         delete updates.video;
       }
       
+      console.log(`PATCH /api/profiles/${id} - after field mapping:`, JSON.stringify(updates, null, 2));
+      
       // Update the profile
       const profile = await storage.updateProfile(userId, updates);
       
       res.json(profile);
     } catch (error: any) {
-      console.error('Update profile error:', error);
+      console.error('PATCH profile error:', error);
       if (error.name === 'ZodError') {
         return res.status(400).json({ error: 'Invalid input', details: error.errors });
       }
