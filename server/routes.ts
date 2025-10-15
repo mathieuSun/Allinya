@@ -167,21 +167,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // POST /api/sessions/start - Start a new session
   app.post('/api/sessions/start', requireAuth, async (req: Request, res: Response) => {
     try {
+      console.log('Session start request:', req.body);
+      
       const { practitionerId, liveSeconds } = z.object({
         practitionerId: z.string().uuid(),
         liveSeconds: z.number().int().positive(),
       }).parse(req.body);
 
       const guestId = req.user!.id;
+      console.log('Guest ID:', guestId, 'Practitioner ID:', practitionerId);
 
       // Verify guest role
       const guest = await storage.getProfile(guestId);
       if (!guest || guest.role !== 'guest') {
+        console.error('User is not a guest:', guest);
         return res.status(403).json({ error: 'Only guests can start sessions' });
       }
 
       // Verify practitioner exists and is online
       const practitioner = await storage.getPractitioner(practitionerId);
+      console.log('Practitioner status:', practitioner);
       if (!practitioner || !practitioner.online) {
         return res.status(400).json({ error: 'Practitioner is not available' });
       }
@@ -190,6 +195,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const sessionId = randomUUID();
       const agoraChannel = `sess_${sessionId.substring(0, 8)}`;
       
+      console.log('Creating session with ID:', sessionId);
       const session = await storage.createSession({
         practitionerId: practitionerId,
         guestId: guestId,
@@ -207,11 +213,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         readyGuest: false,
       });
 
+      console.log('Session created:', session);
+
       // Mark practitioner as in service
       await storage.updatePractitioner(practitionerId, { inService: true });
 
       res.json({ sessionId: session.id });
     } catch (error: any) {
+      console.error('Error creating session:', error);
       res.status(400).json({ error: error.message });
     }
   });

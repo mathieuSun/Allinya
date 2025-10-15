@@ -39,20 +39,25 @@ export default function PractitionerProfilePage() {
   // Start session mutation
   const startSessionMutation = useMutation({
     mutationFn: async () => {
+      console.log('Starting session with:', { practitionerId, liveSeconds: selectedDuration });
       const response = await apiRequest('POST', '/api/sessions/start', {
         practitionerId,
         liveSeconds: selectedDuration,
       });
-      return response.json();
+      const data = await response.json();
+      console.log('Session created:', data);
+      return data;
     },
     onSuccess: (data: any) => {
+      console.log('Success! Redirecting to session:', data.sessionId);
       toast({ title: 'Session starting!' });
       setLocation(`/s/${data.sessionId}`);
     },
     onError: (error: any) => {
+      console.error('Session creation failed:', error);
       toast({
         title: 'Failed to start session',
-        description: error.message,
+        description: error.message || 'Unable to create session. Please try again.',
         variant: 'destructive',
       });
     },
