@@ -171,13 +171,20 @@ export class ObjectStorageService {
       );
     }
 
-    // Use the first public search path
-    const publicDir = publicSearchPaths[0];
+    // Use the DEFAULT_OBJECT_STORAGE_BUCKET_ID for public uploads
+    const bucketId = process.env.DEFAULT_OBJECT_STORAGE_BUCKET_ID;
+    if (!bucketId) {
+      throw new Error(
+        "DEFAULT_OBJECT_STORAGE_BUCKET_ID not set. Object storage not configured."
+      );
+    }
+
     const objectId = randomUUID();
     const publicPath = `uploads/${objectId}`;
-    const fullPath = `${publicDir}/${publicPath}`;
+    const bucketName = bucketId;
+    const objectName = publicPath;
 
-    const { bucketName, objectName } = parseObjectPath(fullPath);
+    console.log(`Creating signed URL for: bucket=${bucketName}, object=${objectName}`);
 
     // Sign URL for PUT method with TTL
     const uploadURL = await signObjectURL({

@@ -165,30 +165,21 @@ export default function ProfilePage() {
 
   // File upload handlers
   const handleGetUploadParametersForAvatar = async () => {
-    const response = await fetch('/api/objects/upload-public', {
-      method: 'POST',
-      credentials: 'include',
-    });
+    const response = await apiRequest('POST', '/api/objects/upload-public', {});
     const data = await response.json();
     setCurrentUploadPublicPath(data.publicPath);
     return { method: 'PUT' as const, url: data.uploadURL };
   };
 
   const handleGetUploadParametersForVideo = async () => {
-    const response = await fetch('/api/objects/upload-public', {
-      method: 'POST',
-      credentials: 'include',
-    });
+    const response = await apiRequest('POST', '/api/objects/upload-public', {});
     const data = await response.json();
     setCurrentUploadPublicPath(data.publicPath);
     return { method: 'PUT' as const, url: data.uploadURL };
   };
 
   const handleGetUploadParametersForGallery = async () => {
-    const response = await fetch('/api/objects/upload-public', {
-      method: 'POST',
-      credentials: 'include',
-    });
+    const response = await apiRequest('POST', '/api/objects/upload-public', {});
     const data = await response.json();
     setCurrentGalleryPublicPaths(prev => [...prev, data.publicPath]);
     return { method: 'PUT' as const, url: data.uploadURL };
