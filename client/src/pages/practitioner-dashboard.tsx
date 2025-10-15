@@ -25,7 +25,7 @@ export default function PractitionerDashboard() {
   }
 
   // Fetch practitioner status
-  const { data: practitionerStatus } = useQuery({
+  const { data: practitionerStatus } = useQuery<{ online: boolean }>({
     queryKey: ['/api/practitioners/status'],
   });
 

@@ -437,11 +437,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const privilegeExpireTime = Math.floor(Date.now() / 1000) + 3600; // 1 hour
       const agoraRole = role === 'host' ? Role.PUBLISHER : Role.SUBSCRIBER;
 
-      const token = RtcTokenBuilder.buildTokenWithUid(
+      const token = RtcTokenBuilder.buildTokenWithAccount(
         appId,
         appCertificate,
         channel,
-        0, // Use 0 for string UIDs
+        uid, // Use string UID directly
         agoraRole,
         privilegeExpireTime
       );
@@ -533,14 +533,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/objects/upload", requireAuth, async (req: Request, res: Response) => {
     try {
       const objectStorageService = new ObjectStorageService();
-      if (!objectStorageService.isConfigured()) {
-        return res.status(503).json({ error: 'File uploads are not available in production. Please use test images for now.' });
-      }
       const uploadURL = await objectStorageService.getObjectEntityUploadURL();
       res.json({ uploadURL });
     } catch (error: any) {
       console.error('Upload error:', error);
-      res.status(503).json({ error: 'File uploads are temporarily disabled in production' });
+      res.status(500).json({ error: error.message });
     }
   });
 
@@ -548,14 +545,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/objects/upload-public", requireAuth, async (req: Request, res: Response) => {
     try {
       const objectStorageService = new ObjectStorageService();
-      if (!objectStorageService.isConfigured()) {
-        return res.status(503).json({ error: 'File uploads are not available in production. Please use test images for now.' });
-      }
       const { uploadURL, publicPath } = await objectStorageService.getPublicObjectUploadURL();
       res.json({ uploadURL, publicPath });
     } catch (error: any) {
       console.error('Upload error:', error);
-      res.status(503).json({ error: 'File uploads are temporarily disabled in production' });
+      res.status(500).json({ error: error.message });
     }
   });
 

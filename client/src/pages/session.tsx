@@ -204,8 +204,8 @@ export default function SessionPage() {
       );
       const { token } = await tokenResponse.json();
 
-      // Join channel
-      await client.join(import.meta.env.VITE_AGORA_APP_ID, session.agoraChannel, token, uid);
+      // Join channel with string UID
+      await client.join(import.meta.env.VITE_AGORA_APP_ID, session.agoraChannel, token || null, uid);
 
       // Create and publish local tracks
       const [audioTrack, videoTrack] = await AgoraRTC.createMicrophoneAndCameraTracks();
