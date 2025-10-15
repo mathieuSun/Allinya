@@ -595,9 +595,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // GET /api/agora/token - Generate Agora RTC token
   app.get('/api/agora/token', requireAuth, async (req: Request, res: Response) => {
     try {
-      const { channel, role, uid } = z.object({
+      const { channel, uid } = z.object({
         channel: z.string(),
-        role: z.enum(['host', 'audience']),
         uid: z.string(),
       }).parse(req.query);
 
@@ -614,7 +613,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const privilegeExpireTime = Math.floor(Date.now() / 1000) + 3600; // 1 hour
-      const agoraRole = role === 'host' ? RtcRole.PUBLISHER : RtcRole.SUBSCRIBER;
+      // Both practitioners and guests need to publish audio/video in a call
+      // So we always use PUBLISHER role for both
+      const agoraRole = RtcRole.PUBLISHER;
 
       const token = RtcTokenBuilder.buildTokenWithUserAccount(
         appId,
@@ -625,7 +626,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         privilegeExpireTime
       );
 
-      res.json({ token });
+      res.json({ 
+        token,
+        appId,
+        uid
+      });
     } catch (error: any) {
       res.status(400).json({ error: error.message });
     }
