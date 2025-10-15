@@ -73,7 +73,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           userId: authData.user.id,
           online: false,
           inService: false,
-          rating: '0.0',
+          rating: 0,
           reviewCount: 0
         });
       }
@@ -227,7 +227,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           userId,
           online: false,
           inService: false,
-          rating: '0.0',
+          rating: 0,
           reviewCount: 0,
         });
       }
