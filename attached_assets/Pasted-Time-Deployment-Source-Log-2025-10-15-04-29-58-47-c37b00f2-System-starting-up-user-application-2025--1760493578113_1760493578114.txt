@@ -1,0 +1,140 @@
+Time
+Deployment
+Source
+Log
+2025-10-15 04:29:58.47
+c37b00f2
+System
+starting up user application
+2025-10-15 07:00:08.06
+c02152f6
+User
+Mode: production
+2025-10-15 07:00:08.06
+c02152f6
+User
+Port: 5000
+2025-10-15 07:00:08.06
+c02152f6
+User
+Database: helium
+2025-10-15 07:00:08.06
+c02152f6
+User
+Supabase: tkswishecwcllxgyhqox.supabase.co
+2025-10-15 07:00:08.06
+c02152f6
+User
+Agora: Configured
+2025-10-15 07:00:08.21
+c02152f6
+User
+11:00:08 PM [express] serving on port 5000
+2025-10-15 07:01:15.62
+c37b00f2
+System
+system: received signal terminated
+2025-10-15 07:15:13.44
+c02152f6
+System
+system: received signal terminated
+2025-10-15 07:28:44.94
+c02152f6
+System
+starting up user application
+2025-10-15 07:28:44.94
+c02152f6
+System
+forwarding local port 5000 to external port 80 (mapped as 1104)
+2025-10-15 07:28:45.84
+c02152f6
+User
+> rest-express@1.0.0 start
+2025-10-15 07:28:45.84
+c02152f6
+User
+> NODE_ENV=production node dist/index.js
+2025-10-15 07:28:47.16
+c02152f6
+User
+[dotenv@17.2.3] injecting env (0) from .env -- tip: ✅ audit secrets and track compliance: https://dotenvx.com/ops
+2025-10-15 07:28:47.17
+c02152f6
+User
+✅ Environment configuration loaded successfully
+2025-10-15 07:28:47.17
+c02152f6
+User
+Mode: production
+2025-10-15 07:28:47.17
+c02152f6
+User
+Port: 5000
+2025-10-15 07:28:47.17
+c02152f6
+User
+Database: helium
+2025-10-15 07:28:47.17
+c02152f6
+User
+Supabase: tkswishecwcllxgyhqox.supabase.co
+2025-10-15 07:28:47.17
+c02152f6
+User
+Agora: Configured
+2025-10-15 07:28:47.29
+c02152f6
+User
+11:28:47 PM [express] serving on port 5000
+2025-10-15 08:01:13.45
+c02152f6
+System
+system: received signal terminated
+2025-10-15 09:58:59.83
+de787501
+System
+starting up user application
+2025-10-15 09:58:59.83
+de787501
+System
+forwarding local port 5000 to external port 80 (mapped as 1104)
+2025-10-15 09:59:01.22
+de787501
+User
+> rest-express@1.0.0 start
+2025-10-15 09:59:01.22
+de787501
+User
+> NODE_ENV=production node dist/index.js
+2025-10-15 09:59:02.37
+de787501
+User
+[dotenv@17.2.3] injecting env (0) from .env -- tip: 🔑 add access controls to secrets: https://dotenvx.com/ops
+2025-10-15 09:59:02.37
+de787501
+User
+✅ Environment configuration loaded successfully
+2025-10-15 09:59:02.37
+de787501
+User
+Mode: production
+2025-10-15 09:59:02.37
+de787501
+User
+Port: 5000
+2025-10-15 09:59:02.37
+de787501
+User
+Database: helium
+2025-10-15 09:59:02.37
+de787501
+User
+Supabase: tkswishecwcllxgyhqox.supabase.co
+2025-10-15 09:59:02.37
+de787501
+User
+Agora: Configured
+2025-10-15 09:59:02.50
+de787501
+User
+1:59:02 AM [express] serving on port 5000
