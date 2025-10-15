@@ -164,7 +164,7 @@ export default function PractitionerProfilePage() {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {thumbnails.map((url, i) => (
                 <div key={i} className="aspect-square rounded-lg overflow-hidden" data-testid={`gallery-thumb-${i}`}>
-                  <img src={url} alt={`Gallery ${i + 1}`} className="w-full h-full object-cover" />
+                  <img src={url || undefined} alt={`Gallery ${i + 1}`} className="w-full h-full object-cover" />
                 </div>
               ))}
             </div>

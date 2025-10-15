@@ -531,16 +531,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Get upload URL for object entity (private)
   app.post("/api/objects/upload", requireAuth, async (req: Request, res: Response) => {
-    const objectStorageService = new ObjectStorageService();
-    const uploadURL = await objectStorageService.getObjectEntityUploadURL();
-    res.json({ uploadURL });
+    try {
+      const objectStorageService = new ObjectStorageService();
+      if (!objectStorageService.isConfigured()) {
+        return res.status(503).json({ error: 'File uploads are not available in production. Please use test images for now.' });
+      }
+      const uploadURL = await objectStorageService.getObjectEntityUploadURL();
+      res.json({ uploadURL });
+    } catch (error: any) {
+      console.error('Upload error:', error);
+      res.status(503).json({ error: 'File uploads are temporarily disabled in production' });
+    }
   });
 
   // Get upload URL for public objects (avatars, gallery, videos)
   app.post("/api/objects/upload-public", requireAuth, async (req: Request, res: Response) => {
-    const objectStorageService = new ObjectStorageService();
-    const { uploadURL, publicPath } = await objectStorageService.getPublicObjectUploadURL();
-    res.json({ uploadURL, publicPath });
+    try {
+      const objectStorageService = new ObjectStorageService();
+      if (!objectStorageService.isConfigured()) {
+        return res.status(503).json({ error: 'File uploads are not available in production. Please use test images for now.' });
+      }
+      const { uploadURL, publicPath } = await objectStorageService.getPublicObjectUploadURL();
+      res.json({ uploadURL, publicPath });
+    } catch (error: any) {
+      console.error('Upload error:', error);
+      res.status(503).json({ error: 'File uploads are temporarily disabled in production' });
+    }
   });
 
   // Update profile with uploaded avatar
