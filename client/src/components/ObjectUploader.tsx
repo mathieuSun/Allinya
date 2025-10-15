@@ -11,8 +11,9 @@ interface ObjectUploaderProps {
   maxFileSize?: number;
   allowedFileTypes?: string[];
   onGetUploadParameters: () => Promise<{
-    method: "POST";
+    method: "PUT";
     url: string;
+    token: string;
   }>;
   onComplete?: (
     result: UploadResult<Record<string, unknown>, Record<string, unknown>>
@@ -71,14 +72,19 @@ export function ObjectUploader({
       .use(XHRUpload, {
         endpoint: async (fileOrBundle) => {
           // Get the upload URL for each file dynamically
-          // Note: endpoint can receive either a single file or array of files
-          // For our use case, we just need to return the URL from our parameters
           const params = await onGetUploadParameters();
           return params.url;
         },
-        method: 'POST',
-        fieldName: 'file', // Supabase expects the file in a 'file' field
-        formData: true, // Send as multipart/form-data
+        method: 'PUT', // Supabase requires PUT method
+        formData: false, // Send as raw binary data, not FormData
+        headers: async (file) => {
+          // Get the upload parameters including the token
+          const params = await onGetUploadParameters();
+          return {
+            'Authorization': `Bearer ${params.token}`, // Supabase requires Authorization header
+            'Content-Type': file.type || 'application/octet-stream',
+          };
+        },
       })
       .on("complete", (result) => {
         onComplete?.(result);

@@ -673,7 +673,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = req.user!.id;
       const { uploadUrl, publicUrl, fileName } = await supabaseStorage.getUploadUrl('avatars', userId);
-      res.json({ uploadUrl, publicUrl, fileName });
+      
+      // Extract the token from the signed URL
+      // Supabase signed URLs include the token as a query parameter
+      const urlObj = new URL(uploadUrl);
+      const token = urlObj.searchParams.get('token') || '';
+      
+      res.json({ uploadUrl, publicUrl, fileName, token });
     } catch (error: any) {
       console.error('Avatar upload URL error:', error);
       res.status(500).json({ error: error.message });
@@ -685,7 +691,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = req.user!.id;
       const { uploadUrl, publicUrl, fileName } = await supabaseStorage.getUploadUrl('gallery', userId);
-      res.json({ uploadUrl, publicUrl, fileName });
+      
+      // Extract the token from the signed URL
+      const urlObj = new URL(uploadUrl);
+      const token = urlObj.searchParams.get('token') || '';
+      
+      res.json({ uploadUrl, publicUrl, fileName, token });
     } catch (error: any) {
       console.error('Gallery upload URL error:', error);
       res.status(500).json({ error: error.message });
@@ -697,7 +708,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = req.user!.id;
       const { uploadUrl, publicUrl, fileName } = await supabaseStorage.getUploadUrl('videos', userId);
-      res.json({ uploadUrl, publicUrl, fileName });
+      
+      // Extract the token from the signed URL
+      const urlObj = new URL(uploadUrl);
+      const token = urlObj.searchParams.get('token') || '';
+      
+      res.json({ uploadUrl, publicUrl, fileName, token });
     } catch (error: any) {
       console.error('Video upload URL error:', error);
       res.status(500).json({ error: error.message });
