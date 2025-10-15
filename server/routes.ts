@@ -16,6 +16,11 @@ const RtcTokenBuilder = AgoraToken.RtcTokenBuilder;
 const Role = AgoraToken.Role;
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Health check
+  app.get('/api/health', (req: Request, res: Response) => {
+    res.json({ status: 'ok', timestamp: new Date().toISOString() });
+  });
+
   // POST /api/auth/role-init - Set user role on first login
   app.post('/api/auth/role-init', requireAuth, async (req: Request, res: Response) => {
     try {
