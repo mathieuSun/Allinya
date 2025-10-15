@@ -182,11 +182,12 @@ export default function SessionPage() {
     }
 
     return () => {
-      if (session?.phase !== 'live') {
+      // Always cleanup when unmounting or when phase changes from live
+      if (agoraJoined && session?.phase !== 'live') {
         cleanupAgora();
       }
     };
-  }, [session?.phase]);
+  }, [session?.phase, agoraJoined, sessionId]);
 
   const initAgora = async () => {
     if (!session || !currentUser) {
@@ -196,19 +197,33 @@ export default function SessionPage() {
 
     try {
       console.log('Initializing Agora with session:', session.agoraChannel);
+      console.log('Session data:', { 
+        agoraChannel: session.agoraChannel,
+        guestId: session.guestId,
+        practitionerId: session.practitionerId,
+        agoraUidGuest: session.agoraUidGuest,
+        agoraUidPractitioner: session.agoraUidPractitioner
+      });
+      
       const client = AgoraRTC.createClient({ mode: 'rtc', codec: 'vp8' });
       setAgoraClient(client);
 
       const isGuest = currentUser.id === session.guestId;
       const uid = isGuest ? session.agoraUidGuest : session.agoraUidPractitioner;
+      
+      console.log('Current user:', currentUser.id, 'is guest:', isGuest, 'using UID:', uid);
 
       // Get token from server with authentication
       const { data: { session: authSession } } = await supabase.auth.getSession();
+      if (!authSession?.access_token) {
+        throw new Error('No auth session available');
+      }
+      
       const tokenResponse = await fetch(
         `/api/agora/token?channel=${session.agoraChannel}&role=host&uid=${uid}`,
         {
           headers: {
-            'Authorization': `Bearer ${authSession?.access_token}`
+            'Authorization': `Bearer ${authSession.access_token}`
           },
           credentials: 'include'
         }
@@ -216,14 +231,22 @@ export default function SessionPage() {
       
       if (!tokenResponse.ok) {
         const errorText = await tokenResponse.text();
+        console.error('Token fetch failed:', tokenResponse.status, errorText);
         throw new Error(`Failed to get Agora token: ${errorText}`);
       }
       
-      const { token } = await tokenResponse.json();
+      const { token, appId } = await tokenResponse.json();
+      console.log('Got Agora token, appId:', appId);
+      
+      // Use the appId from response or fallback to env var
+      const finalAppId = appId || import.meta.env.VITE_AGORA_APP_ID;
+      if (!finalAppId) {
+        throw new Error('Agora App ID not configured');
+      }
 
       // Join channel with string UID
-      console.log('Joining Agora channel:', session.agoraChannel, 'with UID:', uid);
-      await client.join(import.meta.env.VITE_AGORA_APP_ID, session.agoraChannel, token || null, uid);
+      console.log('Joining Agora channel:', session.agoraChannel, 'with UID:', uid, 'appId:', finalAppId);
+      await client.join(finalAppId, session.agoraChannel, token || null, uid);
       console.log('Successfully joined Agora channel');
 
       // Create and publish local tracks
@@ -262,34 +285,45 @@ export default function SessionPage() {
       setAgoraJoined(true);
     } catch (error) {
       console.error('Agora init error:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       toast({
         title: 'Video connection failed',
-        description: 'Please check your camera and microphone permissions',
+        description: errorMessage.includes('permissions') 
+          ? 'Please check your camera and microphone permissions'
+          : errorMessage.includes('token') 
+          ? 'Authentication failed. Please refresh and try again.'
+          : 'Unable to establish video connection. Please try again.',
         variant: 'destructive',
       });
+      // Clean up any partial initialization
+      await cleanupAgora();
     }
   };
 
   const cleanupAgora = async () => {
-    if (localVideoTrack) {
-      localVideoTrack.stop();
-      localVideoTrack.close();
-      setLocalVideoTrack(null);
+    try {
+      if (localVideoTrack) {
+        localVideoTrack.stop();
+        localVideoTrack.close();
+        setLocalVideoTrack(null);
+      }
+      
+      if (localAudioTrack) {
+        localAudioTrack.stop();
+        localAudioTrack.close();
+        setLocalAudioTrack(null);
+      }
+      
+      if (agoraClient) {
+        await agoraClient.leave();
+        setAgoraClient(null);
+      }
+    } catch (cleanupError) {
+      console.error('Error during Agora cleanup:', cleanupError);
+    } finally {
+      setAgoraJoined(false);
+      setRemoteUsers([]);
     }
-    
-    if (localAudioTrack) {
-      localAudioTrack.stop();
-      localAudioTrack.close();
-      setLocalAudioTrack(null);
-    }
-    
-    if (agoraClient) {
-      await agoraClient.leave();
-      setAgoraClient(null);
-    }
-    
-    setAgoraJoined(false);
-    setRemoteUsers([]);
   };
 
   const toggleVideo = async () => {

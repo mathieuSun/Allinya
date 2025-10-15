@@ -77,11 +77,10 @@ export function ObjectUploader({
         },
         method: 'PUT', // Supabase requires PUT method
         formData: false, // Send as raw binary data, not FormData
-        headers: async (file) => {
-          // Get the upload parameters including the token
-          const params = await onGetUploadParameters();
+        headers: (file) => {
+          // Supabase signed URLs already contain authentication in the URL
+          // No Authorization header needed - just set the content type
           return {
-            'Authorization': `Bearer ${params.token}`, // Supabase requires Authorization header
             'Content-Type': file.type || 'application/octet-stream',
           };
         },

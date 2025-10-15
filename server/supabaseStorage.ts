@@ -24,44 +24,6 @@ export class SupabaseStorageService {
   }
 
   /**
-   * Initialize storage buckets if they don't exist
-   * Makes buckets public for read access
-   */
-  async initializeBuckets(): Promise<void> {
-    const buckets: StorageBucket[] = ['avatars', 'gallery', 'videos'];
-    
-    for (const bucketName of buckets) {
-      try {
-        // Check if bucket exists
-        const { data: existingBucket } = await this.client
-          .storage
-          .getBucket(bucketName);
-        
-        if (!existingBucket) {
-          // Create bucket with public read access
-          const { error } = await this.client.storage.createBucket(bucketName, {
-            public: true,
-            allowedMimeTypes: bucketName === 'videos' 
-              ? ['video/mp4', 'video/webm', 'video/ogg']
-              : ['image/jpeg', 'image/png', 'image/gif', 'image/webp'],
-            fileSizeLimit: bucketName === 'videos' ? 104857600 : 10485760 // 100MB for videos, 10MB for images
-          });
-          
-          if (error) {
-            console.error(`Error creating bucket ${bucketName}:`, error);
-          } else {
-            console.log(`✅ Created storage bucket: ${bucketName}`);
-          }
-        } else {
-          console.log(`✓ Storage bucket exists: ${bucketName}`);
-        }
-      } catch (error) {
-        console.error(`Error checking bucket ${bucketName}:`, error);
-      }
-    }
-  }
-
-  /**
    * Get signed upload URL for a file
    * Returns both the upload URL and the final public URL
    */
