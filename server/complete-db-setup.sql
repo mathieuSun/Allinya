@@ -350,26 +350,13 @@ WHERE s.phase = 'ended'
 ORDER BY s.ended_at DESC;
 
 -- ============================================
--- SAMPLE/TEST DATA (OPTIONAL - Comment out in production)
+-- NO TEST DATA - Use real users only
 -- ============================================
--- Uncomment the following lines to insert test data
-
-/*
--- Insert test users (ensure these exist in auth.users first)
-INSERT INTO profiles (id, role, display_name, bio, country, specialties) VALUES
-('1a20c2b4-469d-4187-96ff-3e3da2a1d3a6', 'practitioner', 'Chef Mat', 'Experienced healer specializing in energy work', 'USA', ARRAY['Reiki', 'Crystal Healing']),
-('38774353-63f2-40f7-a5d1-546b4804e5e3', 'guest', 'Guest User', 'Seeking wellness and balance', 'Canada', ARRAY[]::TEXT[])
-ON CONFLICT (id) DO UPDATE SET
-  display_name = EXCLUDED.display_name,
-  bio = EXCLUDED.bio;
-
--- Insert test practitioner data
-INSERT INTO practitioners (user_id, online, rating, review_count) VALUES
-('1a20c2b4-469d-4187-96ff-3e3da2a1d3a6', true, 4.5, 10)
-ON CONFLICT (user_id) DO UPDATE SET
-  online = EXCLUDED.online,
-  rating = EXCLUDED.rating;
-*/
+-- This application uses REAL user accounts only:
+-- - Practitioner: chefmat2018@gmail.com (ID: 1a20c2b4-469d-4187-96ff-3e3da2a1d3a6)
+-- - Guest: cheekyma@hotmail.com (ID: 38774353-63f2-40f7-a5d1-546b4804e5e3)
+--
+-- Create profiles through the application after authenticating with these accounts.
 
 -- ============================================
 -- GRANT PERMISSIONS (For Supabase)
