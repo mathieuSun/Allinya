@@ -788,6 +788,67 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // GET /api/profiles/:id - Get public profile by ID
+  app.get('/api/profiles/:id', async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+      const profile = await storage.getProfile(id);
+      
+      if (!profile) {
+        return res.status(404).json({ error: 'Profile not found' });
+      }
+      
+      res.json(profile);
+    } catch (error: any) {
+      console.error('Get profile error:', error);
+      res.status(400).json({ error: error.message || 'Failed to get profile' });
+    }
+  });
+
+  // PATCH /api/profiles/:id - Update profile by ID (protected - user can only update their own profile)
+  app.patch('/api/profiles/:id', requireAuth, async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+      const userId = req.user!.id;
+      
+      // Verify user is updating their own profile
+      if (id !== userId) {
+        return res.status(403).json({ error: 'You can only update your own profile' });
+      }
+      
+      // Parse and validate the update data
+      const updates = req.body;
+      
+      // Handle field name variations (avatar vs avatarUrl)
+      if (updates.avatar) {
+        updates.avatarUrl = updates.avatar;
+        delete updates.avatar;
+      }
+      
+      // Handle other field mappings if needed
+      if (updates.gallery) {
+        updates.galleryUrls = updates.gallery;
+        delete updates.gallery;
+      }
+      
+      if (updates.video) {
+        updates.videoUrl = updates.video;
+        delete updates.video;
+      }
+      
+      // Update the profile
+      const profile = await storage.updateProfile(userId, updates);
+      
+      res.json(profile);
+    } catch (error: any) {
+      console.error('Update profile error:', error);
+      if (error.name === 'ZodError') {
+        return res.status(400).json({ error: 'Invalid input', details: error.errors });
+      }
+      res.status(400).json({ error: error.message || 'Failed to update profile' });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
