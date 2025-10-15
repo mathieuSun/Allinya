@@ -74,26 +74,42 @@ async function runDiagnostics() {
     console.log('-------------------------------------------');
     
     // Guest requests a session
-    const sessionRequest = await fetch(`${BASE_URL}/api/sessions`, {
+    const sessionRequest = await fetch(`${BASE_URL}/api/sessions/start`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${guestToken}`,
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        practitionerId: practitionerData.user?.id
+        practitionerId: practitionerData.user?.id,
+        liveSeconds: 1800  // Required field - 30 minutes default session duration
       })
     });
     
     const sessionData = await sessionRequest.json();
     
-    if (!sessionData.id) {
+    // The endpoint returns { sessionId: id } not { id: id }
+    const sessionId = sessionData.sessionId || sessionData.id;
+    
+    if (!sessionId) {
       throw new Error('Session creation failed - no session ID');
     }
     console.log('✅ Session created successfully');
-    console.log(`   Session ID: ${sessionData.id}`);
-    console.log(`   Phase: ${sessionData.phase}`);
-    console.log(`   Channel: ${sessionData.agoraChannel}`);
+    console.log(`   Session ID: ${sessionId}`);
+    
+    // Now fetch the full session details
+    const sessionDetailsRequest = await fetch(
+      `${BASE_URL}/api/sessions/${sessionId}`,
+      {
+        headers: {
+          'Authorization': `Bearer ${guestToken}`
+        }
+      }
+    );
+    
+    const sessionDetails = await sessionDetailsRequest.json();
+    console.log(`   Phase: ${sessionDetails.phase}`);
+    console.log(`   Channel: ${sessionDetails.agoraChannel}`);
     console.log('');
     
     // ============================================
@@ -104,7 +120,7 @@ async function runDiagnostics() {
     
     // Get Agora token for practitioner
     const practitionerTokenRequest = await fetch(
-      `${BASE_URL}/api/sessions/${sessionData.id}/token`,
+      `${BASE_URL}/api/agora/token?channel=${sessionDetails.agoraChannel}&uid=p_${practitionerData.user?.id}`,
       {
         headers: {
           'Authorization': `Bearer ${practitionerToken}`
@@ -124,7 +140,7 @@ async function runDiagnostics() {
     
     // Get Agora token for guest
     const guestTokenRequest = await fetch(
-      `${BASE_URL}/api/sessions/${sessionData.id}/token`,
+      `${BASE_URL}/api/agora/token?channel=${sessionDetails.agoraChannel}&uid=g_${guestData.user?.id}`,
       {
         headers: {
           'Authorization': `Bearer ${guestToken}`
@@ -162,8 +178,8 @@ async function runDiagnostics() {
     console.log(`${uniqueUids ? '✅' : '❌'} Unique UIDs for each user`);
     
     // Check channel name matches session
-    const channelMatches = sessionData.agoraChannel === 
-                          `session_${sessionData.id}`;
+    const channelMatches = sessionDetails.agoraChannel === 
+                          `session_${sessionId}`;
     console.log(`${channelMatches ? '✅' : '❌'} Channel name properly formatted`);
     console.log('');
     
