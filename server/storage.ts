@@ -261,10 +261,14 @@ export class DbStorage implements IStorage {
   async createSession(session: InsertSession): Promise<Session> {
     const snakeCaseSession = toSnakeCase(session);
     
+    // Generate a unique channel name for Agora video
+    const agoraChannel = `session_${Date.now()}_${Math.random().toString(36).substring(7)}`;
+    
     const { data, error } = await supabase
       .from('sessions')
       .insert({
         ...snakeCaseSession,
+        agora_channel: agoraChannel, // Add the required agora_channel field
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       })
