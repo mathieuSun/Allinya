@@ -1,9 +1,9 @@
 import { useState, useEffect } from "react";
 import type { ReactNode } from "react";
 import Uppy from "@uppy/core";
+import type { UppyFile, UploadResult } from "@uppy/core";
 import { DashboardModal } from "@uppy/react";
-import AwsS3 from "@uppy/aws-s3";
-import type { UploadResult } from "@uppy/core";
+import XHRUpload from "@uppy/xhr-upload";
 import { Button } from "@/components/ui/button";
 
 interface ObjectUploaderProps {
@@ -11,7 +11,7 @@ interface ObjectUploaderProps {
   maxFileSize?: number;
   allowedFileTypes?: string[];
   onGetUploadParameters: () => Promise<{
-    method: "PUT";
+    method: "POST";
     url: string;
   }>;
   onComplete?: (
@@ -68,9 +68,17 @@ export function ObjectUploader({
       },
       autoProceed: false,
     })
-      .use(AwsS3, {
-        shouldUseMultipart: false,
-        getUploadParameters: onGetUploadParameters,
+      .use(XHRUpload, {
+        endpoint: async (fileOrBundle) => {
+          // Get the upload URL for each file dynamically
+          // Note: endpoint can receive either a single file or array of files
+          // For our use case, we just need to return the URL from our parameters
+          const params = await onGetUploadParameters();
+          return params.url;
+        },
+        method: 'POST',
+        fieldName: 'file', // Supabase expects the file in a 'file' field
+        formData: true, // Send as multipart/form-data
       })
       .on("complete", (result) => {
         onComplete?.(result);

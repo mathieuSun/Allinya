@@ -168,21 +168,21 @@ export default function ProfilePage() {
     const response = await apiRequest('POST', '/api/upload/avatar', {});
     const data = await response.json();
     setCurrentUploadPublicPath(data.publicUrl);
-    return { method: 'PUT' as const, url: data.uploadUrl };
+    return { method: 'POST' as const, url: data.uploadUrl };
   };
 
   const handleGetUploadParametersForVideo = async () => {
     const response = await apiRequest('POST', '/api/upload/video', {});
     const data = await response.json();
     setCurrentUploadPublicPath(data.publicUrl);
-    return { method: 'PUT' as const, url: data.uploadUrl };
+    return { method: 'POST' as const, url: data.uploadUrl };
   };
 
   const handleGetUploadParametersForGallery = async () => {
     const response = await apiRequest('POST', '/api/upload/gallery', {});
     const data = await response.json();
     setCurrentGalleryPublicPaths(prev => [...prev, data.publicUrl]);
-    return { method: 'PUT' as const, url: data.uploadUrl };
+    return { method: 'POST' as const, url: data.uploadUrl };
   };
 
   const handleAvatarUpload = async (result: UploadResult<Record<string, unknown>, Record<string, unknown>>) => {
