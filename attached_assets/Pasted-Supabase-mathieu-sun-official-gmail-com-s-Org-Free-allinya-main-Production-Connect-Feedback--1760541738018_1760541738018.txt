@@ -1,0 +1,202 @@
+Supabase
+mathieu.sun.official@gmail.com's Org
+Free
+
+allinya
+
+main
+Production
+
+
+Connect
+Feedback
+
+
+
+
+
+
+SQL Editor
+Search queries
+
+
+SHARED
+
+FAVORITES
+
+PRIVATE (1)
+Telehealth Profiles, Sessions & Reviews Schema
+
+COMMUNITY
+Templates
+Quickstarts
+
+View running queries
+
+
+Telehealth Profiles, Sessions & Reviews Schema
+
+474475476477478479480481482483484485486487488489490491492493494
+-- Policy 3: Allow users to update their own filesCREATE POLICY "Users can update own files"ON storage.objects FOR UPDATETO authenticatedUSING (    bucket_id IN ('avatars', 'gallery', 'videos') AND    auth.uid()::text = owner);-- Policy 4: Allow users to delete their own filesCREATE POLICY "Users can delete own files"ON storage.objects FOR DELETETO authenticatedUSING (    bucket_id IN ('avatars', 'gallery', 'videos') AND    auth.uid()::text = owner);-- Verify the policies were createdSELECT * FROM pg_policies WHERE tablename = 'objects' AND schemaname = 'storage';
+
+Results
+
+Chart
+
+Export
+
+Source
+
+Primary Database
+
+Role
+postgres
+
+Run
+CTRL
+ERROR:  42883: operator does not exist: text = uuid
+HINT:  No operator matches the given name and argument types. You might need to add explicit type casts.
+
+
+Debug with Assistant
+
+0 row
+
+SQL Operator Error
+
+
+
+The Assistant has just been updated to help you better!
+You may now opt-in to share schema metadata and even logs for better results
+
+Permission settings
+Help me to debug the attached sql snippet which gives the following error:
+
+operator does not exist: text = uuid
+
+
+
+Reasoned
+
+Reasoned
+I will list the database tables and extensions to understand column types and available UUID columns (no inputs required). I'll fetch tables and extensions now.
+
+Ran list_tables
+
+Reasoned
+Summary
+You have a PostgreSQL error: operator does not exist: text = uuid. This means your query is comparing a text value to a uuid column (or vice‑versa). PostgreSQL won't implicitly cast text to uuid for the = operator, so you must make the types match explicitly.
+
+Below are the common causes and step-by-step fixes.
+
+Common causes
+Comparing a text literal (or a column of type text/varchar) to a uuid column, e.g. user_id = 'abc-123-...'.
+Comparing a JSON/JSONB value or JWT claim (text) to a uuid column without casting.
+Using functions returning text (e.g., auth.jwt() ->> 'sub') and comparing directly to a uuid column.
+How to fix
+Cast the text to uuid (preferred when the text is a valid UUID):
+
+Example: SELECT ... WHERE user_id = '00000000-0000-0000-0000-000000000000'::uuid;
+Or explicitly: WHERE user_id = CAST('00000000-0000-0000-0000-000000000000' AS uuid);
+Cast the uuid to text (less preferred for indexes/joins because it prevents index use):
+
+Example: WHERE user_id::text = some_text_column;
+If comparing a JWT claim or JSON field, extract without text operator or cast:
+
+If you used auth.jwt() ->> 'tenant_id' (returns text), cast to uuid: WHERE tenant_id = (auth.jwt() ->> 'tenant_id')::uuid;
+If using auth.jwt() -> 'tenant_id' (returns json), you can do: WHERE tenant_id = (auth.jwt() -> 'tenant_id')::text::uuid (but ->> then cast to uuid is simpler).
+Ensure literals are well-formed UUIDs. If the string is not a valid UUID, casting will fail with an error; validate or use safe checks:
+
+WHERE user_id = NULLIF(your_text, '')::uuid
+Or use try-catch in application code.
+Examples
+Fixing a join where left is text and right is uuid:
+
+Problem: JOIN organizations o ON o.id = up.organization_id_text
+Fix: JOIN organizations o ON o.id = up.organization_id_text::uuid
+Policy using auth.uid():
+
+Correct: CREATE POLICY ... USING ((SELECT auth.uid()) = user_id);
+If user_id is text: CREATE POLICY ... USING ((SELECT auth.uid())::text = user_id);
+Comparing JWT custom claim:
+
+Correct: WHERE organization_id = (auth.jwt() ->> 'organization_id')::uuid
+How I can help next
+If you paste the exact SQL snippet that errors, I will point to the precise line and give the corrected SQL.
+If you want, I can suggest safer casting patterns or provide a small helper function to validate UUID strings before casting.
+Paste the snippet and I'll produce the fixed query.
+the second option
+
+
+
+Reasoned
+Casting uuid to text (option 2) — explanation and examples
+If you want to compare a uuid column to a text value by converting the uuid to text, cast the uuid column using ::text (or CAST(... AS text)). Note this can prevent index use on the uuid column, so prefer casting the text to uuid when possible. Still, when you explicitly choose to cast uuid → text, use one of the patterns below.
+
+Examples and patterns:
+
+Simple equality
+
+SQL QUERY
+
+
+
+-- uuid column compared to a text literal
+WHERE user_id::text = '123e4567-e89b-12d3-a456-426614174000';
+
+Comparing uuid column to a text column
+
+SQL QUERY
+
+
+
+-- join where right side is text
+JOIN users u ON u.id::text = external_source.user_id_text;
+
+In RLS / policy expressions using auth.uid()
+
+SQL QUERY
+
+
+
+-- auth.uid() returns uuid; if your table stores user_id as text:
+CREATE POLICY "user_access" ON my_table
+FOR SELECT TO authenticated
+USING ((SELECT auth.uid())::text = user_id);
+
+When extracting from JSON/JSONB where you have a uuid stored as JSON (-> returns JSON)
+
+SQL QUERY
+
+
+
+-- assuming json_data->'user_id' is a json string, compare to uuid column cast to text
+WHERE (json_data->>'user_id') = user_id::text;
+
+When using joins with functions returning text
+
+SQL QUERY
+
+
+
+-- get_user_external_id() returns text, compare to uuid column cast to text
+JOIN accounts a ON a.id::text = get_user_external_id(users.id);
+
+Important notes:
+
+Casting uuid to text prevents PostgreSQL from using an index on the uuid column for that comparison. If performance matters, prefer casting the text side to uuid instead.
+If the text value may not be a valid UUID, casting the text to uuid will throw an error; in that case you can guard with a validation function or use a safe conditional, e.g.:
+SQL QUERY
+
+
+
+WHERE user_id::text = some_text
+  AND some_text ~* '^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$';
+``*
+
+If you paste the exact SQL snippet that's failing, I will modify it to use ::text where appropriate and point out any potential index/performance impacts.
+
+
+
+
+Supabase
