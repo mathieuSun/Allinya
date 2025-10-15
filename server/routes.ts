@@ -5,20 +5,192 @@ import { requireAuth } from "./auth";
 import { z } from "zod";
 import { randomUUID } from "crypto";
 import { createRequire } from "module";
-import { agoraConfig } from "./config";
+import { agoraConfig, supabaseConfig } from "./config";
 import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage";
 import { ObjectPermission } from "./objectAcl";
+import { createClient } from '@supabase/supabase-js';
 
 // Import Agora token builder (CommonJS module)
 const require = createRequire(import.meta.url);
 const AgoraToken = require("agora-token");
 const RtcTokenBuilder = AgoraToken.RtcTokenBuilder;
-const Role = AgoraToken.Role;
+const RtcRole = AgoraToken.RtcRole;
+
+// Create Supabase client with service role key for authentication operations
+const supabase = createClient(supabaseConfig.url, supabaseConfig.serviceRoleKey);
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Health check
   app.get('/api/health', (req: Request, res: Response) => {
     res.json({ status: 'ok', timestamp: new Date().toISOString() });
+  });
+
+  // POST /api/auth/signup - Create new user account
+  app.post('/api/auth/signup', async (req: Request, res: Response) => {
+    try {
+      const { email, password, full_name, role } = z.object({
+        email: z.string().email(),
+        password: z.string().min(6),
+        full_name: z.string().min(1),
+        role: z.enum(['guest', 'practitioner'])
+      }).parse(req.body);
+
+      // Create user in Supabase Auth
+      const { data: authData, error: authError } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            full_name
+          }
+        }
+      });
+
+      if (authError) {
+        return res.status(400).json({ error: authError.message });
+      }
+
+      if (!authData.user) {
+        return res.status(400).json({ error: 'Failed to create user' });
+      }
+
+      // Create profile for the new user
+      const profile = await storage.createProfile({
+        id: authData.user.id,
+        role,
+        displayName: full_name,
+        country: null,
+        bio: null,
+        avatarUrl: null,
+        galleryUrls: [],
+        videoUrl: null,
+        specialties: []
+      });
+
+      // If practitioner, create practitioner record
+      if (role === 'practitioner') {
+        await storage.createPractitioner({
+          userId: authData.user.id,
+          online: false,
+          inService: false,
+          rating: '0.0',
+          reviewCount: 0
+        });
+      }
+
+      // Return user data and access token
+      res.json({
+        user: authData.user,
+        session: authData.session,
+        access_token: authData.session?.access_token,
+        profile
+      });
+    } catch (error: any) {
+      console.error('Signup error:', error);
+      if (error.name === 'ZodError') {
+        return res.status(400).json({ error: 'Invalid input', details: error.errors });
+      }
+      res.status(400).json({ error: error.message || 'Signup failed' });
+    }
+  });
+
+  // POST /api/auth/login - Sign in existing user
+  app.post('/api/auth/login', async (req: Request, res: Response) => {
+    try {
+      const { email, password } = z.object({
+        email: z.string().email(),
+        password: z.string().min(1)
+      }).parse(req.body);
+
+      // Sign in with Supabase Auth
+      const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      });
+
+      if (authError) {
+        return res.status(401).json({ error: authError.message });
+      }
+
+      if (!authData.user || !authData.session) {
+        return res.status(401).json({ error: 'Invalid credentials' });
+      }
+
+      // Get user profile
+      const profile = await storage.getProfile(authData.user.id);
+
+      // Return user data and access token
+      res.json({
+        user: authData.user,
+        session: authData.session,
+        access_token: authData.session.access_token,
+        profile
+      });
+    } catch (error: any) {
+      console.error('Login error:', error);
+      if (error.name === 'ZodError') {
+        return res.status(400).json({ error: 'Invalid input', details: error.errors });
+      }
+      res.status(401).json({ error: error.message || 'Login failed' });
+    }
+  });
+
+  // POST /api/auth/logout - Sign out user
+  app.post('/api/auth/logout', async (req: Request, res: Response) => {
+    try {
+      // Try to get token from Authorization header first
+      const authHeader = req.headers.authorization;
+      let token: string | undefined;
+
+      if (authHeader && authHeader.startsWith('Bearer ')) {
+        token = authHeader.substring(7);
+      } else if (req.body.refresh_token) {
+        // Fall back to refresh token from body if provided
+        token = req.body.refresh_token;
+      }
+
+      if (token) {
+        // Sign out the user session
+        const { error } = await supabase.auth.admin.signOut(token);
+        if (error) {
+          console.error('Logout error:', error);
+        }
+      }
+
+      // Always return 204 No Content for logout
+      res.status(204).send();
+    } catch (error: any) {
+      console.error('Logout error:', error);
+      // Still return 204 even if there's an error
+      res.status(204).send();
+    }
+  });
+
+  // GET /api/auth/user - Get current authenticated user's profile
+  app.get('/api/auth/user', requireAuth, async (req: Request, res: Response) => {
+    try {
+      const userId = req.user!.id;
+      const profile = await storage.getProfile(userId);
+
+      if (!profile) {
+        return res.status(404).json({ error: 'Profile not found' });
+      }
+
+      // Also get practitioner data if user is a practitioner
+      let practitionerData = null;
+      if (profile.role === 'practitioner') {
+        practitionerData = await storage.getPractitioner(userId);
+      }
+
+      res.json({
+        id: userId,
+        profile,
+        practitioner: practitionerData
+      });
+    } catch (error: any) {
+      console.error('Get user error:', error);
+      res.status(400).json({ error: error.message || 'Failed to get user data' });
+    }
   });
 
   // POST /api/auth/role-init - Set user role on first login
@@ -440,9 +612,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const privilegeExpireTime = Math.floor(Date.now() / 1000) + 3600; // 1 hour
-      const agoraRole = role === 'host' ? Role.PUBLISHER : Role.SUBSCRIBER;
+      const agoraRole = role === 'host' ? RtcRole.PUBLISHER : RtcRole.SUBSCRIBER;
 
-      const token = RtcTokenBuilder.buildTokenWithAccount(
+      const token = RtcTokenBuilder.buildTokenWithUserAccount(
         appId,
         appCertificate,
         channel,
