@@ -189,23 +189,42 @@ export default function SessionPage() {
   }, [session?.phase]);
 
   const initAgora = async () => {
-    if (!session || !currentUser) return;
+    if (!session || !currentUser) {
+      console.error('Cannot initialize Agora: missing session or user');
+      return;
+    }
 
     try {
+      console.log('Initializing Agora with session:', session.agoraChannel);
       const client = AgoraRTC.createClient({ mode: 'rtc', codec: 'vp8' });
       setAgoraClient(client);
 
       const isGuest = currentUser.id === session.guestId;
       const uid = isGuest ? session.agoraUidGuest : session.agoraUidPractitioner;
 
-      // Get token from server
+      // Get token from server with authentication
+      const { data: { session: authSession } } = await supabase.auth.getSession();
       const tokenResponse = await fetch(
-        `/api/agora/token?channel=${session.agoraChannel}&role=host&uid=${uid}`
+        `/api/agora/token?channel=${session.agoraChannel}&role=host&uid=${uid}`,
+        {
+          headers: {
+            'Authorization': `Bearer ${authSession?.access_token}`
+          },
+          credentials: 'include'
+        }
       );
+      
+      if (!tokenResponse.ok) {
+        const errorText = await tokenResponse.text();
+        throw new Error(`Failed to get Agora token: ${errorText}`);
+      }
+      
       const { token } = await tokenResponse.json();
 
       // Join channel with string UID
+      console.log('Joining Agora channel:', session.agoraChannel, 'with UID:', uid);
       await client.join(import.meta.env.VITE_AGORA_APP_ID, session.agoraChannel, token || null, uid);
+      console.log('Successfully joined Agora channel');
 
       // Create and publish local tracks
       const [audioTrack, videoTrack] = await AgoraRTC.createMicrophoneAndCameraTracks();
