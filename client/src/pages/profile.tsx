@@ -163,38 +163,37 @@ export default function ProfilePage() {
     );
   };
 
-  // File upload handlers
+  // File upload handlers for Supabase Storage
   const handleGetUploadParametersForAvatar = async () => {
-    const response = await apiRequest('POST', '/api/objects/upload-public', {});
+    const response = await apiRequest('POST', '/api/upload/avatar', {});
     const data = await response.json();
-    setCurrentUploadPublicPath(data.publicPath);
-    return { method: 'PUT' as const, url: data.uploadURL };
+    setCurrentUploadPublicPath(data.publicUrl);
+    return { method: 'PUT' as const, url: data.uploadUrl };
   };
 
   const handleGetUploadParametersForVideo = async () => {
-    const response = await apiRequest('POST', '/api/objects/upload-public', {});
+    const response = await apiRequest('POST', '/api/upload/video', {});
     const data = await response.json();
-    setCurrentUploadPublicPath(data.publicPath);
-    return { method: 'PUT' as const, url: data.uploadURL };
+    setCurrentUploadPublicPath(data.publicUrl);
+    return { method: 'PUT' as const, url: data.uploadUrl };
   };
 
   const handleGetUploadParametersForGallery = async () => {
-    const response = await apiRequest('POST', '/api/objects/upload-public', {});
+    const response = await apiRequest('POST', '/api/upload/gallery', {});
     const data = await response.json();
-    setCurrentGalleryPublicPaths(prev => [...prev, data.publicPath]);
-    return { method: 'PUT' as const, url: data.uploadURL };
+    setCurrentGalleryPublicPaths(prev => [...prev, data.publicUrl]);
+    return { method: 'PUT' as const, url: data.uploadUrl };
   };
 
   const handleAvatarUpload = async (result: UploadResult<Record<string, unknown>, Record<string, unknown>>) => {
     if (result.successful && result.successful.length > 0 && currentUploadPublicPath) {
-      const avatarUrl = `/public-objects/${currentUploadPublicPath}`;
-      
+      // currentUploadPublicPath already contains the full Supabase Storage URL
       await apiRequest('PUT', '/api/profile/avatar', {
-        publicPath: currentUploadPublicPath,
+        avatarUrl: currentUploadPublicPath,
       });
       
       // Immediately update form state
-      form.setValue('avatarUrl', avatarUrl, { shouldDirty: true });
+      form.setValue('avatarUrl', currentUploadPublicPath, { shouldDirty: true });
       
       setCurrentUploadPublicPath(null);
       await refreshProfile();
@@ -207,14 +206,13 @@ export default function ProfilePage() {
 
   const handleVideoUpload = async (result: UploadResult<Record<string, unknown>, Record<string, unknown>>) => {
     if (result.successful && result.successful.length > 0 && currentUploadPublicPath) {
-      const videoUrl = `/public-objects/${currentUploadPublicPath}`;
-      
+      // currentUploadPublicPath already contains the full Supabase Storage URL
       await apiRequest('PUT', '/api/profile/video', {
-        publicPath: currentUploadPublicPath,
+        videoUrl: currentUploadPublicPath,
       });
       
       // Immediately update form state
-      form.setValue('videoUrl', videoUrl, { shouldDirty: true });
+      form.setValue('videoUrl', currentUploadPublicPath, { shouldDirty: true });
       
       setCurrentUploadPublicPath(null);
       await refreshProfile();
@@ -227,15 +225,14 @@ export default function ProfilePage() {
 
   const handleGalleryUpload = async (result: UploadResult<Record<string, unknown>, Record<string, unknown>>) => {
     if (result.successful && result.successful.length > 0 && currentGalleryPublicPaths.length > 0) {
-      const galleryUrls = currentGalleryPublicPaths.map(path => `/public-objects/${path}`);
-      
+      // currentGalleryPublicPaths already contains full Supabase Storage URLs
       await apiRequest('PUT', '/api/profile/gallery', {
-        galleryPaths: currentGalleryPublicPaths,
+        galleryUrls: currentGalleryPublicPaths,
       });
       
       // Immediately update form state - append to existing gallery
       const existingGallery = form.getValues('galleryUrls') || [];
-      form.setValue('galleryUrls', [...existingGallery, ...galleryUrls], { shouldDirty: true });
+      form.setValue('galleryUrls', [...existingGallery, ...currentGalleryPublicPaths], { shouldDirty: true });
       
       setCurrentGalleryPublicPaths([]);
       await refreshProfile();

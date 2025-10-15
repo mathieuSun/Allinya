@@ -6,8 +6,7 @@ import { z } from "zod";
 import { randomUUID } from "crypto";
 import { createRequire } from "module";
 import { agoraConfig, supabaseConfig } from "./config";
-import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage";
-import { ObjectPermission } from "./objectAcl";
+import { supabaseStorage, type StorageBucket } from "./supabaseStorage";
 import { createClient } from '@supabase/supabase-js';
 
 // Import Agora token builder (CommonJS module)
@@ -20,6 +19,9 @@ const RtcRole = AgoraToken.RtcRole;
 const supabase = createClient(supabaseConfig.url, supabaseConfig.serviceRoleKey);
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Initialize Supabase Storage buckets on startup
+  await supabaseStorage.initializeBuckets();
+  
   // Health check
   app.get('/api/health', (req: Request, res: Response) => {
     res.json({ status: 'ok', timestamp: new Date().toISOString() });
@@ -664,85 +666,54 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Object Storage Endpoints
-  
-  // Serve public objects
-  app.get("/public-objects/:filePath(*)", async (req, res) => {
-    const filePath = req.params.filePath;
-    const objectStorageService = new ObjectStorageService();
-    try {
-      const file = await objectStorageService.searchPublicObject(filePath);
-      if (!file) {
-        return res.status(404).json({ error: "File not found" });
-      }
-      objectStorageService.downloadObject(file, res);
-    } catch (error) {
-      console.error("Error searching for public object:", error);
-      return res.status(500).json({ error: "Internal server error" });
-    }
-  });
+  // Supabase Storage Upload Endpoints
 
-  // Serve private objects with ACL check  
-  app.get("/objects/:objectPath(*)", requireAuth, async (req: Request, res: Response) => {
-    const userId = req.user?.id;
-    const objectStorageService = new ObjectStorageService();
+  // Get upload URL for avatar
+  app.post("/api/upload/avatar", requireAuth, async (req: Request, res: Response) => {
     try {
-      const objectFile = await objectStorageService.getObjectEntityFile(req.path);
-      const canAccess = await objectStorageService.canAccessObjectEntity({
-        objectFile,
-        userId: userId,
-        requestedPermission: ObjectPermission.READ,
-      });
-      if (!canAccess) {
-        return res.sendStatus(401);
-      }
-      objectStorageService.downloadObject(objectFile, res);
-    } catch (error) {
-      console.error("Error checking object access:", error);
-      if (error instanceof ObjectNotFoundError) {
-        return res.sendStatus(404);
-      }
-      return res.sendStatus(500);
-    }
-  });
-
-  // Get upload URL for object entity (private)
-  app.post("/api/objects/upload", requireAuth, async (req: Request, res: Response) => {
-    try {
-      const objectStorageService = new ObjectStorageService();
-      const uploadURL = await objectStorageService.getObjectEntityUploadURL();
-      res.json({ uploadURL });
+      const userId = req.user!.id;
+      const { uploadUrl, publicUrl, fileName } = await supabaseStorage.getUploadUrl('avatars', userId);
+      res.json({ uploadUrl, publicUrl, fileName });
     } catch (error: any) {
-      console.error('Upload error:', error);
+      console.error('Avatar upload URL error:', error);
       res.status(500).json({ error: error.message });
     }
   });
 
-  // Get upload URL for public objects (avatars, gallery, videos)
-  app.post("/api/objects/upload-public", requireAuth, async (req: Request, res: Response) => {
+  // Get upload URL for gallery image
+  app.post("/api/upload/gallery", requireAuth, async (req: Request, res: Response) => {
     try {
-      const objectStorageService = new ObjectStorageService();
-      const { uploadURL, publicPath } = await objectStorageService.getPublicObjectUploadURL();
-      res.json({ uploadURL, publicPath });
+      const userId = req.user!.id;
+      const { uploadUrl, publicUrl, fileName } = await supabaseStorage.getUploadUrl('gallery', userId);
+      res.json({ uploadUrl, publicUrl, fileName });
     } catch (error: any) {
-      console.error('Upload error:', error);
+      console.error('Gallery upload URL error:', error);
       res.status(500).json({ error: error.message });
     }
   });
 
-  // Update profile with uploaded avatar
+  // Get upload URL for video
+  app.post("/api/upload/video", requireAuth, async (req: Request, res: Response) => {
+    try {
+      const userId = req.user!.id;
+      const { uploadUrl, publicUrl, fileName } = await supabaseStorage.getUploadUrl('videos', userId);
+      res.json({ uploadUrl, publicUrl, fileName });
+    } catch (error: any) {
+      console.error('Video upload URL error:', error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Update profile with uploaded avatar URL
   app.put("/api/profile/avatar", requireAuth, async (req: Request, res: Response) => {
-    if (!req.body.publicPath) {
-      return res.status(400).json({ error: "publicPath is required" });
-    }
+    const { avatarUrl } = z.object({
+      avatarUrl: z.string().url()
+    }).parse(req.body);
 
     const userId = req.user!.id;
 
     try {
-      // Construct the public URL path
-      const avatarUrl = `/public-objects/${req.body.publicPath}`;
-
-      // Update profile with the avatar path
+      // Update profile with the Supabase Storage URL
       const profile = await storage.updateProfile(userId, {
         avatarUrl,
       });
@@ -754,19 +725,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Update profile with uploaded video
+  // Update profile with uploaded video URL
   app.put("/api/profile/video", requireAuth, async (req: Request, res: Response) => {
-    if (!req.body.publicPath) {
-      return res.status(400).json({ error: "publicPath is required" });
-    }
+    const { videoUrl } = z.object({
+      videoUrl: z.string().url()
+    }).parse(req.body);
 
     const userId = req.user!.id;
 
     try {
-      // Construct the public URL path
-      const videoUrl = `/public-objects/${req.body.publicPath}`;
-
-      // Update profile with the video path
+      // Update profile with the Supabase Storage URL
       const profile = await storage.updateProfile(userId, {
         videoUrl,
       });
@@ -778,19 +746,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Update profile with gallery images
+  // Update profile with gallery image URLs
   app.put("/api/profile/gallery", requireAuth, async (req: Request, res: Response) => {
-    if (!req.body.galleryPaths || !Array.isArray(req.body.galleryPaths)) {
-      return res.status(400).json({ error: "galleryPaths array is required" });
-    }
+    const { galleryUrls } = z.object({
+      galleryUrls: z.array(z.string().url()).max(3, 'Maximum 3 gallery images allowed')
+    }).parse(req.body);
 
     const userId = req.user!.id;
 
     try {
-      // Construct the public URL paths
-      const galleryUrls = req.body.galleryPaths.map((path: string) => `/public-objects/${path}`);
-
-      // Update profile with the gallery paths
+      // Update profile with the Supabase Storage URLs
       const profile = await storage.updateProfile(userId, {
         galleryUrls,
       });
