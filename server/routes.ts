@@ -375,7 +375,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       res.json({ 
         success: true,
-        isOnline: practitioner.isOnline,
+        isOnline: (practitioner as any).isOnline,
         message: is_online ? 'You are now online' : 'You are now offline'
       });
     } catch (error: any) {
@@ -407,7 +407,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Verify practitioner exists and is online
       const practitioner = await storage.getPractitioner(practitionerId);
       console.log('Practitioner status:', practitioner);
-      if (!practitioner || !practitioner.isOnline) {
+      if (!practitioner || !(practitioner as any).isOnline) {
         return res.status(400).json({ error: 'Practitioner is not available' });
       }
 

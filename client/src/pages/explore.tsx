@@ -178,7 +178,7 @@ export default function ExplorePage() {
                   <Button 
                     className="w-full" 
                     disabled={!isOnline}
-                    data-testid={`button-start-${practitioner.userId}`}
+                    data-testid={`button-start-${practitioner.id}`}
                   >
                     {isOnline ? 'Start Session' : 'Offline'}
                   </Button>
