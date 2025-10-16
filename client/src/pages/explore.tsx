@@ -15,9 +15,11 @@ export default function ExplorePage() {
   const { profile, signOut } = useAuth();
   const [allPractitioners, setAllPractitioners] = useState<PractitionerWithProfile[]>([]);
 
-  // Fetch all practitioners (online and offline)
+  // Fetch all practitioners (online and offline) with automatic polling
   const { data: practitioners, isLoading } = useQuery<PractitionerWithProfile[]>({
     queryKey: ['/api/practitioners'],
+    refetchInterval: 10000, // Refetch every 10 seconds
+    refetchIntervalInBackground: false, // Only poll when page is visible/focused
   });
 
   // Subscribe to realtime updates
