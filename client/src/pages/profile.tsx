@@ -191,18 +191,26 @@ export default function ProfilePage() {
   };
 
   const handleAvatarUpload = async (result: UploadResult<Record<string, unknown>, Record<string, unknown>>) => {
+    console.log('[Avatar Upload] Complete event triggered', { 
+      successful: result.successful?.length,
+      publicPath: currentUploadPublicPath 
+    });
+    
     if (result.successful && result.successful.length > 0 && currentUploadPublicPath) {
       try {
-        // currentUploadPublicPath already contains the full Supabase Storage URL
+        console.log('[Avatar Upload] Saving to database:', currentUploadPublicPath);
+        
+        // Save URL to database
         await apiRequest('PUT', '/api/profile/avatar', {
           avatarUrl: currentUploadPublicPath,
         });
         
+        console.log('[Avatar Upload] Saved! Refreshing profile...');
+        
         // Force refresh the profile from database
         await refreshProfile();
         
-        // Update form state with the new avatar URL
-        form.setValue('avatarUrl', currentUploadPublicPath, { shouldValidate: true });
+        console.log('[Avatar Upload] Profile refreshed! New avatar should display.');
         
         setCurrentUploadPublicPath(null);
         
@@ -211,12 +219,18 @@ export default function ProfilePage() {
           description: 'Your profile picture has been updated',
         });
       } catch (error: any) {
+        console.error('[Avatar Upload] Error:', error);
         toast({
           title: 'Failed to save avatar',
           description: error.message,
           variant: 'destructive',
         });
       }
+    } else {
+      console.error('[Avatar Upload] Missing data:', { 
+        hasSuccessful: !!result.successful?.length,
+        hasPublicPath: !!currentUploadPublicPath 
+      });
     }
   };
 
