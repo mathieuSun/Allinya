@@ -53,13 +53,10 @@
       });
     }
     
-    // For iOS, force a hard reload after a short delay
+    // For iOS, just log that cache was cleared - NO automatic reload
     if (isIOS) {
-      console.log('[Cache Manager] iOS detected, forcing hard reload...');
-      setTimeout(() => {
-        // Use multiple methods to ensure reload on iOS
-        window.location.href = window.location.href + '?_t=' + BUILD_TIMESTAMP;
-      }, 100);
+      console.log('[Cache Manager] iOS detected, cache cleared. User can manually refresh when ready.');
+      // NO automatic reload - let user control when to refresh
     }
   }
   
@@ -75,12 +72,12 @@
     };
   }
   
-  // Listen for service worker updates
+  // Listen for service worker updates but don't auto-reload
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.addEventListener('message', (event) => {
       if (event.data && event.data.type === 'CACHE_UPDATED') {
-        console.log('[Cache Manager] Service worker updated caches, reloading...');
-        window.location.reload(true);
+        console.log('[Cache Manager] Service worker updated caches. User can manually refresh when ready.');
+        // NO automatic reload - let user control when to refresh
       }
     });
   }
