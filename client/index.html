@@ -3,6 +3,14 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
+    <!-- Aggressive cache prevention for iOS WebKit -->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
+    <meta http-equiv="Clear-Site-Data" content="cache, storage" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <!-- Force refresh on iOS after updates -->
+    <meta http-equiv="refresh" content="86400" />
     <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval' https: wss: data: blob:; img-src 'self' data: https:; connect-src 'self' https: wss:;">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -11,6 +19,47 @@
   </head>
   <body>
     <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
+    <!-- Cache Manager - Must run first -->
+    <script src="/cache-manager.js?v=1760625660849"></script>
+    <!-- Service Worker Registration -->
+    <script>
+      if ('serviceWorker' in navigator) {
+        // Unregister old service workers first
+        navigator.serviceWorker.getRegistrations().then(function(registrations) {
+          for(let registration of registrations) {
+            registration.unregister();
+          }
+        }).then(() => {
+          // Register new service worker with cache bust
+          navigator.serviceWorker.register('/sw.js?v=' + Date.now())
+            .then(reg => {
+              console.log('[Main] Service Worker registered:', reg.scope);
+              
+              // Check for updates every 30 seconds on iOS
+              if (/iPad|iPhone|iPod/.test(navigator.userAgent) || 
+                  (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)) {
+                setInterval(() => {
+                  reg.update();
+                }, 30000);
+              }
+            })
+            .catch(err => console.error('[Main] Service Worker registration failed:', err));
+        });
+      }
+      
+      // Force cache bypass for Vite modules on iOS
+      if (window.__BUILD_INFO__ && window.__BUILD_INFO__.isIOS) {
+        const originalFetch = window.fetch;
+        window.fetch = function(input, init) {
+          if (typeof input === 'string' && (input.includes('.js') || input.includes('.css') || input.includes('.tsx'))) {
+            const url = new URL(input, window.location.origin);
+            url.searchParams.set('_cb', window.__BUILD_INFO__.timestamp || Date.now());
+            input = url.toString();
+          }
+          return originalFetch.call(this, input, init);
+        };
+      }
+    </script>
+    <script type="module" src="/src/main.tsx?v=1760625660849"></script>
   </body>
 </html>

@@ -5,6 +5,7 @@ import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/lib/auth-context";
+import { BuildVersionIndicator } from "@/components/BuildVersionIndicator";
 import AuthPage from "@/pages/auth";
 import OnboardingPage from "@/pages/onboarding";
 import ProfilePage from "@/pages/profile";
@@ -40,6 +41,8 @@ function App() {
         <AuthProvider>
           <Toaster />
           <Router />
+          {/* Build version indicator for iOS cache management */}
+          <BuildVersionIndicator />
           {/* React Query DevTools for debugging */}
           <ReactQueryDevtools initialIsOpen={false} />
         </AuthProvider>

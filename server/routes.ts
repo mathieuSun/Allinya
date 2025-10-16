@@ -19,13 +19,72 @@ const RtcRole = AgoraToken.RtcRole;
 // Create Supabase client with service role key for authentication operations
 const supabase = createClient(supabaseConfig.url, supabaseConfig.serviceRoleKey);
 
+// Build version info
+const BUILD_TIMESTAMP = Date.now().toString();
+const BUILD_VERSION = "1.0.0";
+
 export async function registerRoutes(app: Express): Promise<Server> {
   // Initialize Supabase Storage buckets on startup
   await supabaseStorage.initializeBuckets();
+
+  // Apply aggressive no-cache headers to all API responses for iOS WebKit
+  app.use((req: Request, res: Response, next) => {
+    // Set aggressive cache headers for all API routes
+    res.set({
+      'Cache-Control': 'no-cache, no-store, must-revalidate, private, max-age=0',
+      'Pragma': 'no-cache',
+      'Expires': '0',
+      'X-Build-Timestamp': BUILD_TIMESTAMP,
+      'X-Build-Version': BUILD_VERSION,
+      'Surrogate-Control': 'no-store',
+      'X-Content-Type-Options': 'nosniff',
+      'Vary': 'Accept-Encoding, Origin'
+    });
+    
+    // For iOS devices, add extra headers
+    const userAgent = req.headers['user-agent'] || '';
+    if (userAgent.includes('WebKit') || userAgent.includes('iPad') || userAgent.includes('iPhone')) {
+      res.set({
+        'Clear-Site-Data': '"cache"',
+        'X-iOS-Cache-Bust': BUILD_TIMESTAMP
+      });
+    }
+    
+    next();
+  });
   
   // Health check
   app.get('/api/health', (req: Request, res: Response) => {
     res.json({ status: 'ok', timestamp: new Date().toISOString() });
+  });
+
+  // Cache bust endpoint - returns current build version
+  app.get('/api/cache-bust', (req: Request, res: Response) => {
+    const versionInfo = {
+      buildTimestamp: BUILD_TIMESTAMP,
+      version: BUILD_VERSION,
+      serverTime: Date.now(),
+      cacheClear: true,
+      message: 'Cache cleared - please reload',
+      userAgent: req.headers['user-agent'] || 'unknown'
+    };
+    
+    // Send with explicit no-cache for iOS
+    res.set({
+      'Cache-Control': 'no-cache, no-store, must-revalidate, max-age=0',
+      'X-Force-Reload': 'true'
+    });
+    
+    res.json(versionInfo);
+  });
+
+  // Version check endpoint - used by frontend to detect version changes
+  app.get('/api/version', (req: Request, res: Response) => {
+    res.json({
+      timestamp: BUILD_TIMESTAMP,
+      version: BUILD_VERSION,
+      requiresReload: false
+    });
   });
 
   // POST /api/auth/signup - Create new user account
