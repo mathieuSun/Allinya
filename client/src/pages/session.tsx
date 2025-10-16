@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState } from 'react';
 import { useLocation, useRoute } from 'wouter';
 import { useAuth } from '@/lib/auth-context';
 import { useQuery, useMutation } from '@tanstack/react-query';
@@ -7,13 +7,13 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
-import { Loader2, Check, Video, VideoOff, Mic, MicOff, PhoneOff } from 'lucide-react';
+import { Loader2, Check } from 'lucide-react';
 import { apiRequest, queryClient } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/lib/supabase';
 import { calculateRemainingTime, formatTime } from '@/lib/timer-utils';
 import type { SessionWithParticipants } from '@shared/schema';
-import AgoraRTC, { type IAgoraRTCClient, type IAgoraRTCRemoteUser, type ICameraVideoTrack, type IMicrophoneAudioTrack } from 'agora-rtc-sdk-ng';
+import VideoRoom from '@/components/VideoRoom';
 
 export default function SessionPage() {
   const [, params] = useRoute('/s/:id');
@@ -25,18 +25,6 @@ export default function SessionPage() {
   const [remainingTime, setRemainingTime] = useState(0);
   const [comment, setComment] = useState('');
   const [rating, setRating] = useState(0);
-
-  // Agora state
-  const [agoraClient, setAgoraClient] = useState<IAgoraRTCClient | null>(null);
-  const [localVideoTrack, setLocalVideoTrack] = useState<ICameraVideoTrack | null>(null);
-  const [localAudioTrack, setLocalAudioTrack] = useState<IMicrophoneAudioTrack | null>(null);
-  const [remoteUsers, setRemoteUsers] = useState<IAgoraRTCRemoteUser[]>([]);
-  const [isVideoEnabled, setIsVideoEnabled] = useState(true);
-  const [isAudioEnabled, setIsAudioEnabled] = useState(true);
-  const [agoraJoined, setAgoraJoined] = useState(false);
-
-  const localVideoRef = useRef<HTMLDivElement>(null);
-  const remoteVideoRef = useRef<HTMLDivElement>(null);
 
   // Fetch session
   const { data: session, isLoading } = useQuery<SessionWithParticipants>({
@@ -63,7 +51,6 @@ export default function SessionPage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [`/api/sessions/${sessionId}`] });
-      cleanupAgora();
     },
   });
 
@@ -149,7 +136,7 @@ export default function SessionPage() {
         setRemainingTime(remaining);
         
         // Check if both are ready to transition to live
-        if (session.readyPractitioner && session.readyGuest && !agoraJoined) {
+        if (session.readyPractitioner && session.readyGuest) {
           // Both ready - transition should happen automatically
           queryClient.invalidateQueries({ queryKey: [`/api/sessions/${sessionId}`] });
         }
@@ -173,177 +160,7 @@ export default function SessionPage() {
     const interval = setInterval(updateTimer, 1000);
 
     return () => clearInterval(interval);
-  }, [session, agoraJoined, sessionId]);
-
-  // Agora setup for live phase
-  useEffect(() => {
-    if (session?.phase === 'live' && !agoraJoined) {
-      initAgora();
-    }
-
-    return () => {
-      // Always cleanup when unmounting or when phase changes from live
-      if (agoraJoined && session?.phase !== 'live') {
-        cleanupAgora();
-      }
-    };
-  }, [session?.phase, agoraJoined, sessionId]);
-
-  const initAgora = async () => {
-    if (!session || !currentUser) {
-      console.error('Cannot initialize Agora: missing session or user');
-      return;
-    }
-
-    try {
-      console.log('Initializing Agora with session:', session.agoraChannel);
-      console.log('Session data:', { 
-        agoraChannel: session.agoraChannel,
-        guestId: session.guestId,
-        practitionerId: session.practitionerId,
-        agoraUidGuest: session.agoraUidGuest,
-        agoraUidPractitioner: session.agoraUidPractitioner
-      });
-      
-      const client = AgoraRTC.createClient({ mode: 'rtc', codec: 'vp8' });
-      setAgoraClient(client);
-
-      const isGuest = currentUser.id === session.guestId;
-      const uid = isGuest ? session.agoraUidGuest : session.agoraUidPractitioner;
-      
-      console.log('Current user:', currentUser.id, 'is guest:', isGuest, 'using UID:', uid);
-
-      // Get token from server with authentication
-      const { data: { session: authSession } } = await supabase.auth.getSession();
-      if (!authSession?.access_token) {
-        throw new Error('No auth session available');
-      }
-      
-      const tokenResponse = await fetch(
-        `/api/agora/token?channel=${session.agoraChannel}&role=host&uid=${uid}`,
-        {
-          headers: {
-            'Authorization': `Bearer ${authSession.access_token}`
-          },
-          credentials: 'include'
-        }
-      );
-      
-      if (!tokenResponse.ok) {
-        const errorText = await tokenResponse.text();
-        console.error('Token fetch failed:', tokenResponse.status, errorText);
-        throw new Error(`Failed to get Agora token: ${errorText}`);
-      }
-      
-      const { token, appId } = await tokenResponse.json();
-      console.log('Got Agora token, appId:', appId);
-      
-      // Use the appId from response or fallback to env var
-      const finalAppId = appId || import.meta.env.VITE_AGORA_APP_ID;
-      if (!finalAppId) {
-        throw new Error('Agora App ID not configured');
-      }
-
-      // Join channel with string UID
-      console.log('Joining Agora channel:', session.agoraChannel, 'with UID:', uid, 'appId:', finalAppId);
-      await client.join(finalAppId, session.agoraChannel, token || null, uid);
-      console.log('Successfully joined Agora channel');
-
-      // Create and publish local tracks
-      const [audioTrack, videoTrack] = await AgoraRTC.createMicrophoneAndCameraTracks();
-      setLocalAudioTrack(audioTrack);
-      setLocalVideoTrack(videoTrack);
-
-      await client.publish([audioTrack, videoTrack]);
-
-      // Play local video
-      if (localVideoRef.current) {
-        videoTrack.play(localVideoRef.current);
-      }
-
-      // Handle remote users
-      client.on('user-published', async (user, mediaType) => {
-        await client.subscribe(user, mediaType);
-        
-        if (mediaType === 'video') {
-          setRemoteUsers((prev) => [...prev.filter((u) => u.uid !== user.uid), user]);
-          
-          if (remoteVideoRef.current) {
-            user.videoTrack?.play(remoteVideoRef.current);
-          }
-        }
-        
-        if (mediaType === 'audio') {
-          user.audioTrack?.play();
-        }
-      });
-
-      client.on('user-unpublished', (user) => {
-        setRemoteUsers((prev) => prev.filter((u) => u.uid !== user.uid));
-      });
-
-      setAgoraJoined(true);
-    } catch (error) {
-      console.error('Agora init error:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      toast({
-        title: 'Video connection failed',
-        description: errorMessage.includes('permissions') 
-          ? 'Please check your camera and microphone permissions'
-          : errorMessage.includes('token') 
-          ? 'Authentication failed. Please refresh and try again.'
-          : 'Unable to establish video connection. Please try again.',
-        variant: 'destructive',
-      });
-      // Clean up any partial initialization
-      await cleanupAgora();
-    }
-  };
-
-  const cleanupAgora = async () => {
-    try {
-      if (localVideoTrack) {
-        localVideoTrack.stop();
-        localVideoTrack.close();
-        setLocalVideoTrack(null);
-      }
-      
-      if (localAudioTrack) {
-        localAudioTrack.stop();
-        localAudioTrack.close();
-        setLocalAudioTrack(null);
-      }
-      
-      if (agoraClient) {
-        await agoraClient.leave();
-        setAgoraClient(null);
-      }
-    } catch (cleanupError) {
-      console.error('Error during Agora cleanup:', cleanupError);
-    } finally {
-      setAgoraJoined(false);
-      setRemoteUsers([]);
-    }
-  };
-
-  const toggleVideo = async () => {
-    if (localVideoTrack) {
-      await localVideoTrack.setEnabled(!isVideoEnabled);
-      setIsVideoEnabled(!isVideoEnabled);
-    }
-  };
-
-  const toggleAudio = async () => {
-    if (localAudioTrack) {
-      await localAudioTrack.setEnabled(!isAudioEnabled);
-      setIsAudioEnabled(!isAudioEnabled);
-    }
-  };
-
-  const leaveSession = async () => {
-    await cleanupAgora();
-    endSessionMutation.mutate();
-  };
+  }, [session, sessionId, endSessionMutation]);
 
   if (!currentUser) {
     setLocation('/auth');
@@ -449,74 +266,29 @@ export default function SessionPage() {
     );
   }
 
-  // Live Video
+  // Live Video Room
   if (session.phase === 'live') {
+    // Determine the UID for the current user
+    const uid = isGuest ? session.agoraUidGuest : session.agoraUidPractitioner;
+    
     return (
-      <div className="min-h-screen bg-black relative">
-        {/* Timer Bar */}
-        <div className="absolute top-0 left-0 right-0 z-50 bg-black/60 backdrop-blur-sm p-4">
-          <div className="max-w-7xl mx-auto flex items-center justify-between text-white">
-            <div className="flex items-center gap-3">
-              <div className="h-3 w-3 rounded-full bg-red-500 animate-pulse" />
-              <span className="text-xl font-semibold" data-testid="text-live-timer">{formatTime(remainingTime)}</span>
-            </div>
-            <Badge variant="destructive" data-testid="badge-phase-live">LIVE</Badge>
-          </div>
-        </div>
-
-        {/* Video Grid */}
-        <div className="h-screen grid grid-cols-1 md:grid-cols-2 gap-2 p-2 pt-20">
-          <div ref={remoteVideoRef} className="relative bg-muted rounded-lg overflow-hidden" data-testid="video-remote">
-            {remoteUsers.length === 0 && (
-              <div className="absolute inset-0 flex flex-col items-center justify-center">
-                <Avatar className="h-32 w-32 mb-4">
-                  <AvatarImage src={otherUser.avatarUrl || undefined} />
-                  <AvatarFallback className="text-4xl">
-                    {otherUser.displayName?.[0]?.toUpperCase()}
-                  </AvatarFallback>
-                </Avatar>
-                <p className="text-muted-foreground">{otherUser.displayName}</p>
-              </div>
-            )}
-          </div>
-          <div ref={localVideoRef} className="relative bg-muted rounded-lg overflow-hidden" data-testid="video-local">
-            <div className="absolute bottom-4 left-4 text-white text-sm bg-black/50 px-3 py-1 rounded">
-              You
-            </div>
-          </div>
-        </div>
-
-        {/* Controls */}
-        <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 flex items-center gap-4">
-          <Button
-            size="icon"
-            variant={isVideoEnabled ? 'secondary' : 'destructive'}
-            className="h-14 w-14 rounded-full"
-            onClick={toggleVideo}
-            data-testid="button-toggle-video"
-          >
-            {isVideoEnabled ? <Video className="h-6 w-6" /> : <VideoOff className="h-6 w-6" />}
-          </Button>
-          <Button
-            size="icon"
-            variant={isAudioEnabled ? 'secondary' : 'destructive'}
-            className="h-14 w-14 rounded-full"
-            onClick={toggleAudio}
-            data-testid="button-toggle-audio"
-          >
-            {isAudioEnabled ? <Mic className="h-6 w-6" /> : <MicOff className="h-6 w-6" />}
-          </Button>
-          <Button
-            size="icon"
-            variant="destructive"
-            className="h-14 w-14 rounded-full"
-            onClick={leaveSession}
-            data-testid="button-leave"
-          >
-            <PhoneOff className="h-6 w-6" />
-          </Button>
-        </div>
-      </div>
+      <VideoRoom
+        sessionId={sessionId!}
+        channelName={session.agoraChannel}
+        uid={uid}
+        currentUser={{
+          id: currentUser.id,
+          displayName: currentUser.displayName,
+          avatarUrl: currentUser.avatarUrl,
+        }}
+        otherUser={{
+          id: otherUser.id,
+          displayName: otherUser.displayName,
+          avatarUrl: otherUser.avatarUrl,
+        }}
+        remainingTime={remainingTime}
+        onLeave={() => endSessionMutation.mutate()}
+      />
     );
   }
 

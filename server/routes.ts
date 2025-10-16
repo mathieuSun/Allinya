@@ -451,19 +451,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: 'Practitioner is not available' });
       }
 
-      // Create session
+      // Create session with Agora UIDs
       const sessionId = randomUUID();
       const agoraChannel = `sess_${sessionId.substring(0, 8)}`;
       
+      // Generate unique UIDs for Agora (using timestamp + random for uniqueness)
+      const timestamp = Date.now();
+      const agoraUidGuest = `guest_${timestamp}_${Math.random().toString(36).substring(7)}`;
+      const agoraUidPractitioner = `pract_${timestamp}_${Math.random().toString(36).substring(7)}`;
+      
       console.log('Creating session with ID:', sessionId);
+      console.log('Agora UIDs - Guest:', agoraUidGuest, 'Practitioner:', agoraUidPractitioner);
+      
       const session = await storage.createSession({
         practitionerId: practitionerId,
         guestId: guestId,
         phase: 'waiting',
         liveSeconds: liveSeconds,
-        practitionerReady: false,
-        guestReady: false,
+        readyPractitioner: false,
+        readyGuest: false,
         agoraChannel: agoraChannel,
+        agoraUidGuest: agoraUidGuest,
+        agoraUidPractitioner: agoraUidPractitioner,
       });
 
       console.log('Session created:', session);

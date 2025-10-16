@@ -34,12 +34,18 @@ export const sessions = pgTable("sessions", {
   id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
   practitioner_id: uuid("practitioner_id").notNull().references(() => profiles.id),
   guest_id: uuid("guest_id").notNull().references(() => profiles.id),
+  is_group: boolean("is_group").notNull().default(false),
   phase: text("phase", { enum: ["waiting", "room_timer", "live", "ended"] }).notNull().default("waiting"),
+  waiting_seconds: integer("waiting_seconds").notNull().default(60),
   live_seconds: integer("live_seconds").notNull().default(900),
-  started_at: timestamp("started_at", { withTimezone: true }).defaultNow(),
-  practitioner_ready: boolean("practitioner_ready").notNull().default(false),
-  guest_ready: boolean("guest_ready").notNull().default(false),
+  waiting_started_at: timestamp("waiting_started_at", { withTimezone: true }),
+  live_started_at: timestamp("live_started_at", { withTimezone: true }),
+  ended_at: timestamp("ended_at", { withTimezone: true }),
+  ready_practitioner: boolean("ready_practitioner").notNull().default(false),
+  ready_guest: boolean("ready_guest").notNull().default(false),
   agora_channel: text("agora_channel"),
+  agora_uid_guest: text("agora_uid_guest"),
+  agora_uid_practitioner: text("agora_uid_practitioner"),
   created_at: timestamp("created_at", { withTimezone: true }).defaultNow(),
   updated_at: timestamp("updated_at", { withTimezone: true }).defaultNow(),
 });
@@ -122,12 +128,18 @@ export type RuntimeSession = {
   id: string;
   practitionerId: string;  // converted from 'practitioner_id' in database
   guestId: string;  // converted from 'guest_id' in database
+  isGroup: boolean;  // converted from 'is_group' in database  
   phase: "waiting" | "room_timer" | "live" | "ended";
+  waitingSeconds: number;  // converted from 'waiting_seconds' in database
   liveSeconds: number;  // converted from 'live_seconds' in database
-  startedAt: string | null;  // converted from 'started_at' in database
-  practitionerReady: boolean;  // converted from 'practitioner_ready' in database
-  guestReady: boolean;  // converted from 'guest_ready' in database
+  waitingStartedAt: string | null;  // converted from 'waiting_started_at' in database
+  liveStartedAt: string | null;  // converted from 'live_started_at' in database
+  endedAt: string | null;  // converted from 'ended_at' in database
+  readyPractitioner: boolean;  // converted from 'ready_practitioner' in database
+  readyGuest: boolean;  // converted from 'ready_guest' in database
   agoraChannel: string | null;  // converted from 'agora_channel' in database
+  agoraUidGuest: string | null;  // converted from 'agora_uid_guest' in database
+  agoraUidPractitioner: string | null;  // converted from 'agora_uid_practitioner' in database
   createdAt: string | null;
   updatedAt: string | null;
 };
