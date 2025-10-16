@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import type { ReactNode } from "react";
 import Uppy from "@uppy/core";
 import type { UppyFile, UploadResult } from "@uppy/core";
@@ -68,40 +68,51 @@ export function ObjectUploader({
         allowedFileTypes,
       },
       autoProceed: false,
+    }).use(XHRUpload, {
+      endpoint: async (fileOrBundle) => {
+        // Get the upload URL for each file dynamically
+        const params = await onGetUploadParameters();
+        
+        // Store the public URL in the file's metadata so we can access it in onComplete
+        if ('id' in fileOrBundle) {
+          uppy.setFileMeta(fileOrBundle.id, { 
+            publicUrl: (params as any).publicUrl 
+          });
+        }
+        
+        return params.url;
+      },
+      method: 'PUT', // Supabase requires PUT method
+      formData: false, // Send as raw binary data, not FormData
+      headers: (file) => {
+        // Supabase signed URLs already contain authentication in the URL
+        // No Authorization header needed - just set the content type
+        return {
+          'Content-Type': file.type || 'application/octet-stream',
+        };
+      },
     })
-      .use(XHRUpload, {
-        endpoint: async (fileOrBundle) => {
-          // Get the upload URL for each file dynamically
-          const params = await onGetUploadParameters();
-          
-          // Store the public URL in the file's metadata so we can access it in onComplete
-          if ('id' in fileOrBundle) {
-            uppy.setFileMeta(fileOrBundle.id, { 
-              publicUrl: (params as any).publicUrl 
-            });
-          }
-          
-          return params.url;
-        },
-        method: 'PUT', // Supabase requires PUT method
-        formData: false, // Send as raw binary data, not FormData
-        headers: (file) => {
-          // Supabase signed URLs already contain authentication in the URL
-          // No Authorization header needed - just set the content type
-          return {
-            'Content-Type': file.type || 'application/octet-stream',
-          };
-        },
-      })
-      .on("complete", (result) => {
-        console.log('[ObjectUploader] Upload complete!', { 
-          successful: result.successful?.length,
-          failed: result.failed?.length 
-        });
-        onComplete?.(result);
-        setShowModal(false);
-      })
   );
+
+  // Re-attach event handlers whenever onComplete changes to avoid stale closures
+  useEffect(() => {
+    const handleComplete = (result: UploadResult<Record<string, unknown>, Record<string, unknown>>) => {
+      console.log('[ObjectUploader] Upload complete!', { 
+        successful: result.successful?.length,
+        failed: result.failed?.length,
+        files: result.successful 
+      });
+      onComplete?.(result);
+      setShowModal(false);
+    };
+
+    uppy.on("complete", handleComplete);
+
+    return () => {
+      uppy.off("complete", handleComplete);
+    };
+  }, [uppy, onComplete]);
+
 
   return (
     <div>
