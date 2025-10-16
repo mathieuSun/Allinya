@@ -120,13 +120,14 @@ export default function SessionPage() {
           const updatedSession = payload.new as any;
           
           if (updatedSession.phase === 'live' && session.phase === 'waiting') {
+            // Auto-start when both parties are ready
             toast({
               title: '🎥 Session Starting!',
-              description: 'Video connection is being established...',
+              description: 'Both participants are ready - launching video now...',
             });
             playNotificationSound();
             if (document.hidden) {
-              showBrowserNotification('Session Starting!', 'Video connection is being established...');
+              showBrowserNotification('Session Starting!', 'Both participants are ready - launching video now...');
             }
           }
           
@@ -139,17 +140,19 @@ export default function SessionPage() {
           }
           
           if (updatedSession.ready_practitioner && !session.readyPractitioner) {
+            const bothReady = updatedSession.ready_guest === true;
             toast({
               title: '✅ Practitioner is ready',
-              description: 'Waiting for both parties to be ready...',
+              description: bothReady ? 'Both ready! Session will start automatically...' : 'Session will start when both parties are ready...',
             });
             playNotificationSound();
           }
           
           if (updatedSession.ready_guest && !session.readyGuest) {
+            const bothReady = updatedSession.ready_practitioner === true;
             toast({
               title: '✅ Guest is ready',
-              description: 'Waiting for both parties to be ready...',
+              description: bothReady ? 'Both ready! Session will start automatically...' : 'Session will start when both parties are ready...',
             });
             playNotificationSound();
           }
@@ -373,6 +376,12 @@ export default function SessionPage() {
 
             {isReady && !otherReady && (
               <p className="text-muted-foreground">Waiting for {otherUser.displayName} to be ready...</p>
+            )}
+            
+            {isReady && otherReady && (
+              <div className="animate-pulse">
+                <p className="text-primary font-medium">Both participants ready! Starting video automatically...</p>
+              </div>
             )}
           </CardContent>
         </Card>

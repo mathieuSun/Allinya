@@ -523,8 +523,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         : session.readyGuest === true;
 
       if (bothReady && session.phase === 'waiting') {
+        // Auto-transition to live phase when both parties are ready
         updates.phase = 'live';
-        // startedAt field is managed by the database
+        updates.liveStartedAt = new Date().toISOString();
+        
+        // Agora channel is already set when session is created
+        // UIDs are generated dynamically in the /api/agora/token endpoint
+        console.log(`Session ${sessionId} auto-transitioning to live phase - both parties ready`);
       }
 
       const updatedSession = await storage.updateSession(sessionId, updates);
