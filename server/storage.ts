@@ -10,7 +10,18 @@ import { createClient } from '@supabase/supabase-js';
 import { supabaseConfig } from './config';
 
 // Use Supabase service role key for backend operations
-const supabase = createClient(supabaseConfig.url, supabaseConfig.serviceRoleKey);
+// Add no-cache header to force fresh schema fetch to avoid PostgREST cache issues
+const supabase = createClient(supabaseConfig.url, supabaseConfig.serviceRoleKey, {
+  db: {
+    schema: 'public'
+  },
+  global: {
+    headers: {
+      'Cache-Control': 'no-cache',
+      'Prefer': 'return=representation'
+    }
+  }
+});
 
 // Define camelCase input types for the storage interface
 type InsertProfileInput = {
