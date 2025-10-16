@@ -162,7 +162,11 @@ export default function PractitionerDashboard() {
             <div className="flex items-center gap-4">
               <Button
                 variant={practitionerStatus?.isOnline ? 'default' : 'outline'}
-                onClick={() => toggleOnlineMutation.mutate(!practitionerStatus?.isOnline)}
+                onClick={() => {
+                  // Ensure we have a boolean value - default to false if undefined
+                  const currentStatus = practitionerStatus?.isOnline ?? false;
+                  toggleOnlineMutation.mutate(!currentStatus);
+                }}
                 disabled={toggleOnlineMutation.isPending}
                 data-testid="button-toggle-online"
               >

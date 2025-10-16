@@ -309,7 +309,11 @@ export default function ProfilePage() {
                   </Button>
                   <Button
                     variant={(practitionerStatus as any)?.isOnline ? 'default' : 'outline'}
-                    onClick={() => toggleOnlineMutation.mutate(!(practitionerStatus as any)?.isOnline)}
+                    onClick={() => {
+                      // Ensure we have a boolean value - default to false if undefined
+                      const currentStatus = (practitionerStatus as any)?.isOnline ?? false;
+                      toggleOnlineMutation.mutate(!currentStatus);
+                    }}
                     disabled={toggleOnlineMutation.isPending}
                     data-testid="button-toggle-online"
                   >
