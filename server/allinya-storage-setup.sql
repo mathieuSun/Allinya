@@ -20,6 +20,22 @@
 ALTER TABLE storage.objects ENABLE ROW LEVEL SECURITY;
 
 -- ================================================
+-- DROP EXISTING POLICIES (Safe to re-run)
+-- ================================================
+DROP POLICY IF EXISTS "Auth users can upload avatars" ON storage.objects;
+DROP POLICY IF EXISTS "Anyone can view avatars" ON storage.objects;
+DROP POLICY IF EXISTS "Users can update own avatars" ON storage.objects;
+DROP POLICY IF EXISTS "Users can delete own avatars" ON storage.objects;
+DROP POLICY IF EXISTS "Auth users can upload gallery" ON storage.objects;
+DROP POLICY IF EXISTS "Anyone can view gallery" ON storage.objects;
+DROP POLICY IF EXISTS "Users can update own gallery" ON storage.objects;
+DROP POLICY IF EXISTS "Users can delete own gallery" ON storage.objects;
+DROP POLICY IF EXISTS "Auth users can upload videos" ON storage.objects;
+DROP POLICY IF EXISTS "Anyone can view videos" ON storage.objects;
+DROP POLICY IF EXISTS "Users can update own videos" ON storage.objects;
+DROP POLICY IF EXISTS "Users can delete own videos" ON storage.objects;
+
+-- ================================================
 -- AVATARS BUCKET POLICIES
 -- ================================================
 

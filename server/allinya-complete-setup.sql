@@ -101,6 +101,19 @@ ALTER TABLE practitioners ENABLE ROW LEVEL SECURITY;
 ALTER TABLE sessions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE reviews ENABLE ROW LEVEL SECURITY;
 
+-- Drop existing policies if they exist (safe to re-run)
+DROP POLICY IF EXISTS "Profiles are viewable by everyone" ON profiles;
+DROP POLICY IF EXISTS "Users can update own profile" ON profiles;
+DROP POLICY IF EXISTS "Users can insert own profile" ON profiles;
+DROP POLICY IF EXISTS "Practitioners are viewable by everyone" ON practitioners;
+DROP POLICY IF EXISTS "Practitioners can update own record" ON practitioners;
+DROP POLICY IF EXISTS "Practitioners can insert own record" ON practitioners;
+DROP POLICY IF EXISTS "Users can view own sessions" ON sessions;
+DROP POLICY IF EXISTS "Guests can create sessions" ON sessions;
+DROP POLICY IF EXISTS "Participants can update own sessions" ON sessions;
+DROP POLICY IF EXISTS "Reviews are viewable by everyone" ON reviews;
+DROP POLICY IF EXISTS "Guests can create reviews" ON reviews;
+
 -- PROFILES POLICIES
 -- Anyone can view profiles
 CREATE POLICY "Profiles are viewable by everyone" 
@@ -182,6 +195,12 @@ BEGIN
   RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
+
+-- Drop existing triggers if they exist
+DROP TRIGGER IF EXISTS update_profiles_updated_at ON profiles;
+DROP TRIGGER IF EXISTS update_practitioners_updated_at ON practitioners;
+DROP TRIGGER IF EXISTS update_sessions_updated_at ON sessions;
+DROP TRIGGER IF EXISTS update_rating_after_review ON reviews;
 
 -- Triggers for updated_at
 CREATE TRIGGER update_profiles_updated_at 
