@@ -541,18 +541,43 @@ export default function ProfilePage() {
 
                     <div className="space-y-2">
                       <Label>Introduction Video (optional)</Label>
-                      <ObjectUploader
-                        maxNumberOfFiles={1}
-                        maxFileSize={104857600} // 100MB for videos
-                        allowedFileTypes={['video/*', '.mp4', '.mov', '.avi', '.mkv', '.webm']}
-                        onGetUploadParameters={handleGetUploadParametersForVideo}
-                        onComplete={handleVideoUpload}
-                      >
-                        <div className="flex items-center gap-2">
-                          <VideoIcon className="h-4 w-4" />
-                          <span>Upload Video from Computer</span>
-                        </div>
-                      </ObjectUploader>
+                      <div className="flex gap-2">
+                        <ObjectUploader
+                          maxNumberOfFiles={1}
+                          maxFileSize={104857600} // 100MB for videos
+                          allowedFileTypes={['video/*', '.mp4', '.mov', '.avi', '.mkv', '.webm']}
+                          onGetUploadParameters={handleGetUploadParametersForVideo}
+                          onComplete={handleVideoUpload}
+                        >
+                          <div className="flex items-center gap-2">
+                            <VideoIcon className="h-4 w-4" />
+                            <span>Upload Video</span>
+                          </div>
+                        </ObjectUploader>
+                        <Button
+                          type="button"
+                          variant="secondary"
+                          onClick={async () => {
+                            try {
+                              const data = await apiRequest('POST', '/api/upload/video/sync', {});
+                              await refreshProfile();
+                              toast({
+                                title: 'Video synced!',
+                                description: 'Your latest video upload is now saved'
+                              });
+                            } catch (error: any) {
+                              toast({
+                                title: 'Sync failed',
+                                description: error.message,
+                                variant: 'destructive'
+                              });
+                            }
+                          }}
+                        >
+                          <RefreshCw className="h-4 w-4 mr-2" />
+                          Sync Latest Upload
+                        </Button>
+                      </div>
                       {form.watch('videoUrl') && (
                         <p className="text-sm text-muted-foreground">Video uploaded successfully</p>
                       )}

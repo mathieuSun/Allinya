@@ -841,6 +841,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // POST /api/upload/video/sync - Sync the latest uploaded video to profile
+  app.post("/api/upload/video/sync", requireAuth, async (req: Request, res: Response) => {
+    try {
+      const userId = req.user!.id;
+      
+      const supabaseClient = createClient(supabaseConfig.url, supabaseConfig.serviceRoleKey);
+      const { data: files, error: listError } = await supabaseClient.storage
+        .from('videos')
+        .list(userId, {
+          sortBy: { column: 'created_at', order: 'desc' }
+        });
+      
+      if (listError) {
+        throw new Error(`Failed to list video files: ${listError.message}`);
+      }
+      
+      if (!files || files.length === 0) {
+        return res.status(404).json({ error: 'No video files found' });
+      }
+      
+      const latestFile = files[0];
+      const publicUrl = `${supabaseConfig.url}/storage/v1/object/public/videos/${userId}/${latestFile.name}`;
+      
+      await storage.updateProfile(userId, { videoUrl: publicUrl });
+      
+      res.json({ 
+        success: true, 
+        videoUrl: publicUrl,
+        fileName: latestFile.name 
+      });
+    } catch (error: any) {
+      console.error('Video sync error:', error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   // Unified upload endpoint for all object types
   // POST /api/objects/upload - Upload files to any bucket with automatic profile saving
   app.post("/api/objects/upload", requireAuth, async (req: Request, res: Response) => {
