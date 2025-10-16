@@ -13,7 +13,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Badge } from '@/components/ui/badge';
 import { apiRequest, queryClient } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Plus, X, Power, PowerOff, LogOut, Upload, ImageIcon, VideoIcon } from 'lucide-react';
+import { Loader2, Plus, X, Power, PowerOff, LogOut, Upload, ImageIcon, VideoIcon, RefreshCw } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { ObjectUploader } from '@/components/ObjectUploader';
@@ -376,18 +376,43 @@ export default function ProfilePage() {
                   <div className="flex-1">
                     <div className="space-y-2">
                       <Label>Avatar Picture</Label>
-                      <ObjectUploader
-                        maxNumberOfFiles={1}
-                        maxFileSize={5242880} // 5MB
-                        allowedFileTypes={['image/*', '.jpg', '.jpeg', '.png', '.gif', '.webp']}
-                        onGetUploadParameters={handleGetUploadParametersForAvatar}
-                        onComplete={handleAvatarUpload}
-                      >
-                        <div className="flex items-center gap-2">
-                          <Upload className="h-4 w-4" />
-                          <span>Upload Avatar from Computer</span>
-                        </div>
-                      </ObjectUploader>
+                      <div className="flex gap-2">
+                        <ObjectUploader
+                          maxNumberOfFiles={1}
+                          maxFileSize={5242880} // 5MB
+                          allowedFileTypes={['image/*', '.jpg', '.jpeg', '.png', '.gif', '.webp']}
+                          onGetUploadParameters={handleGetUploadParametersForAvatar}
+                          onComplete={handleAvatarUpload}
+                        >
+                          <div className="flex items-center gap-2">
+                            <Upload className="h-4 w-4" />
+                            <span>Upload Avatar</span>
+                          </div>
+                        </ObjectUploader>
+                        <Button
+                          type="button"
+                          variant="secondary"
+                          onClick={async () => {
+                            try {
+                              const data = await apiRequest('POST', '/api/upload/avatar/sync', {});
+                              await refreshProfile();
+                              toast({
+                                title: 'Avatar synced!',
+                                description: 'Your latest upload is now your profile picture'
+                              });
+                            } catch (error: any) {
+                              toast({
+                                title: 'Sync failed',
+                                description: error.message,
+                                variant: 'destructive'
+                              });
+                            }
+                          }}
+                        >
+                          <RefreshCw className="h-4 w-4 mr-2" />
+                          Sync Latest Upload
+                        </Button>
+                      </div>
                       {form.watch('avatarUrl') && (
                         <p className="text-sm text-muted-foreground">Current avatar uploaded</p>
                       )}

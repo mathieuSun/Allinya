@@ -768,6 +768,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // POST /api/upload/avatar/sync - Sync the latest uploaded avatar to profile
+  app.post("/api/upload/avatar/sync", requireAuth, async (req: Request, res: Response) => {
+    try {
+      const userId = req.user!.id;
+      
+      // List files in the user's avatar folder, sorted by most recent
+      const supabaseClient = createClient(supabaseConfig.url, supabaseConfig.serviceRoleKey);
+      const { data: files, error: listError } = await supabaseClient.storage
+        .from('avatars')
+        .list(userId, {
+          sortBy: { column: 'created_at', order: 'desc' }
+        });
+      
+      if (listError) {
+        throw new Error(`Failed to list avatar files: ${listError.message}`);
+      }
+      
+      if (!files || files.length === 0) {
+        return res.status(404).json({ error: 'No avatar files found' });
+      }
+      
+      // Get the most recent file
+      const latestFile = files[0];
+      const publicUrl = `${supabaseConfig.url}/storage/v1/object/public/avatars/${userId}/${latestFile.name}`;
+      
+      // Update the user's profile with this avatar URL
+      await storage.updateProfile(userId, { avatarUrl: publicUrl });
+      
+      res.json({ 
+        success: true, 
+        avatarUrl: publicUrl,
+        fileName: latestFile.name 
+      });
+    } catch (error: any) {
+      console.error('Avatar sync error:', error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   // Get upload URL for gallery image
   app.post("/api/upload/gallery", requireAuth, async (req: Request, res: Response) => {
     try {
