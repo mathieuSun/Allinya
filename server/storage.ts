@@ -168,6 +168,13 @@ export class DbStorage implements IStorage {
     // Convert camelCase to snake_case for database
     const snakeCaseUpdates = toSnakeCase(updates);
     
+    // PostgREST schema cache workaround: Use 'is_online' instead of 'online'
+    // The column exists in the database but PostgREST's schema cache doesn't recognize it
+    if ('online' in snakeCaseUpdates) {
+      snakeCaseUpdates.is_online = snakeCaseUpdates.online;
+      delete snakeCaseUpdates.online;
+    }
+    
     console.log('After conversion to snake_case:', JSON.stringify(snakeCaseUpdates, null, 2));
     
     const { data, error } = await supabase
@@ -188,50 +195,149 @@ export class DbStorage implements IStorage {
   }
 
   async getAllPractitioners(): Promise<PractitionerWithProfile[]> {
-    const { data, error } = await supabase
-      .from('practitioners')
-      .select(`
-        *,
-        profile:profiles!user_id (*)
-      `)
-      .order('online', { ascending: false })
-      .order('rating', { ascending: false });
-    
-    if (error) throw error;
-    
-    return toCamelCase(data || []) as PractitionerWithProfile[];
+    try {
+      // PostgREST schema cache workaround: Fetch practitioners and profiles separately
+      const { data: practitioners, error: practError } = await supabase
+        .from('practitioners')
+        .select('*')
+        .order('is_online', { ascending: false })  // Use 'is_online' instead of 'online'
+        .order('rating', { ascending: false });
+      
+      if (practError) {
+        console.error('Error fetching practitioners:', practError);
+        throw practError;
+      }
+      
+      if (!practitioners || practitioners.length === 0) {
+        return [];
+      }
+      
+      // Get all user IDs (filter out any undefined/null values)
+      const userIds = practitioners
+        .map(p => p.user_id)
+        .filter(id => id != null && id !== 'undefined');
+      
+      if (userIds.length === 0) {
+        console.log('No valid user IDs found in practitioners');
+        return [];
+      }
+      
+      // Fetch profiles for all practitioners
+      const { data: profiles, error: profileError } = await supabase
+        .from('profiles')
+        .select('*')
+        .in('id', userIds);
+      
+      if (profileError) {
+        console.error('Error fetching profiles:', profileError);
+        throw profileError;
+      }
+      
+      // Manually join the data
+      const profileMap = new Map((profiles || []).map(p => [p.id, p]));
+      const result = practitioners
+        .filter(pract => pract.user_id != null && pract.user_id !== 'undefined')
+        .map(pract => ({
+          ...toCamelCase(pract),
+          profile: toCamelCase(profileMap.get(pract.user_id) || {})
+        }));
+      
+      return result as PractitionerWithProfile[];
+    } catch (error) {
+      console.error('getAllPractitioners error:', error);
+      throw error;
+    }
   }
 
   async getOnlinePractitioners(): Promise<PractitionerWithProfile[]> {
-    const { data, error } = await supabase
-      .from('practitioners')
-      .select(`
-        *,
-        profile:profiles!user_id (*)
-      `)
-      .eq('online', true);
-    
-    if (error) throw error;
-    
-    return toCamelCase(data || []) as PractitionerWithProfile[];
+    try {
+      // PostgREST schema cache workaround: Fetch practitioners and profiles separately
+      const { data: practitioners, error: practError } = await supabase
+        .from('practitioners')
+        .select('*')
+        .eq('is_online', true);  // Use 'is_online' instead of 'online'
+      
+      if (practError) {
+        console.error('Error fetching online practitioners:', practError);
+        throw practError;
+      }
+      
+      if (!practitioners || practitioners.length === 0) {
+        return [];
+      }
+      
+      // Get all user IDs (filter out any undefined/null values)
+      const userIds = practitioners
+        .map(p => p.user_id)
+        .filter(id => id != null && id !== 'undefined');
+      
+      if (userIds.length === 0) {
+        return [];
+      }
+      
+      // Fetch profiles for all online practitioners
+      const { data: profiles, error: profileError } = await supabase
+        .from('profiles')
+        .select('*')
+        .in('id', userIds);
+      
+      if (profileError) {
+        console.error('Error fetching profiles for online practitioners:', profileError);
+        throw profileError;
+      }
+      
+      // Manually join the data
+      const profileMap = new Map((profiles || []).map(p => [p.id, p]));
+      const result = practitioners
+        .filter(pract => pract.user_id != null && pract.user_id !== 'undefined')
+        .map(pract => ({
+          ...toCamelCase(pract),
+          profile: toCamelCase(profileMap.get(pract.user_id) || {})
+        }));
+      
+      return result as PractitionerWithProfile[];
+    } catch (error) {
+      console.error('getOnlinePractitioners error:', error);
+      throw error;
+    }
   }
 
   async getPractitionerWithProfile(userId: string): Promise<PractitionerWithProfile | undefined> {
-    const { data, error } = await supabase
+    // PostgREST schema cache workaround: Fetch practitioners and profiles separately
+    const { data: practitioner, error: practError } = await supabase
       .from('practitioners')
-      .select(`
-        *,
-        profile:profiles!user_id (*)
-      `)
+      .select('*')
       .eq('user_id', userId)
       .single();
     
-    if (error) {
-      console.error('Error fetching practitioner with profile:', error);
+    if (practError) {
+      console.error('Error fetching practitioner:', practError);
       return undefined;
     }
     
-    return toCamelCase(data) as PractitionerWithProfile;
+    if (!practitioner) {
+      return undefined;
+    }
+    
+    // Fetch the profile separately
+    const { data: profile, error: profileError } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', userId)
+      .single();
+    
+    if (profileError) {
+      console.error('Error fetching profile:', profileError);
+      return undefined;
+    }
+    
+    // Manually combine the data
+    const result = {
+      ...toCamelCase(practitioner),
+      profile: toCamelCase(profile || {})
+    };
+    
+    return result as PractitionerWithProfile;
   }
 
   async getSession(id: string): Promise<SessionWithParticipants | undefined> {
