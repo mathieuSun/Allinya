@@ -11,12 +11,12 @@ const API_BASE = 'http://localhost:5000/api';
 // Real test users
 const PRACTITIONER = {
   email: 'chefmat2018@gmail.com',
-  password: '12345678'
+  password: 'Rickrick01'
 };
 
 const GUEST = {
   email: 'cheekyma@hotmail.com',
-  password: '12345678'
+  password: 'Rickrick01'
 };
 
 let practitionerToken = null;
