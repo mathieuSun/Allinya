@@ -73,6 +73,14 @@ export function ObjectUploader({
         endpoint: async (fileOrBundle) => {
           // Get the upload URL for each file dynamically
           const params = await onGetUploadParameters();
+          
+          // Store the public URL in the file's metadata so we can access it in onComplete
+          if ('id' in fileOrBundle) {
+            uppy.setFileMeta(fileOrBundle.id, { 
+              publicUrl: (params as any).publicUrl 
+            });
+          }
+          
           return params.url;
         },
         method: 'PUT', // Supabase requires PUT method

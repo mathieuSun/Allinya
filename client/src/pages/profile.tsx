@@ -175,7 +175,12 @@ export default function ProfilePage() {
   const handleGetUploadParametersForAvatar = async () => {
     const data = await apiRequest('POST', '/api/upload/avatar', {});
     setCurrentUploadPublicPath(data.publicUrl);
-    return { method: 'PUT' as const, url: data.uploadUrl, token: data.token };
+    return { 
+      method: 'PUT' as const, 
+      url: data.uploadUrl, 
+      token: data.token,
+      publicUrl: data.publicUrl // Pass it through so ObjectUploader can store it
+    };
   };
 
   const handleGetUploadParametersForVideo = async () => {
@@ -193,16 +198,23 @@ export default function ProfilePage() {
   const handleAvatarUpload = async (result: UploadResult<Record<string, unknown>, Record<string, unknown>>) => {
     console.log('[Avatar Upload] Complete event triggered', { 
       successful: result.successful?.length,
-      publicPath: currentUploadPublicPath 
+      files: result.successful
     });
     
-    if (result.successful && result.successful.length > 0 && currentUploadPublicPath) {
+    if (result.successful && result.successful.length > 0) {
       try {
-        console.log('[Avatar Upload] Saving to database:', currentUploadPublicPath);
+        // Get the public URL from the file metadata (stored by ObjectUploader)
+        const publicUrl = result.successful[0].meta?.publicUrl as string;
+        
+        if (!publicUrl) {
+          throw new Error('No public URL found in upload metadata');
+        }
+        
+        console.log('[Avatar Upload] Saving to database:', publicUrl);
         
         // Save URL to database
         await apiRequest('PUT', '/api/profile/avatar', {
-          avatarUrl: currentUploadPublicPath,
+          avatarUrl: publicUrl,
         });
         
         console.log('[Avatar Upload] Saved! Refreshing profile...');
@@ -227,10 +239,7 @@ export default function ProfilePage() {
         });
       }
     } else {
-      console.error('[Avatar Upload] Missing data:', { 
-        hasSuccessful: !!result.successful?.length,
-        hasPublicPath: !!currentUploadPublicPath 
-      });
+      console.error('[Avatar Upload] No successful uploads:', result);
     }
   };
 
