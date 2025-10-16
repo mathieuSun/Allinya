@@ -86,6 +86,10 @@ export function ObjectUploader({
         },
       })
       .on("complete", (result) => {
+        console.log('[ObjectUploader] Upload complete!', { 
+          successful: result.successful?.length,
+          failed: result.failed?.length 
+        });
         onComplete?.(result);
         setShowModal(false);
       })
