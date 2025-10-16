@@ -97,8 +97,19 @@ export type Session = typeof sessions.$inferSelect;
 export type InsertReview = z.infer<typeof insertReviewSchema>;
 export type Review = typeof reviews.$inferSelect;
 
+// Runtime types after camelCase conversion (what the API actually returns)
+export type RuntimePractitioner = {
+  id: string;  // converted from 'id' in database (not userId)
+  isOnline: boolean;  // converted from 'is_online' in database
+  inService: boolean;  // already camelCase
+  rating: string | null;
+  reviewCount: number | null;
+  createdAt: string | null;
+  updatedAt: string | null;
+};
+
 // Extended types for API responses
-export type PractitionerWithProfile = Practitioner & {
+export type PractitionerWithProfile = RuntimePractitioner & {
   profile: Profile;
 };
 
