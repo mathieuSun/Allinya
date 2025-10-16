@@ -265,7 +265,7 @@ export default function ProfilePage() {
         <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <Avatar className="h-10 w-10">
+              <Avatar className="h-10 w-10" key={profile?.avatarUrl || 'no-avatar-header'}>
                 <AvatarImage src={profile?.avatarUrl || undefined} />
                 <AvatarFallback>
                   {profile?.displayName?.[0]?.toUpperCase() || 'U'}
@@ -344,8 +344,8 @@ export default function ProfilePage() {
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                 <div className="flex items-center gap-6 mb-6">
-                  <Avatar className="h-24 w-24">
-                    <AvatarImage src={form.watch('avatarUrl')} />
+                  <Avatar className="h-24 w-24" key={profile?.avatarUrl || 'no-avatar'}>
+                    <AvatarImage src={profile?.avatarUrl || undefined} />
                     <AvatarFallback className="text-2xl">
                       {profile.displayName?.[0]?.toUpperCase() || 'U'}
                     </AvatarFallback>
