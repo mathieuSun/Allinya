@@ -51,12 +51,19 @@ export default function ProfilePage() {
   // Toggle online status
   const toggleOnlineMutation = useMutation({
     mutationFn: async (online: boolean) => {
-      return apiRequest('POST', '/api/presence/toggle', { online });
+      // Use the new PATCH endpoint with the current user's ID
+      return apiRequest('PATCH', `/api/practitioners/${user?.id}/status`, { is_online: online });
     },
-    onSuccess: () => {
+    onSuccess: (data: any) => {
       queryClient.invalidateQueries({ queryKey: ['/api/practitioners/status'] });
-      const isOnline = (practitionerStatus as any)?.online;
-      toast({ title: isOnline ? 'You are now offline' : 'You are now online' });
+      toast({ title: data.message || (data.online ? 'You are now online' : 'You are now offline') });
+    },
+    onError: (error: any) => {
+      toast({
+        title: 'Failed to update status',
+        description: error.message || 'Unable to update online status',
+        variant: 'destructive',
+      });
     },
   });
 

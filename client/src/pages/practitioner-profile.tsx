@@ -8,7 +8,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Star, Loader2, Clock } from 'lucide-react';
+import { Star, Loader2, Clock, User2, ImageIcon, VideoIcon } from 'lucide-react';
 import { apiRequest, queryClient } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
 import type { Profile } from '@shared/schema';
@@ -121,12 +121,18 @@ export default function PractitionerProfilePage() {
         {heroImage ? (
           <img src={heroImage} alt={practitioner.displayName} className="w-full h-full object-cover" />
         ) : (
-          <div className="w-full h-full bg-muted" />
+          <div className="w-full h-full bg-muted flex items-center justify-center">
+            <ImageIcon className="h-24 w-24 text-muted-foreground/30" />
+          </div>
         )}
         <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
         <Avatar className="absolute -bottom-12 left-1/2 transform -translate-x-1/2 h-24 w-24 border-4 border-background">
-          <AvatarImage src={practitioner.avatarUrl || undefined} />
-          <AvatarFallback className="text-3xl">{practitioner.displayName?.[0]?.toUpperCase() || 'P'}</AvatarFallback>
+          {practitioner.avatarUrl ? (
+            <AvatarImage src={practitioner.avatarUrl} />
+          ) : null}
+          <AvatarFallback className="bg-muted">
+            <User2 className="h-12 w-12 text-muted-foreground" />
+          </AvatarFallback>
         </Avatar>
       </div>
 
@@ -158,27 +164,54 @@ export default function PractitionerProfilePage() {
           </div>
         )}
 
-        {thumbnails.length > 0 && (
-          <div className="mb-12">
-            <h2 className="text-2xl font-semibold mb-4">Gallery</h2>
+        <div className="mb-12">
+          <h2 className="text-2xl font-semibold mb-4">Gallery</h2>
+          {thumbnails.length > 0 ? (
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {thumbnails.map((url, i) => (
-                <div key={i} className="aspect-square rounded-lg overflow-hidden" data-testid={`gallery-thumb-${i}`}>
+                <div key={i} className="aspect-square rounded-lg overflow-hidden bg-muted" data-testid={`gallery-thumb-${i}`}>
                   <img src={url || undefined} alt={`Gallery ${i + 1}`} className="w-full h-full object-cover" />
                 </div>
               ))}
             </div>
-          </div>
-        )}
-
-        {practitioner.videoUrl && (
-          <div className="mb-12">
-            <h2 className="text-2xl font-semibold mb-4">Introduction Video</h2>
-            <div className="aspect-video rounded-lg overflow-hidden bg-muted flex items-center justify-center">
-              <p className="text-muted-foreground">Video: {practitioner.videoUrl}</p>
+          ) : (
+            <div className="flex flex-col items-center justify-center p-12 border-2 border-dashed border-muted-foreground/25 rounded-lg bg-muted/10">
+              <ImageIcon className="h-16 w-16 text-muted-foreground/50 mb-4" />
+              <p className="text-muted-foreground text-center">No images yet</p>
+              <p className="text-sm text-muted-foreground/75 text-center mt-2">
+                Gallery images will appear here once the practitioner uploads them
+              </p>
             </div>
-          </div>
-        )}
+          )}
+        </div>
+
+        <div className="mb-12">
+          <h2 className="text-2xl font-semibold mb-4">Introduction Video</h2>
+          {practitioner.videoUrl ? (
+            <div className="aspect-video rounded-lg overflow-hidden bg-black">
+              {/* If the URL is a video file, display it */}
+              {practitioner.videoUrl.match(/\.(mp4|webm|ogg)$/i) ? (
+                <video controls className="w-full h-full">
+                  <source src={practitioner.videoUrl} />
+                  Your browser does not support the video tag.
+                </video>
+              ) : (
+                /* Otherwise show the URL as a placeholder for now */
+                <div className="w-full h-full bg-muted flex items-center justify-center">
+                  <p className="text-muted-foreground">Video: {practitioner.videoUrl}</p>
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="aspect-video rounded-lg flex flex-col items-center justify-center border-2 border-dashed border-muted-foreground/25 bg-muted/10">
+              <VideoIcon className="h-20 w-20 text-muted-foreground/50 mb-4" />
+              <p className="text-muted-foreground text-center">No video yet</p>
+              <p className="text-sm text-muted-foreground/75 text-center mt-2">
+                An introduction video will appear here once uploaded
+              </p>
+            </div>
+          )}
+        </div>
       </main>
 
       {/* Sticky CTA */}

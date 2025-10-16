@@ -69,12 +69,22 @@ export default function PractitionerDashboard() {
   // Toggle online status
   const toggleOnlineMutation = useMutation({
     mutationFn: async (online: boolean) => {
-      return apiRequest('POST', '/api/presence/toggle', { online });
+      // Use the user ID from the profile since we're already authenticated
+      const userId = profile?.id;
+      if (!userId) throw new Error('User ID not found');
+      return apiRequest('PATCH', `/api/practitioners/${userId}/status`, { is_online: online });
     },
-    onSuccess: () => {
+    onSuccess: (data: any) => {
       queryClient.invalidateQueries({ queryKey: ['/api/practitioners/status'] });
       toast({ 
-        title: practitionerStatus?.online ? 'You are now offline' : 'You are now online',
+        title: data.message || (data.online ? 'You are now online' : 'You are now offline'),
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: 'Failed to update status',
+        description: error.message || 'Unable to update online status',
+        variant: 'destructive',
       });
     },
   });

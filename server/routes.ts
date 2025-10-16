@@ -346,6 +346,44 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // PATCH /api/practitioners/:id/status - Update practitioner online status
+  app.patch('/api/practitioners/:id/status', requireAuth, async (req: Request, res: Response) => {
+    try {
+      const practitionerId = req.params.id;
+      const { is_online } = req.body;
+      
+      // Validate input
+      if (typeof is_online !== 'boolean') {
+        return res.status(400).json({ error: 'is_online must be a boolean' });
+      }
+
+      const userId = req.user!.id;
+
+      // Verify this is the practitioner's own account
+      if (practitionerId !== userId) {
+        return res.status(403).json({ error: 'Can only update your own status' });
+      }
+
+      // Verify user is a practitioner
+      const profile = await storage.getProfile(userId);
+      if (!profile || profile.role !== 'practitioner') {
+        return res.status(403).json({ error: 'Only practitioners can update their status' });
+      }
+
+      // Update practitioner status
+      const practitioner = await storage.updatePractitioner(userId, { online: is_online });
+      
+      res.json({ 
+        success: true,
+        online: practitioner.online,
+        message: is_online ? 'You are now online' : 'You are now offline'
+      });
+    } catch (error: any) {
+      console.error('Error updating practitioner status:', error);
+      res.status(400).json({ error: error.message || 'Failed to update status' });
+    }
+  });
+
   // POST /api/sessions/start - Start a new session
   app.post('/api/sessions/start', requireAuth, async (req: Request, res: Response) => {
     try {
