@@ -41,6 +41,7 @@ export const sessions = pgTable("sessions", {
   waiting_started_at: timestamp("waiting_started_at", { withTimezone: true }),
   live_started_at: timestamp("live_started_at", { withTimezone: true }),
   ended_at: timestamp("ended_at", { withTimezone: true }),
+  acknowledged_practitioner: boolean("acknowledged_practitioner").notNull().default(false),
   ready_practitioner: boolean("ready_practitioner").notNull().default(false),
   ready_guest: boolean("ready_guest").notNull().default(false),
   agora_channel: text("agora_channel"),
@@ -135,6 +136,7 @@ export type RuntimeSession = {
   waitingStartedAt: string | null;  // converted from 'waiting_started_at' in database
   liveStartedAt: string | null;  // converted from 'live_started_at' in database
   endedAt: string | null;  // converted from 'ended_at' in database
+  acknowledgedPractitioner: boolean;  // converted from 'acknowledged_practitioner' in database
   readyPractitioner: boolean;  // converted from 'ready_practitioner' in database
   readyGuest: boolean;  // converted from 'ready_guest' in database
   agoraChannel: string | null;  // converted from 'agora_channel' in database

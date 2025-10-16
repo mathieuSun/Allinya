@@ -500,6 +500,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ error: 'Not a session participant' });
       }
 
+      // For practitioner, ensure they have acknowledged first
+      if (who === 'practitioner' && !session.acknowledgedPractitioner) {
+        return res.status(400).json({ 
+          error: 'Please acknowledge the session request first' 
+        });
+      }
+
       const updates: Partial<SessionWithParticipants> = {};
       
       if (who === 'guest') {
@@ -547,6 +554,49 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(session);
     } catch (error: any) {
       res.status(400).json({ error: error.message });
+    }
+  });
+
+  // POST /api/sessions/acknowledge - Practitioner acknowledges session request
+  app.post('/api/sessions/acknowledge', requireAuth, async (req: Request, res: Response) => {
+    try {
+      const { sessionId } = z.object({
+        sessionId: z.string().uuid(),
+      }).parse(req.body);
+
+      const userId = req.user!.id;
+      const session = await storage.getSession(sessionId);
+
+      if (!session) {
+        return res.status(404).json({ error: 'Session not found' });
+      }
+
+      // Verify user is the practitioner
+      if (userId !== session.practitionerId) {
+        return res.status(403).json({ error: 'Only the practitioner can acknowledge the session' });
+      }
+
+      // Verify session is in waiting phase
+      if (session.phase !== 'waiting') {
+        return res.status(400).json({ error: 'Session is not in waiting phase' });
+      }
+
+      // Update session to mark practitioner acknowledged
+      const updatedSession = await storage.updateSession(sessionId, {
+        acknowledgedPractitioner: true
+      });
+
+      res.json({ 
+        success: true,
+        message: 'Session acknowledged. Guest has been notified.',
+        session: updatedSession
+      });
+    } catch (error: any) {
+      console.error('Acknowledge error:', error);
+      if (error.name === 'ZodError') {
+        return res.status(400).json({ error: 'Invalid input', details: error.errors });
+      }
+      res.status(500).json({ error: error.message || 'Failed to acknowledge session' });
     }
   });
 
@@ -625,8 +675,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: 'Session is not in waiting phase' });
       }
 
-      // Mark practitioner as ready and transition to waiting room
+      // Mark practitioner as acknowledged and ready when accepting from dashboard
       const updatedSession = await storage.updateSession(sessionId, {
+        acknowledgedPractitioner: true,
         readyPractitioner: true,
       });
 

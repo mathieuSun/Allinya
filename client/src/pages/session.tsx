@@ -34,6 +34,27 @@ export default function SessionPage() {
     refetchInterval: 2000,
   });
 
+  // Acknowledge mutation (for practitioners)
+  const acknowledgeMutation = useMutation({
+    mutationFn: async () => {
+      return apiRequest('POST', '/api/sessions/acknowledge', { sessionId });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [`/api/sessions/${sessionId}`] });
+      toast({ 
+        title: '✅ Session acknowledged', 
+        description: 'Guest has been notified that you have seen their request.' 
+      });
+    },
+    onError: (error: any) => {
+      toast({ 
+        title: 'Failed to acknowledge', 
+        description: error.message || 'Please try again',
+        variant: 'destructive' 
+      });
+    },
+  });
+
   // Mark ready mutation
   const markReadyMutation = useMutation({
     mutationFn: async () => {
@@ -107,6 +128,14 @@ export default function SessionPage() {
             if (document.hidden) {
               showBrowserNotification('Session Starting!', 'Video connection is being established...');
             }
+          }
+          
+          if (updatedSession.acknowledged_practitioner && !session.acknowledgedPractitioner) {
+            toast({
+              title: '👋 Practitioner acknowledged',
+              description: 'Practitioner has seen your request and will join soon.',
+            });
+            playNotificationSound();
           }
           
           if (updatedSession.ready_practitioner && !session.readyPractitioner) {
@@ -200,9 +229,11 @@ export default function SessionPage() {
   }
 
   const isGuest = currentUser.id === session.guestId;
+  const isPractitioner = currentUser.id === session.practitionerId;
   const otherUser = isGuest ? session.practitioner : session.guest;
   const isReady = isGuest ? session.readyGuest : session.readyPractitioner;
   const otherReady = isGuest ? session.readyPractitioner : session.readyGuest;
+  const hasAcknowledged = session.acknowledgedPractitioner;
 
   // Waiting Room
   if (session.phase === 'waiting') {
@@ -216,7 +247,7 @@ export default function SessionPage() {
               {formatTime(remainingTime)}
             </div>
 
-            <div className="flex items-center justify-center gap-12 mb-12">
+            <div className="flex items-center justify-center gap-12 mb-8">
               <div className="text-center">
                 <Avatar className="h-20 w-20 mx-auto mb-3">
                   <AvatarImage src={currentUser.avatarUrl || undefined} />
@@ -254,7 +285,74 @@ export default function SessionPage() {
               </div>
             </div>
 
-            {!isReady && (
+            {/* Status indicators */}
+            <div className="mb-8 space-y-2">
+              {isPractitioner && hasAcknowledged && (
+                <p className="text-sm text-muted-foreground flex items-center justify-center gap-2">
+                  <Check className="h-4 w-4 text-primary" />
+                  Session acknowledged ✓
+                </p>
+              )}
+              {isGuest && hasAcknowledged && (
+                <p className="text-sm text-muted-foreground flex items-center justify-center gap-2">
+                  <Check className="h-4 w-4 text-primary" />
+                  Practitioner acknowledged ✓
+                </p>
+              )}
+              {session.readyPractitioner && (
+                <p className="text-sm text-muted-foreground flex items-center justify-center gap-2">
+                  <Check className="h-4 w-4 text-primary" />
+                  Practitioner ready ✓
+                </p>
+              )}
+              {session.readyGuest && (
+                <p className="text-sm text-muted-foreground flex items-center justify-center gap-2">
+                  <Check className="h-4 w-4 text-primary" />
+                  Guest ready ✓
+                </p>
+              )}
+            </div>
+
+            {/* Action buttons based on role and state */}
+            {isPractitioner && !hasAcknowledged && (
+              <Button
+                size="lg"
+                className="text-xl px-12 py-6"
+                onClick={() => acknowledgeMutation.mutate()}
+                disabled={acknowledgeMutation.isPending}
+                data-testid="button-acknowledge"
+              >
+                {acknowledgeMutation.isPending ? (
+                  <>
+                    <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                    Acknowledging...
+                  </>
+                ) : (
+                  "Acknowledge Request"
+                )}
+              </Button>
+            )}
+
+            {isPractitioner && hasAcknowledged && !isReady && (
+              <Button
+                size="lg"
+                className="text-xl px-12 py-6"
+                onClick={() => markReadyMutation.mutate()}
+                disabled={markReadyMutation.isPending}
+                data-testid="button-ready"
+              >
+                {markReadyMutation.isPending ? (
+                  <>
+                    <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                    Setting Ready...
+                  </>
+                ) : (
+                  "I'm Ready"
+                )}
+              </Button>
+            )}
+
+            {isGuest && !isReady && (
               <Button
                 size="lg"
                 className="text-xl px-12 py-6"
