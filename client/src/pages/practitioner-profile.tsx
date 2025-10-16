@@ -40,11 +40,10 @@ export default function PractitionerProfilePage() {
   const startSessionMutation = useMutation({
     mutationFn: async () => {
       console.log('Starting session with:', { practitionerId, liveSeconds: selectedDuration });
-      const response = await apiRequest('POST', '/api/sessions/start', {
+      const data = await apiRequest('POST', '/api/sessions/start', {
         practitionerId,
         liveSeconds: selectedDuration,
       });
-      const data = await response.json();
       console.log('Session created:', data);
       return data;
     },
