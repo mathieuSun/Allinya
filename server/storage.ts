@@ -52,6 +52,7 @@ type InsertSessionInput = {
   startedAt?: string | null;
   practitionerReady?: boolean;
   guestReady?: boolean;
+  acknowledgedPractitioner?: boolean;
   agoraChannel?: string | null;
 };
 

@@ -524,6 +524,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         liveSeconds: liveSeconds,
         practitionerReady: false,
         guestReady: false,
+        acknowledgedPractitioner: false,  // Add this field with default value
         agoraChannel: agoraChannel,
       });
 
