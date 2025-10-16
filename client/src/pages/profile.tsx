@@ -115,6 +115,9 @@ export default function ProfilePage() {
     return null;
   }
 
+  // Debug: log the avatar URL
+  console.log('[Profile] Avatar URL:', profile.avatarUrl);
+
   const onSubmit = async (data: any) => {
     try {
       // Filter out empty values to prevent overwriting uploaded media
@@ -344,12 +347,22 @@ export default function ProfilePage() {
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                 <div className="flex items-center gap-6 mb-6">
-                  <Avatar className="h-24 w-24" key={profile?.avatarUrl || 'no-avatar'}>
-                    <AvatarImage src={profile?.avatarUrl || undefined} />
-                    <AvatarFallback className="text-2xl">
+                  {profile?.avatarUrl ? (
+                    <img 
+                      src={profile.avatarUrl} 
+                      alt="Avatar"
+                      className="h-24 w-24 rounded-full object-cover border-2 border-border"
+                      onError={(e) => {
+                        console.error('[IMG] Load error:', profile.avatarUrl);
+                        e.currentTarget.style.display = 'none';
+                      }}
+                      onLoad={() => console.log('[IMG] Loaded:', profile.avatarUrl)}
+                    />
+                  ) : (
+                    <div className="h-24 w-24 rounded-full bg-muted flex items-center justify-center text-2xl">
                       {profile.displayName?.[0]?.toUpperCase() || 'U'}
-                    </AvatarFallback>
-                  </Avatar>
+                    </div>
+                  )}
                   <div className="flex-1">
                     <div className="space-y-2">
                       <Label>Avatar Picture</Label>
