@@ -274,8 +274,8 @@ export default function SessionPage() {
     return (
       <VideoRoom
         sessionId={sessionId!}
-        channelName={session.agoraChannel}
-        uid={uid}
+        channelName={session.agoraChannel || ''}
+        uid={uid || ''}
         currentUser={{
           id: currentUser.id,
           displayName: currentUser.displayName,

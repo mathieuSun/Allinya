@@ -147,16 +147,12 @@ export default function VideoRoom({
         try {
           const [audioTrack, videoTrack] = await AgoraRTC.createMicrophoneAndCameraTracks(
             { 
-              audioConfig: {
-                echoCancellation: true,
-                noiseSuppression: true,
-                autoGainControl: true
-              }
+              AEC: true,  // Acoustic Echo Cancellation
+              ANS: true,  // Automatic Noise Suppression
+              AGC: true   // Automatic Gain Control
             },
             {
-              videoConfig: {
-                encoderConfig: "720p_2"
-              }
+              encoderConfig: "720p_2"
             }
           );
 

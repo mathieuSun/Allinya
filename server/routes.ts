@@ -8,6 +8,7 @@ import { createRequire } from "module";
 import { agoraConfig, supabaseConfig } from "./config";
 import { supabaseStorage, type StorageBucket } from "./supabaseStorage";
 import { createClient } from '@supabase/supabase-js';
+import type { SessionWithParticipants } from "@shared/schema";
 
 // Import Agora token builder (CommonJS module)
 const require = createRequire(import.meta.url);
@@ -499,20 +500,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ error: 'Not a session participant' });
       }
 
-      const updates: Partial<RuntimeSession> = {};
+      const updates: Partial<SessionWithParticipants> = {};
       
       if (who === 'guest') {
-        updates.guestReady = true;
+        updates.readyGuest = true;
       } else {
-        updates.practitionerReady = true;
+        updates.readyPractitioner = true;
       }
 
       // Check if both ready, transition to live
       // If guest is marking ready, check if practitioner was already ready
       // If practitioner is marking ready, check if guest was already ready
       const bothReady = (who === 'guest') 
-        ? session.practitionerReady === true
-        : session.guestReady === true;
+        ? session.readyPractitioner === true
+        : session.readyGuest === true;
 
       if (bothReady && session.phase === 'waiting') {
         updates.phase = 'live';
@@ -626,7 +627,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Mark practitioner as ready and transition to waiting room
       const updatedSession = await storage.updateSession(sessionId, {
-        practitionerReady: true,
+        readyPractitioner: true,
       });
 
       res.json(updatedSession);
