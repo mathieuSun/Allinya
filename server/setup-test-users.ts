@@ -54,13 +54,14 @@ async function setupTestUsers() {
   for (const testUser of testUsers) {
     try {
       // Check if user already exists
-      const { data: existingUser } = await supabase.auth.admin.getUserByEmail(testUser.email);
+      const { data: existingUsers } = await supabase.auth.admin.listUsers();
+      const existingUser = existingUsers?.users?.find(u => u.email === testUser.email);
       
       let userId: string;
       
-      if (existingUser?.user) {
+      if (existingUser) {
         console.log(`✅ User ${testUser.email} already exists`);
-        userId = existingUser.user.id;
+        userId = existingUser.id;
       } else {
         // Create user with admin API
         const { data, error } = await supabase.auth.admin.createUser({
