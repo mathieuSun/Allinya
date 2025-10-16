@@ -579,7 +579,19 @@ export default function ProfilePage() {
                         </Button>
                       </div>
                       {form.watch('videoUrl') && (
-                        <p className="text-sm text-muted-foreground">Video uploaded successfully</p>
+                        <div className="mt-4 space-y-2">
+                          <p className="text-sm text-muted-foreground">Current video:</p>
+                          <div className="relative rounded-lg overflow-hidden border border-border bg-black">
+                            <video 
+                              src={form.watch('videoUrl')} 
+                              controls 
+                              className="w-full max-h-96"
+                              data-testid="video-preview"
+                            >
+                              Your browser does not support the video tag.
+                            </video>
+                          </div>
+                        </div>
                       )}
                     </div>
                   </>
