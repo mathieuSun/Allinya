@@ -20,7 +20,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const refreshProfile = async () => {
+  const refreshProfile = async (retryCount = 0) => {
     if (!user) {
       setProfile(null);
       return;
@@ -32,8 +32,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       
       if (!session?.access_token) {
         // Token not available yet (happens during sign-up/sign-in transitions)
-        // Don't null the profile, just wait for next refresh
-        console.log('Waiting for session token...');
+        // Retry up to 10 times with 500ms delay
+        if (retryCount < 10) {
+          console.log(`Waiting for session token... retry ${retryCount + 1}`);
+          setTimeout(() => refreshProfile(retryCount + 1), 500);
+        } else {
+          console.error('Failed to get session token after 10 retries');
+          setProfile(null);
+        }
         return;
       }
 
@@ -71,8 +77,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+    } = supabase.auth.onAuthStateChange(async (_event, session) => {
       setUser(session?.user ?? null);
+      
+      // If we have a new session, immediately fetch the profile using the provided token
+      if (session?.access_token && session?.user) {
+        try {
+          const response = await fetch('/api/auth/user', {
+            credentials: 'include',
+            headers: {
+              'Authorization': `Bearer ${session.access_token}`,
+            },
+          });
+
+          if (response.ok) {
+            const data = await response.json();
+            setProfile(data.profile);
+          } else if (response.status === 404) {
+            setProfile(null);
+          }
+        } catch (error) {
+          console.error('Error fetching profile on auth change:', error);
+        }
+      }
     });
 
     return () => subscription.unsubscribe();
