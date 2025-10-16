@@ -173,22 +173,19 @@ export default function ProfilePage() {
 
   // File upload handlers for Supabase Storage
   const handleGetUploadParametersForAvatar = async () => {
-    const response = await apiRequest('POST', '/api/upload/avatar', {});
-    const data = await response.json();
+    const data = await apiRequest('POST', '/api/upload/avatar', {});
     setCurrentUploadPublicPath(data.publicUrl);
     return { method: 'PUT' as const, url: data.uploadUrl, token: data.token };
   };
 
   const handleGetUploadParametersForVideo = async () => {
-    const response = await apiRequest('POST', '/api/upload/video', {});
-    const data = await response.json();
+    const data = await apiRequest('POST', '/api/upload/video', {});
     setCurrentUploadPublicPath(data.publicUrl);
     return { method: 'PUT' as const, url: data.uploadUrl, token: data.token };
   };
 
   const handleGetUploadParametersForGallery = async () => {
-    const response = await apiRequest('POST', '/api/upload/gallery', {});
-    const data = await response.json();
+    const data = await apiRequest('POST', '/api/upload/gallery', {});
     setCurrentGalleryPublicPaths(prev => [...prev, data.publicUrl]);
     return { method: 'PUT' as const, url: data.uploadUrl, token: data.token };
   };
