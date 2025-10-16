@@ -232,39 +232,12 @@ END $$;
 
 NOTIFY pgrst, 'reload schema';
 
--- STEP 10: INSERT TEST DATA (OPTIONAL - REMOVE IN PRODUCTION)
+-- NO TEST DATA - Users must sign up through the app
 -- ============================================
-
--- Test user 1: Practitioner
-INSERT INTO profiles (id, role, display_name, country, bio, avatar_url, specialties) 
-VALUES (
-  'a1111111-1111-1111-1111-111111111111'::uuid,
-  'practitioner',
-  'Dr. Sarah Johnson',
-  'USA',
-  'Certified energy healer with 10 years experience',
-  NULL,
-  ARRAY['Reiki', 'Chakra Balancing']
-) ON CONFLICT (id) DO NOTHING;
-
--- Add practitioner data
-INSERT INTO practitioners (id, is_online, rating, review_count) 
-VALUES (
-  'a1111111-1111-1111-1111-111111111111'::uuid,
-  true,
-  4.8,
-  25
-) ON CONFLICT (id) DO NOTHING;
-
--- Test user 2: Guest
-INSERT INTO profiles (id, role, display_name, country, bio) 
-VALUES (
-  'b2222222-2222-2222-2222-222222222222'::uuid,
-  'guest',
-  'John Smith',
-  'Canada',
-  'Seeking healing and wellness'
-) ON CONFLICT (id) DO NOTHING;
+-- Only authorized accounts:
+-- - chefmat2018@gmail.com (practitioner)
+-- - cheekyma@hotmail.com (guest)
+-- These users must sign up through the application
 
 -- ============================================
 -- SUCCESS MESSAGE
