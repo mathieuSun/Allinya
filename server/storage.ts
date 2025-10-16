@@ -229,6 +229,9 @@ export class DbStorage implements IStorage {
         throw practError;
       }
       
+      console.log('getAllPractitioners - Raw practitioners from DB:', practitioners?.length, 'records');
+      console.log('First practitioner:', practitioners?.[0]);
+      
       if (!practitioners || practitioners.length === 0) {
         return [];
       }
