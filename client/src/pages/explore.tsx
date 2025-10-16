@@ -59,7 +59,7 @@ export default function ExplorePage() {
   }
 
   if (profile.role === 'practitioner') {
-    setLocation('/profile');
+    setLocation('/dashboard');
     return null;
   }
 

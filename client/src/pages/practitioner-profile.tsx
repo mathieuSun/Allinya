@@ -69,7 +69,7 @@ export default function PractitionerProfilePage() {
   }
 
   if (currentUser.role !== 'guest') {
-    setLocation('/profile');
+    setLocation('/dashboard');
     return null;
   }
 
