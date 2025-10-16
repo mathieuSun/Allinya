@@ -134,7 +134,7 @@ export class DbStorage implements IStorage {
     const { data, error } = await supabase
       .from('practitioners')
       .select('*')
-      .eq('user_id', userId)
+      .eq('id', userId)
       .single();
     
     if (error) {
@@ -183,7 +183,7 @@ export class DbStorage implements IStorage {
         ...snakeCaseUpdates,
         updated_at: new Date().toISOString()
       })
-      .eq('user_id', userId)
+      .eq('id', userId)
       .select()
       .single();
     
@@ -214,7 +214,7 @@ export class DbStorage implements IStorage {
       
       // Get all user IDs (filter out any undefined/null values)
       const userIds = practitioners
-        .map(p => p.user_id)
+        .map(p => p.id)
         .filter(id => id != null && id !== 'undefined');
       
       if (userIds.length === 0) {
@@ -236,10 +236,10 @@ export class DbStorage implements IStorage {
       // Manually join the data
       const profileMap = new Map((profiles || []).map(p => [p.id, p]));
       const result = practitioners
-        .filter(pract => pract.user_id != null && pract.user_id !== 'undefined')
+        .filter(pract => pract.id != null && pract.id !== 'undefined')
         .map(pract => ({
           ...toCamelCase(pract),
-          profile: toCamelCase(profileMap.get(pract.user_id) || {})
+          profile: toCamelCase(profileMap.get(pract.id) || {})
         }));
       
       return result as PractitionerWithProfile[];
@@ -268,7 +268,7 @@ export class DbStorage implements IStorage {
       
       // Get all user IDs (filter out any undefined/null values)
       const userIds = practitioners
-        .map(p => p.user_id)
+        .map(p => p.id)
         .filter(id => id != null && id !== 'undefined');
       
       if (userIds.length === 0) {
@@ -289,10 +289,10 @@ export class DbStorage implements IStorage {
       // Manually join the data
       const profileMap = new Map((profiles || []).map(p => [p.id, p]));
       const result = practitioners
-        .filter(pract => pract.user_id != null && pract.user_id !== 'undefined')
+        .filter(pract => pract.id != null && pract.id !== 'undefined')
         .map(pract => ({
           ...toCamelCase(pract),
-          profile: toCamelCase(profileMap.get(pract.user_id) || {})
+          profile: toCamelCase(profileMap.get(pract.id) || {})
         }));
       
       return result as PractitionerWithProfile[];
@@ -307,7 +307,7 @@ export class DbStorage implements IStorage {
     const { data: practitioner, error: practError } = await supabase
       .from('practitioners')
       .select('*')
-      .eq('user_id', userId)
+      .eq('id', userId)
       .single();
     
     if (practError) {

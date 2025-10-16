@@ -25,7 +25,7 @@ export default function PractitionerDashboard() {
   }
 
   // Fetch practitioner status
-  const { data: practitionerStatus } = useQuery<{ online: boolean }>({
+  const { data: practitionerStatus } = useQuery<{ isOnline: boolean }>({
     queryKey: ['/api/practitioners/status'],
   });
 
@@ -77,7 +77,7 @@ export default function PractitionerDashboard() {
     onSuccess: (data: any) => {
       queryClient.invalidateQueries({ queryKey: ['/api/practitioners/status'] });
       toast({ 
-        title: data.message || (data.online ? 'You are now online' : 'You are now offline'),
+        title: data.message || (data.isOnline ? 'You are now online' : 'You are now offline'),
       });
     },
     onError: (error: any) => {
@@ -128,12 +128,12 @@ export default function PractitionerDashboard() {
             <h1 className="text-2xl font-bold">Practitioner Dashboard</h1>
             <div className="flex items-center gap-4">
               <Button
-                variant={practitionerStatus?.online ? 'default' : 'outline'}
-                onClick={() => toggleOnlineMutation.mutate(!practitionerStatus?.online)}
+                variant={practitionerStatus?.isOnline ? 'default' : 'outline'}
+                onClick={() => toggleOnlineMutation.mutate(!practitionerStatus?.isOnline)}
                 disabled={toggleOnlineMutation.isPending}
                 data-testid="button-toggle-online"
               >
-                {practitionerStatus?.online ? (
+                {practitionerStatus?.isOnline ? (
                   <>
                     <Power className="mr-2 h-4 w-4" />
                     Online
@@ -169,13 +169,13 @@ export default function PractitionerDashboard() {
           <CardContent className="py-6">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
-                <div className={`h-3 w-3 rounded-full ${practitionerStatus?.online ? 'bg-green-500' : 'bg-gray-400'} animate-pulse`} />
+                <div className={`h-3 w-3 rounded-full ${practitionerStatus?.isOnline ? 'bg-green-500' : 'bg-gray-400'} animate-pulse`} />
                 <div>
                   <p className="font-semibold">
-                    You are {practitionerStatus?.online ? 'online' : 'offline'}
+                    You are {practitionerStatus?.isOnline ? 'online' : 'offline'}
                   </p>
                   <p className="text-sm text-muted-foreground">
-                    {practitionerStatus?.online 
+                    {practitionerStatus?.isOnline 
                       ? 'Guests can request sessions with you'
                       : 'Go online to receive session requests'}
                   </p>
@@ -306,7 +306,7 @@ export default function PractitionerDashboard() {
                 <Bell className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                 <h3 className="text-lg font-semibold mb-2">No active sessions</h3>
                 <p className="text-muted-foreground">
-                  {practitionerStatus?.online 
+                  {practitionerStatus?.isOnline 
                     ? "You'll be notified when guests request sessions"
                     : "Go online to start receiving session requests"}
                 </p>

@@ -109,7 +109,7 @@ export default function ExplorePage() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {allPractitioners.map((practitioner) => {
-              const isOnline = practitioner.online;
+              const isOnline = practitioner.isOnline;
               return (
               <Card
                 key={practitioner.userId}

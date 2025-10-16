@@ -56,7 +56,7 @@ export default function ProfilePage() {
     },
     onSuccess: (data: any) => {
       queryClient.invalidateQueries({ queryKey: ['/api/practitioners/status'] });
-      toast({ title: data.message || (data.online ? 'You are now online' : 'You are now offline') });
+      toast({ title: data.message || (data.isOnline ? 'You are now online' : 'You are now offline') });
     },
     onError: (error: any) => {
       toast({
@@ -96,7 +96,7 @@ export default function ProfilePage() {
         videoUrl: profile.videoUrl || '',
       });
     }
-  }, [profile, form]);
+  }, [profile]); // Remove form from dependencies to prevent infinite loop
 
   useEffect(() => {
     if (!profile || !user) {
@@ -268,12 +268,12 @@ export default function ProfilePage() {
                     Go to Dashboard
                   </Button>
                   <Button
-                    variant={(practitionerStatus as any)?.online ? 'default' : 'outline'}
-                    onClick={() => toggleOnlineMutation.mutate(!(practitionerStatus as any)?.online)}
+                    variant={(practitionerStatus as any)?.isOnline ? 'default' : 'outline'}
+                    onClick={() => toggleOnlineMutation.mutate(!(practitionerStatus as any)?.isOnline)}
                     disabled={toggleOnlineMutation.isPending}
                     data-testid="button-toggle-online"
                   >
-                    {(practitionerStatus as any)?.online ? (
+                    {(practitionerStatus as any)?.isOnline ? (
                       <>
                         <Power className="mr-2 h-4 w-4" />
                         Online
