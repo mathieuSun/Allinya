@@ -12,6 +12,7 @@ import { apiRequest, queryClient } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/lib/supabase';
 import { calculateRemainingTime, formatTime } from '@/lib/timer-utils';
+import { playNotificationSound, showBrowserNotification } from '@/lib/notification-utils';
 import type { SessionWithParticipants } from '@shared/schema';
 import VideoRoom from '@/components/VideoRoom';
 
@@ -41,6 +42,14 @@ export default function SessionPage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [`/api/sessions/${sessionId}`] });
+      toast({ title: '✅ You are ready!', description: 'Waiting for the other participant...' });
+    },
+    onError: (error: any) => {
+      toast({ 
+        title: 'Failed to mark ready', 
+        description: error.message || 'Please try again',
+        variant: 'destructive' 
+      });
     },
   });
 
@@ -94,6 +103,10 @@ export default function SessionPage() {
               title: '🎥 Session Starting!',
               description: 'Video connection is being established...',
             });
+            playNotificationSound();
+            if (document.hidden) {
+              showBrowserNotification('Session Starting!', 'Video connection is being established...');
+            }
           }
           
           if (updatedSession.ready_practitioner && !session.readyPractitioner) {
@@ -101,6 +114,7 @@ export default function SessionPage() {
               title: '✅ Practitioner is ready',
               description: 'Waiting for both parties to be ready...',
             });
+            playNotificationSound();
           }
           
           if (updatedSession.ready_guest && !session.readyGuest) {
@@ -108,6 +122,7 @@ export default function SessionPage() {
               title: '✅ Guest is ready',
               description: 'Waiting for both parties to be ready...',
             });
+            playNotificationSound();
           }
           
           if (updatedSession.phase === 'ended') {
@@ -115,6 +130,7 @@ export default function SessionPage() {
               title: '📱 Session Ended',
               description: 'The session has been completed',
             });
+            playNotificationSound();
           }
         }
       )
@@ -131,7 +147,7 @@ export default function SessionPage() {
 
     const updateTimer = () => {
       if (session.phase === 'waiting') {
-        const startedAt = session.waitingStartedAt ? new Date(session.waitingStartedAt).toISOString() : null;
+        const startedAt = session.waitingStartedAt || null;
         const remaining = calculateRemainingTime(startedAt, session.waitingSeconds);
         setRemainingTime(remaining);
         
@@ -146,7 +162,7 @@ export default function SessionPage() {
           endSessionMutation.mutate();
         }
       } else if (session.phase === 'live') {
-        const startedAt = session.liveStartedAt ? new Date(session.liveStartedAt).toISOString() : null;
+        const startedAt = session.liveStartedAt || null;
         const remaining = calculateRemainingTime(startedAt, session.liveSeconds);
         setRemainingTime(remaining);
         

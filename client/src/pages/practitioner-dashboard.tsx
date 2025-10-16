@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useLocation } from 'wouter';
 import { useAuth } from '@/lib/auth-context';
 import { useQuery, useMutation } from '@tanstack/react-query';
+import { playNotificationSound, requestNotificationPermission, showBrowserNotification } from '@/lib/notification-utils';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -35,7 +36,7 @@ export default function PractitionerDashboard() {
   });
 
   // Fetch active/pending sessions
-  const { data: sessions, isLoading } = useQuery<SessionWithParticipants[]>({
+  const { data: sessions, isLoading, isFetching } = useQuery<SessionWithParticipants[]>({
     queryKey: ['/api/sessions/practitioner'],
     refetchInterval: 1000, // Poll every 1 second for better responsiveness
   });
@@ -43,6 +44,15 @@ export default function PractitionerDashboard() {
   // Track session state for notification logic
   const [hasLoadedSessions, setHasLoadedSessions] = useState(false);
   const [previousSessionCount, setPreviousSessionCount] = useState(0);
+  const [hasRequestedPermission, setHasRequestedPermission] = useState(false);
+
+  // Request notification permission on mount (once)
+  useEffect(() => {
+    if (!hasRequestedPermission && practitionerStatus?.isOnline) {
+      requestNotificationPermission();
+      setHasRequestedPermission(true);
+    }
+  }, [practitionerStatus?.isOnline, hasRequestedPermission]);
 
   // Update pending sessions and show notifications for new ones
   useEffect(() => {
@@ -53,16 +63,26 @@ export default function PractitionerDashboard() {
       // Check if there are NEW sessions (count increased)
       // Show notification if: we've loaded before AND count increased
       if (hasLoadedSessions && pending.length > previousSessionCount) {
+        // Get the newest session for notification details
+        const newestSession = pending[pending.length - 1];
+        const guestName = newestSession?.guest?.displayName || 'A guest';
+        
+        // Show toast notification
         toast({
           title: '🔔 New Session Request!',
-          description: 'A guest is requesting a healing session',
+          description: `${guestName} is requesting a healing session`,
         });
         
-        // Play notification sound if available
-        try {
-          const audio = new Audio('/notification.mp3');
-          audio.play().catch(() => {});
-        } catch {}
+        // Play notification sound
+        playNotificationSound();
+        
+        // Show browser notification if page is not focused
+        if (document.hidden) {
+          showBrowserNotification(
+            'New Session Request!',
+            `${guestName} is requesting a healing session`,
+          );
+        }
       }
       
       // Mark as loaded and update count
@@ -307,13 +327,13 @@ export default function PractitionerDashboard() {
           </div>
         )}
 
-        {/* Empty State */}
+        {/* Empty State - Only show after initial load, not during refetches */}
         {isLoading ? (
           <div className="flex items-center justify-center py-20">
             <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
           </div>
         ) : (
-          !pendingSessions.length && !activeSessions.length && (
+          !isFetching && !pendingSessions.length && !activeSessions.length && (
             <Card>
               <CardContent className="py-20 text-center">
                 <Bell className="h-12 w-12 text-muted-foreground mx-auto mb-4" />

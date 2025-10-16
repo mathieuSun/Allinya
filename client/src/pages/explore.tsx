@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useLocation } from 'wouter';
 import { useAuth } from '@/lib/auth-context';
 import { useQuery } from '@tanstack/react-query';
+import { queryClient } from '@/lib/queryClient';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -13,7 +14,6 @@ import type { PractitionerWithProfile } from '@shared/schema';
 export default function ExplorePage() {
   const [, setLocation] = useLocation();
   const { profile, signOut } = useAuth();
-  const [allPractitioners, setAllPractitioners] = useState<PractitionerWithProfile[]>([]);
 
   // Fetch all practitioners (online and offline) with automatic polling
   const { data: practitioners, isLoading } = useQuery<PractitionerWithProfile[]>({
@@ -24,9 +24,6 @@ export default function ExplorePage() {
 
   // Subscribe to realtime updates
   useEffect(() => {
-    if (practitioners) {
-      setAllPractitioners(practitioners);
-    }
 
     const channel = supabase
       .channel('practitioners-status')
@@ -37,13 +34,9 @@ export default function ExplorePage() {
           schema: 'public',
           table: 'practitioners',
         },
-        async () => {
-          // Refetch when practitioners table changes
-          const response = await fetch('/api/practitioners');
-          if (response.ok) {
-            const data = await response.json();
-            setAllPractitioners(data);
-          }
+        () => {
+          // Invalidate cache to trigger refetch when practitioners table changes
+          queryClient.invalidateQueries({ queryKey: ['/api/practitioners'] });
         }
       )
       .subscribe();
@@ -51,7 +44,7 @@ export default function ExplorePage() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [practitioners]);
+  }, []);
 
   if (!profile) {
     setLocation('/auth');
@@ -101,14 +94,14 @@ export default function ExplorePage() {
           <div className="flex items-center justify-center py-20">
             <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
           </div>
-        ) : allPractitioners.length === 0 ? (
+        ) : !practitioners || practitioners.length === 0 ? (
           <div className="text-center py-20">
             <p className="text-xl text-muted-foreground">No practitioners available</p>
             <p className="text-sm text-muted-foreground mt-2">Please check back later</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {allPractitioners.map((practitioner) => {
+            {practitioners.map((practitioner) => {
               const isOnline = practitioner.isOnline;
               return (
               <Card
