@@ -112,10 +112,10 @@ export default function ExplorePage() {
               const isOnline = practitioner.isOnline;
               return (
               <Card
-                key={practitioner.id}
+                key={practitioner.userId}
                 className={`hover-elevate transition-all cursor-pointer overflow-hidden ${!isOnline ? 'opacity-50 grayscale' : ''}`}
-                onClick={() => setLocation(`/p/${practitioner.id}`)}
-                data-testid={`card-practitioner-${practitioner.id}`}
+                onClick={() => setLocation(`/p/${practitioner.userId}`)}
+                data-testid={`card-practitioner-${practitioner.userId}`}
               >
                 <div className="aspect-[3/4] relative">
                   {practitioner.profile.avatarUrl ? (
@@ -149,7 +149,7 @@ export default function ExplorePage() {
                     </div>
                   )}
                   <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
-                    <h3 className="text-2xl font-semibold mb-2" data-testid={`text-practitioner-name-${practitioner.id}`}>
+                    <h3 className="text-2xl font-semibold mb-2" data-testid={`text-practitioner-name-${practitioner.userId}`}>
                       {practitioner.profile.displayName}
                     </h3>
                     <div className="flex items-center gap-2 mb-3">
@@ -178,7 +178,7 @@ export default function ExplorePage() {
                   <Button 
                     className="w-full" 
                     disabled={!isOnline}
-                    data-testid={`button-start-${practitioner.id}`}
+                    data-testid={`button-start-${practitioner.userId}`}
                   >
                     {isOnline ? 'Start Session' : 'Offline'}
                   </Button>

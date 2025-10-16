@@ -11,7 +11,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Star, Loader2, Clock, User2, ImageIcon, VideoIcon } from 'lucide-react';
 import { apiRequest, queryClient } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
-import type { Profile } from '@shared/schema';
+import type { RuntimeProfile } from '@shared/schema';
 
 const DURATION_OPTIONS = [
   { value: 300, label: '5 minutes', minutes: 5 },
@@ -31,7 +31,7 @@ export default function PractitionerProfilePage() {
   const practitionerId = params?.id;
 
   // Fetch practitioner profile
-  const { data: practitioner, isLoading } = useQuery<Profile>({
+  const { data: practitioner, isLoading } = useQuery<RuntimeProfile>({
     queryKey: [`/api/practitioners/${practitionerId}`],
     enabled: !!practitionerId,
   });

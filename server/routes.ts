@@ -73,7 +73,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (role === 'practitioner') {
         await storage.createPractitioner({
           userId: authData.user.id,
-          online: false,
+          isOnline: false,
           inService: false,
           rating: "0.0",
           reviewCount: 0
@@ -151,7 +151,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           console.log('Creating practitioner record for', email);
           await storage.createPractitioner({
             userId: authData.user.id,
-            online: false,
+            isOnline: false,
             inService: false,
             rating: "0.0",
             reviewCount: 0,
@@ -267,7 +267,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (role === 'practitioner') {
         await storage.createPractitioner({
           userId,
-          online: false,
+          isOnline: false,
           inService: false,
           rating: "0.0",
           reviewCount: 0,
@@ -327,7 +327,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ error: 'Only practitioners can toggle presence' });
       }
 
-      const practitioner = await storage.updatePractitioner(userId, { online });
+      const practitioner = await storage.updatePractitioner(userId, { isOnline: online });
       res.json(practitioner);
     } catch (error: any) {
       res.status(400).json({ error: error.message });
@@ -390,11 +390,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.patch('/api/practitioners/:id/status', requireAuth, async (req: Request, res: Response) => {
     try {
       const practitionerId = req.params.id;
-      const { is_online } = req.body;
+      const { isOnline } = req.body;
       
       // Validate input
-      if (typeof is_online !== 'boolean') {
-        return res.status(400).json({ error: 'is_online must be a boolean' });
+      if (typeof isOnline !== 'boolean') {
+        return res.status(400).json({ error: 'isOnline must be a boolean' });
       }
 
       const userId = req.user!.id;
@@ -411,12 +411,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Update practitioner status
-      const practitioner = await storage.updatePractitioner(userId, { online: is_online });
+      const practitioner = await storage.updatePractitioner(userId, { isOnline });
       
       res.json({ 
         success: true,
-        isOnline: (practitioner as any).isOnline,
-        message: is_online ? 'You are now online' : 'You are now offline'
+        isOnline: practitioner.isOnline,
+        message: isOnline ? 'You are now online' : 'You are now offline'
       });
     } catch (error: any) {
       console.error('Error updating practitioner status:', error);
@@ -459,18 +459,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const session = await storage.createSession({
         practitionerId: practitionerId,
         guestId: guestId,
-        isGroup: false,
         phase: 'waiting',
-        waitingSeconds: 300,
         liveSeconds: liveSeconds,
-        waitingStartedAt: new Date(),
-        liveStartedAt: null,
-        endedAt: null,
+        practitionerReady: false,
+        guestReady: false,
         agoraChannel: agoraChannel,
-        agoraUidPractitioner: `p_${randomUUID().substring(0, 8)}`,
-        agoraUidGuest: `g_${randomUUID().substring(0, 8)}`,
-        readyPractitioner: false,
-        readyGuest: false,
       });
 
       console.log('Session created:', session);
@@ -508,18 +501,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const updates: Partial<typeof session> = {};
       
       if (who === 'guest') {
-        updates.readyGuest = true;
+        updates.guestReady = true;
       } else {
-        updates.readyPractitioner = true;
+        updates.practitionerReady = true;
       }
 
       // Check if both ready, transition to live
-      const bothReady = (who === 'guest' ? true : session.readyGuest) && 
-                        (who === 'practitioner' ? true : session.readyPractitioner);
+      const bothReady = (who === 'guest' ? true : session.guestReady) && 
+                        (who === 'practitioner' ? true : session.practitionerReady);
 
       if (bothReady && session.phase === 'waiting') {
         updates.phase = 'live';
-        updates.liveStartedAt = new Date();
+        updates.startedAt = new Date().toISOString();
       }
 
       const updatedSession = await storage.updateSession(sessionId, updates);
@@ -572,8 +565,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const updatedSession = await storage.updateSession(sessionId, {
-        phase: 'ended',
-        endedAt: new Date(),
+        phase: 'ended'
       });
 
       // Mark practitioner as not in service
@@ -630,7 +622,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Mark practitioner as ready and transition to waiting room
       const updatedSession = await storage.updateSession(sessionId, {
-        readyPractitioner: true,
+        practitionerReady: true,
       });
 
       res.json(updatedSession);
@@ -660,8 +652,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // End the session
       const updatedSession = await storage.updateSession(sessionId, {
-        phase: 'ended',
-        endedAt: new Date(),
+        phase: 'ended'
       });
 
       // Mark practitioner as not in service
@@ -803,6 +794,125 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error: any) {
       console.error('Video upload URL error:', error);
       res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Unified upload endpoint for all object types
+  // POST /api/objects/upload - Upload files to any bucket with automatic profile saving
+  app.post("/api/objects/upload", requireAuth, async (req: Request, res: Response) => {
+    try {
+      const { bucket, fileType, saveToProfile = false } = z.object({
+        bucket: z.enum(['avatars', 'gallery', 'videos']),
+        fileType: z.string().optional(),
+        saveToProfile: z.boolean().optional()
+      }).parse(req.body);
+
+      const userId = req.user!.id;
+
+      // Get signed upload URL using service role client
+      const { uploadUrl, publicUrl, fileName } = await supabaseStorage.getUploadUrl(bucket, userId);
+
+      // Extract the token from the signed URL (for compatibility with frontend)
+      const urlObj = new URL(uploadUrl);
+      const token = urlObj.searchParams.get('token') || '';
+
+      // Optionally save URL to profile immediately
+      // Note: This happens before actual upload, so frontend should handle upload completion
+      if (saveToProfile) {
+        const profile = await storage.getProfile(userId);
+        if (profile) {
+          let updateData: any = {};
+          
+          switch(bucket) {
+            case 'avatars':
+              updateData.avatarUrl = publicUrl;
+              break;
+            case 'gallery':
+              // Add to gallery URLs array (max 3)
+              const currentGallery = profile.galleryUrls || [];
+              if (currentGallery.length < 3) {
+                updateData.galleryUrls = [...currentGallery, publicUrl];
+              }
+              break;
+            case 'videos':
+              updateData.videoUrl = publicUrl;
+              break;
+          }
+          
+          if (Object.keys(updateData).length > 0) {
+            await storage.updateProfile(userId, updateData);
+          }
+        }
+      }
+
+      // Prepare response
+      const response = {
+        uploadUrl,
+        publicUrl,
+        fileName,
+        token,
+        bucket,
+        success: true
+      };
+
+      res.json(response);
+    } catch (error: any) {
+      console.error('Unified upload error:', error);
+      res.status(500).json({ 
+        error: error.message,
+        success: false 
+      });
+    }
+  });
+  
+  // Enhanced upload completion endpoint to save URLs after successful upload
+  // POST /api/objects/upload/complete - Save uploaded file URL to profile
+  app.post("/api/objects/upload/complete", requireAuth, async (req: Request, res: Response) => {
+    try {
+      const { bucket, publicUrl } = z.object({
+        bucket: z.enum(['avatars', 'gallery', 'videos']),
+        publicUrl: z.string().url()
+      }).parse(req.body);
+
+      const userId = req.user!.id;
+      const profile = await storage.getProfile(userId);
+      
+      if (!profile) {
+        return res.status(404).json({ error: 'Profile not found' });
+      }
+
+      let updateData: any = {};
+      
+      switch(bucket) {
+        case 'avatars':
+          updateData.avatarUrl = publicUrl;
+          break;
+        case 'gallery':
+          // Add to gallery URLs array (max 3)
+          const currentGallery = profile.galleryUrls || [];
+          if (currentGallery.length < 3) {
+            updateData.galleryUrls = [...currentGallery, publicUrl];
+          } else {
+            return res.status(400).json({ error: 'Gallery limit reached (max 3 images)' });
+          }
+          break;
+        case 'videos':
+          updateData.videoUrl = publicUrl;
+          break;
+      }
+      
+      const updatedProfile = await storage.updateProfile(userId, updateData);
+      res.json({ 
+        success: true, 
+        profile: updatedProfile,
+        message: `${bucket} URL saved to profile`
+      });
+    } catch (error: any) {
+      console.error('Upload completion error:', error);
+      res.status(500).json({ 
+        error: error.message,
+        success: false 
+      });
     }
   });
 

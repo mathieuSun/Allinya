@@ -7,81 +7,75 @@ import { z } from "zod";
 export const profiles = pgTable("profiles", {
   id: uuid("id").primaryKey(),
   role: text("role", { enum: ["guest", "practitioner"] }).notNull(),
-  displayName: text("display_name").notNull(),
+  display_name: text("display_name").notNull(),
   country: text("country"),
   bio: text("bio"),
-  avatarUrl: text("avatar_url"),
-  galleryUrls: text("gallery_urls").array().default(sql`array[]::text[]`),
-  videoUrl: text("video_url"),
+  avatar_url: text("avatar_url"),
+  gallery_urls: text("gallery_urls").array().default(sql`array[]::text[]`),
+  video_url: text("video_url"),
   specialties: text("specialties").array().default(sql`array[]::text[]`),
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
-  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
+  created_at: timestamp("created_at", { withTimezone: true }).defaultNow(),
+  updated_at: timestamp("updated_at", { withTimezone: true }).defaultNow(),
 });
 
-// Practitioners table - presence and rating info
+// Practitioners table - presence and rating info (all columns use snake_case in database)
 export const practitioners = pgTable("practitioners", {
-  userId: uuid("user_id").primaryKey().references(() => profiles.id, { onDelete: "cascade" }),
-  online: boolean("online").notNull().default(false),
-  inService: boolean("in_service").notNull().default(false),
-  rating: numeric("rating", { precision: 3, scale: 2 }).default("0.0"),
-  reviewCount: integer("review_count").default(0),
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
-  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
+  user_id: uuid("user_id").primaryKey().references(() => profiles.id, { onDelete: "cascade" }),
+  is_online: boolean("is_online").notNull().default(false),
+  in_service: boolean("in_service").notNull().default(false),
+  rating: numeric("rating", { precision: 2, scale: 1 }).default("0.0"),
+  review_count: integer("review_count").default(0),
+  created_at: timestamp("created_at", { withTimezone: true }).defaultNow(),
+  updated_at: timestamp("updated_at", { withTimezone: true }).defaultNow(),
 });
 
-// Sessions table - handles waiting room and live video phases
+// Sessions table - matches actual database structure
 export const sessions = pgTable("sessions", {
   id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
-  practitionerId: uuid("practitioner_id").notNull().references(() => profiles.id),
-  guestId: uuid("guest_id").notNull().references(() => profiles.id),
-  isGroup: boolean("is_group").notNull().default(false),
-  phase: text("phase", { enum: ["waiting", "live", "ended"] }).notNull(),
-  waitingSeconds: integer("waiting_seconds").notNull().default(300),
-  liveSeconds: integer("live_seconds").notNull(),
-  waitingStartedAt: timestamp("waiting_started_at", { withTimezone: true }),
-  liveStartedAt: timestamp("live_started_at", { withTimezone: true }),
-  endedAt: timestamp("ended_at", { withTimezone: true }),
-  agoraChannel: text("agora_channel").notNull(),
-  agoraUidPractitioner: text("agora_uid_practitioner").notNull(),
-  agoraUidGuest: text("agora_uid_guest").notNull(),
-  readyPractitioner: boolean("ready_practitioner").notNull().default(false),
-  readyGuest: boolean("ready_guest").notNull().default(false),
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
-  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
+  practitioner_id: uuid("practitioner_id").notNull().references(() => profiles.id),
+  guest_id: uuid("guest_id").notNull().references(() => profiles.id),
+  phase: text("phase", { enum: ["waiting", "room_timer", "live", "ended"] }).notNull().default("waiting"),
+  live_seconds: integer("live_seconds").notNull().default(900),
+  started_at: timestamp("started_at", { withTimezone: true }).defaultNow(),
+  practitioner_ready: boolean("practitioner_ready").notNull().default(false),
+  guest_ready: boolean("guest_ready").notNull().default(false),
+  agora_channel: text("agora_channel"),
+  created_at: timestamp("created_at", { withTimezone: true }).defaultNow(),
+  updated_at: timestamp("updated_at", { withTimezone: true }).defaultNow(),
 });
 
-// Reviews table - placeholder for future ratings
+// Reviews table - guest reviews after sessions
 export const reviews = pgTable("reviews", {
   id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
-  sessionId: uuid("session_id").notNull().references(() => sessions.id, { onDelete: "cascade" }),
-  guestId: uuid("guest_id").notNull().references(() => profiles.id),
-  practitionerId: uuid("practitioner_id").notNull().references(() => profiles.id),
+  session_id: uuid("session_id").notNull().references(() => sessions.id, { onDelete: "cascade" }),
+  guest_id: uuid("guest_id").notNull().references(() => profiles.id),
+  practitioner_id: uuid("practitioner_id").notNull().references(() => profiles.id),
   rating: integer("rating"),
   comment: text("comment"),
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
+  created_at: timestamp("created_at", { withTimezone: true }).defaultNow(),
 });
 
-// Insert schemas
+// Insert schemas - omit auto-generated fields using snake_case column names
 export const insertProfileSchema = createInsertSchema(profiles).omit({
   id: true,
-  createdAt: true,
-  updatedAt: true,
+  created_at: true,
+  updated_at: true,
 });
 
 export const insertPractitionerSchema = createInsertSchema(practitioners).omit({
-  createdAt: true,
-  updatedAt: true,
+  created_at: true,
+  updated_at: true,
 });
 
 export const insertSessionSchema = createInsertSchema(sessions).omit({
   id: true,
-  createdAt: true,
-  updatedAt: true,
+  created_at: true,
+  updated_at: true,
 });
 
 export const insertReviewSchema = createInsertSchema(reviews).omit({
   id: true,
-  createdAt: true,
+  created_at: true,
 });
 
 // Types
@@ -98,22 +92,62 @@ export type InsertReview = z.infer<typeof insertReviewSchema>;
 export type Review = typeof reviews.$inferSelect;
 
 // Runtime types after camelCase conversion (what the API actually returns)
+// These represent the data after conversion from snake_case database columns
+
+export type RuntimeProfile = {
+  id: string;
+  role: "guest" | "practitioner";
+  displayName: string;
+  country: string | null;
+  bio: string | null;
+  avatarUrl: string | null;
+  galleryUrls: string[] | null;
+  videoUrl: string | null;
+  specialties: string[] | null;
+  createdAt: string | null;
+  updatedAt: string | null;
+};
+
 export type RuntimePractitioner = {
-  id: string;  // converted from 'id' in database (not userId)
+  userId: string;  // converted from 'user_id' in database
   isOnline: boolean;  // converted from 'is_online' in database
-  inService: boolean;  // already camelCase
+  inService: boolean;  // converted from 'in_service' in database
   rating: string | null;
   reviewCount: number | null;
   createdAt: string | null;
   updatedAt: string | null;
 };
 
-// Extended types for API responses
-export type PractitionerWithProfile = RuntimePractitioner & {
-  profile: Profile;
+export type RuntimeSession = {
+  id: string;
+  practitionerId: string;  // converted from 'practitioner_id' in database
+  guestId: string;  // converted from 'guest_id' in database
+  phase: "waiting" | "room_timer" | "live" | "ended";
+  liveSeconds: number;  // converted from 'live_seconds' in database
+  startedAt: string | null;  // converted from 'started_at' in database
+  practitionerReady: boolean;  // converted from 'practitioner_ready' in database
+  guestReady: boolean;  // converted from 'guest_ready' in database
+  agoraChannel: string | null;  // converted from 'agora_channel' in database
+  createdAt: string | null;
+  updatedAt: string | null;
 };
 
-export type SessionWithParticipants = Session & {
-  practitioner: Profile;
-  guest: Profile;
+export type RuntimeReview = {
+  id: string;
+  sessionId: string;  // converted from 'session_id' in database
+  guestId: string;  // converted from 'guest_id' in database
+  practitionerId: string;  // converted from 'practitioner_id' in database
+  rating: number | null;
+  comment: string | null;
+  createdAt: string | null;
+};
+
+// Extended types for API responses
+export type PractitionerWithProfile = RuntimePractitioner & {
+  profile: RuntimeProfile;
+};
+
+export type SessionWithParticipants = RuntimeSession & {
+  practitioner: RuntimeProfile;
+  guest: RuntimeProfile;
 };

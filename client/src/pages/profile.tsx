@@ -18,6 +18,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { ObjectUploader } from '@/components/ObjectUploader';
 import type { UploadResult } from '@uppy/core';
+import type { RuntimeProfile } from '@shared/schema';
 
 const guestProfileSchema = z.object({
   displayName: z.string().min(1, 'Display name is required'),
@@ -52,7 +53,7 @@ export default function ProfilePage() {
   const toggleOnlineMutation = useMutation({
     mutationFn: async (online: boolean) => {
       // Use the new PATCH endpoint with the current user's ID
-      return apiRequest('PATCH', `/api/practitioners/${user?.id}/status`, { is_online: online });
+      return apiRequest('PATCH', `/api/practitioners/${user?.id}/status`, { isOnline: online });
     },
     onSuccess: (data: any) => {
       queryClient.invalidateQueries({ queryKey: ['/api/practitioners/status'] });
