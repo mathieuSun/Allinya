@@ -130,7 +130,15 @@ export default function PractitionerDashboard() {
       <header className="border-b border-border backdrop-blur-lg bg-background/80 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between">
-            <h1 className="text-2xl font-bold">Practitioner Dashboard</h1>
+            <div className="flex items-center gap-3">
+              <Avatar className="h-10 w-10">
+                <AvatarImage src={profile?.avatarUrl || undefined} />
+                <AvatarFallback>
+                  {profile?.displayName?.[0]?.toUpperCase() || 'P'}
+                </AvatarFallback>
+              </Avatar>
+              <h1 className="text-2xl font-bold">Practitioner Dashboard</h1>
+            </div>
             <div className="flex items-center gap-4">
               <Button
                 variant={practitionerStatus?.isOnline ? 'default' : 'outline'}

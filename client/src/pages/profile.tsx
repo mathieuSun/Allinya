@@ -192,20 +192,31 @@ export default function ProfilePage() {
 
   const handleAvatarUpload = async (result: UploadResult<Record<string, unknown>, Record<string, unknown>>) => {
     if (result.successful && result.successful.length > 0 && currentUploadPublicPath) {
-      // currentUploadPublicPath already contains the full Supabase Storage URL
-      await apiRequest('PUT', '/api/profile/avatar', {
-        avatarUrl: currentUploadPublicPath,
-      });
-      
-      // Immediately update form state
-      form.setValue('avatarUrl', currentUploadPublicPath, { shouldDirty: true });
-      
-      setCurrentUploadPublicPath(null);
-      await refreshProfile();
-      
-      toast({
-        title: 'Avatar uploaded successfully',
-      });
+      try {
+        // currentUploadPublicPath already contains the full Supabase Storage URL
+        await apiRequest('PUT', '/api/profile/avatar', {
+          avatarUrl: currentUploadPublicPath,
+        });
+        
+        // Force refresh the profile from database
+        await refreshProfile();
+        
+        // Update form state with the new avatar URL
+        form.setValue('avatarUrl', currentUploadPublicPath, { shouldValidate: true });
+        
+        setCurrentUploadPublicPath(null);
+        
+        toast({
+          title: 'Avatar uploaded successfully',
+          description: 'Your profile picture has been updated',
+        });
+      } catch (error: any) {
+        toast({
+          title: 'Failed to save avatar',
+          description: error.message,
+          variant: 'destructive',
+        });
+      }
     }
   };
 
@@ -253,7 +264,15 @@ export default function ProfilePage() {
       <header className="border-b border-border backdrop-blur-lg bg-background/80 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between">
-            <h1 className="text-2xl font-bold">Allinya</h1>
+            <div className="flex items-center gap-3">
+              <Avatar className="h-10 w-10">
+                <AvatarImage src={profile?.avatarUrl || undefined} />
+                <AvatarFallback>
+                  {profile?.displayName?.[0]?.toUpperCase() || 'U'}
+                </AvatarFallback>
+              </Avatar>
+              <h1 className="text-2xl font-bold">Allinya</h1>
+            </div>
             <div className="flex items-center gap-4">
               {profile.role === 'guest' && (
                 <Button variant="outline" onClick={() => setLocation('/explore')} data-testid="button-explore">
