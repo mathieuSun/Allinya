@@ -37,7 +37,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return;
       }
 
-      const response = await fetch('/api/profile', {
+      const response = await fetch('/api/auth/user', {
         credentials: 'include',
         headers: {
           'Authorization': `Bearer ${session.access_token}`,
@@ -55,7 +55,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       const data = await response.json();
-      setProfile(data);
+      // The /api/auth/user endpoint returns { id, profile, practitioner }
+      // We just need the profile part
+      setProfile(data.profile);
     } catch (error) {
       console.error('Error fetching profile:', error);
     }
