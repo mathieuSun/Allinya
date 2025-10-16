@@ -15,7 +15,7 @@ export default function OnboardingPage() {
 
   // Redirect if already has role
   if (profile?.role) {
-    setLocation(profile.role === 'guest' ? '/explore' : '/profile');
+    setLocation(profile.role === 'guest' ? '/explore' : '/dashboard');
     return null;
   }
 
@@ -25,7 +25,7 @@ export default function OnboardingPage() {
       await apiRequest('POST', '/api/auth/role-init', { role });
       await refreshProfile();
       toast({ title: `Welcome as a ${role}!` });
-      setLocation(role === 'guest' ? '/explore' : '/profile');
+      setLocation(role === 'guest' ? '/explore' : '/dashboard');
     } catch (error: any) {
       toast({
         title: 'Failed to set role',

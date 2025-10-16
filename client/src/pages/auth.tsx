@@ -40,7 +40,7 @@ export default function AuthPage() {
       } else if (profile.role === 'guest') {
         setLocation('/explore');
       } else {
-        setLocation('/profile');
+        setLocation('/dashboard');
       }
     }
   }, [profile, setLocation]);
