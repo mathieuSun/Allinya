@@ -119,7 +119,47 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Get user profile
-      const profile = await storage.getProfile(authData.user.id);
+      let profile = await storage.getProfile(authData.user.id);
+
+      // Auto-create profile for existing Supabase Auth accounts without profiles
+      if (!profile) {
+        console.log(`No profile found for ${email}, auto-creating based on email...`);
+        
+        // Determine role based on email
+        const role = email === 'chefmat2018@gmail.com' ? 'practitioner' : 
+                    email === 'cheekyma@hotmail.com' ? 'guest' : 
+                    'guest'; // Default to guest for any other email
+
+        // Extract display name from email
+        const displayName = email.split('@')[0].replace(/[0-9]/g, '').replace(/[._-]/g, ' ');
+
+        // Create profile
+        profile = await storage.createProfile({
+          id: authData.user.id,
+          role,
+          displayName: displayName.charAt(0).toUpperCase() + displayName.slice(1),
+          country: null,
+          bio: null,
+          avatarUrl: null,
+          galleryUrls: [],
+          videoUrl: null,
+          specialties: [],
+        });
+
+        // If practitioner, create practitioner record
+        if (role === 'practitioner') {
+          console.log('Creating practitioner record for', email);
+          await storage.createPractitioner({
+            userId: authData.user.id,
+            online: false,
+            inService: false,
+            rating: "0.0",
+            reviewCount: 0,
+          });
+        }
+
+        console.log(`Profile auto-created for ${email} with role: ${role}`);
+      }
 
       // Return user data and access token
       res.json({
