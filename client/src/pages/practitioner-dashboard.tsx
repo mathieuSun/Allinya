@@ -19,8 +19,13 @@ export default function PractitionerDashboard() {
   const [pendingSessions, setPendingSessions] = useState<SessionWithParticipants[]>([]);
 
   // Check if practitioner
-  if (!profile || profile.role !== 'practitioner') {
-    setLocation('/profile');
+  if (!profile) {
+    setLocation('/auth');
+    return null;
+  }
+
+  if (profile.role !== 'practitioner') {
+    setLocation('/explore');
     return null;
   }
 
