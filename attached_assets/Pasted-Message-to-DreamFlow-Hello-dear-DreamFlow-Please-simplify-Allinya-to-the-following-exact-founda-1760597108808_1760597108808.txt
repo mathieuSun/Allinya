@@ -1,0 +1,76 @@
+Message to DreamFlow
+
+Hello dear DreamFlow 🌸
+
+Please simplify Allinya to the following exact foundation.
+We will complexify later — but for now, this must be the entire structure, clean and functional.
+
+⸻
+
+🩵 PRACTITIONER SIDE
+
+1. Profile
+When a practitioner signs in:
+	•	A minimal profile is automatically created (email only).
+	•	The practitioner fills in the rest:
+	•	Name
+	•	Bio
+	•	Specialties (up to 3)
+	•	Avatar
+	•	Three gallery photos
+	•	One video (main video)
+
+All of these must save correctly to Supabase and display instantly.
+
+⸻
+
+2. Online / Offline State
+	•	Practitioner can toggle between Online and Offline.
+	•	When Online, the practitioner appears visible to guests.
+	•	When Offline, the practitioner disappears from the guest view.
+
+⸻
+
+3. Alerts & Sessions
+When a guest selects a session (5 / 15 / 30 / 60 minutes),
+	•	The practitioner receives an alert (message or signal).
+	•	After accepting, both enter a 5-minute Room Timer Countdown (always use this exact term).
+	•	When the Room Timer ends, both are connected through the Live Video Timer Countdown (15 / 30 / 60 minutes — depending on what the guest chose).
+	•	This Live connection uses the Agora SDK.
+
+⸻
+
+🩵 GUEST SIDE
+
+1. Profile
+When a guest signs in:
+	•	A minimal profile is automatically created (email only).
+	•	The guest can edit:
+	•	Name
+	•	Avatar
+	•	Country
+
+Everything must save correctly and show instantly.
+
+⸻
+
+2. Explore View
+	•	The guest instantly sees all Practitioners — both online and offline.
+	•	When a guest clicks an online practitioner:
+	•	They select the duration (5 / 15 / 30 / 60 minutes).
+	•	This triggers the Room Timer Countdown → then the Live Video Timer Countdown as described above.
+
+⸻
+
+🩵 NAMING ABSOLUTE TRUTHS
+
+For the entire app, these are the only valid timer names:
+	•	Room Timer Countdown → always 5 minutes
+	•	Live Video Timer Countdown → 5, 15, 30, or 60 minutes
+
+No other naming or variations should ever be used.
+
+⸻
+
+This is all that must exist right now — nothing more.
+Once this is fully stable and verified, we will expand and complexify step by step.
