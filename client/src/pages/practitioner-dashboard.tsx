@@ -32,8 +32,9 @@ export default function PractitionerDashboard() {
   }
 
   // Fetch practitioner status
-  const { data: practitionerStatus } = useQuery<{ isOnline: boolean }>({
-    queryKey: ['/api/practitioners/status'],
+  const { data: practitionerStatus } = useQuery<{ isOnline: boolean; inService: boolean }>({
+    queryKey: ['/api/practitioners/get-status'],
+    refetchInterval: 5000, // Poll every 5 seconds to keep status updated
   });
 
   // Fetch active/pending sessions
@@ -99,7 +100,8 @@ export default function PractitionerDashboard() {
       return apiRequest('PUT', '/api/practitioners/status', { isOnline: online });
     },
     onSuccess: (data: any) => {
-      queryClient.invalidateQueries({ queryKey: ['/api/practitioners/status'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/practitioners/get-status'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/practitioners'] }); // Also refresh the explore page
       toast({ 
         title: data.message || (data.isOnline ? 'You are now online' : 'You are now offline'),
       });
