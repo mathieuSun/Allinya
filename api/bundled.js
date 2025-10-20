@@ -114,7 +114,7 @@ function handleCors(req: VercelRequest, res: VercelResponse) {
 async function requireAuth(
   req: VercelRequest,
   res: VercelResponse
-): Promise<{ userId: string } | null> {
+) {
   try {
     const authHeader = req.headers.authorization;
     
@@ -142,13 +142,13 @@ async function requireAuth(
 // ==================== STORAGE SERVICE ====================
 
 // Helper function to convert camelCase to snake_case
-function toSnakeCase(obj: any): any {
+function toSnakeCase(obj) {
   if (obj === null || obj === undefined) return obj;
   if (obj instanceof Date) return obj.toISOString();
   if (Array.isArray(obj)) return obj.map(toSnakeCase);
   if (typeof obj !== 'object') return obj;
   
-  const converted: any = {};
+  const converted = {};
   for (const key in obj) {
     const snakeKey = key.replace(/([A-Z])/g, '_$1').toLowerCase();
     converted[snakeKey] = toSnakeCase(obj[key]);
@@ -157,12 +157,12 @@ function toSnakeCase(obj: any): any {
 }
 
 // Helper function to convert snake_case to camelCase
-function toCamelCase(obj: any): any {
+function toCamelCase(obj) {
   if (obj === null || obj === undefined) return obj;
   if (Array.isArray(obj)) return obj.map(toCamelCase);
   if (typeof obj !== 'object') return obj;
   
-  const converted: any = {};
+  const converted = {};
   for (const key in obj) {
     const camelKey = key.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase());
     converted[camelKey] = toCamelCase(obj[key]);
@@ -172,7 +172,7 @@ function toCamelCase(obj: any): any {
 
 // Storage operations
 const storage = {
-  async getProfile(id: string) {
+  async getProfile(id) {
     const { data, error } = await supabase
       .from('profiles')
       .select('*')
@@ -187,7 +187,7 @@ const storage = {
     return toCamelCase(data);
   },
 
-  async createProfile(profile: any) {
+  async createProfile(profile) {
     const snakeCaseProfile = toSnakeCase(profile);
     
     const { data, error } = await supabase
@@ -204,7 +204,7 @@ const storage = {
     return toCamelCase(data);
   },
 
-  async updateProfile(id: string, updates: any) {
+  async updateProfile(id, updates) {
     const snakeCaseUpdates = toSnakeCase(updates);
     
     const { data, error} = await supabase
@@ -224,7 +224,7 @@ const storage = {
     return toCamelCase(data);
   },
 
-  async getPractitioner(userId: string) {
+  async getPractitioner(userId) {
     const { data, error } = await supabase
       .from('practitioners')
       .select('*')
@@ -239,7 +239,7 @@ const storage = {
     return toCamelCase(data);
   },
 
-  async createPractitioner(practitioner: any) {
+  async createPractitioner(practitioner) {
     const snakeCasePractitioner = toSnakeCase(practitioner);
     
     const { data, error } = await supabase
@@ -256,7 +256,7 @@ const storage = {
     return toCamelCase(data);
   },
 
-  async updatePractitioner(userId: string, updates: any) {
+  async updatePractitioner(userId, updates) {
     const snakeCaseUpdates = toSnakeCase(updates);
     
     const { data, error } = await supabase
@@ -365,7 +365,7 @@ const storage = {
     return result;
   },
 
-  async getPractitionerWithProfile(userId: string) {
+  async getPractitionerWithProfile(userId) {
     const practitioner = await this.getPractitioner(userId);
     if (!practitioner) return undefined;
     
@@ -378,7 +378,7 @@ const storage = {
     };
   },
 
-  async getSession(id: string) {
+  async getSession(id) {
     const { data: session, error } = await supabase
       .from('sessions')
       .select('*')
@@ -400,7 +400,7 @@ const storage = {
     };
   },
 
-  async getSessionsForPractitioner(practitionerId: string) {
+  async getSessionsForPractitioner(practitionerId) {
     const { data: sessions, error } = await supabase
       .from('sessions')
       .select('*')
@@ -428,7 +428,7 @@ const storage = {
     return sessionsWithParticipants;
   },
 
-  async createSession(session: any) {
+  async createSession(session) {
     const snakeCaseSession = toSnakeCase(session);
     
     const { data, error } = await supabase
@@ -445,7 +445,7 @@ const storage = {
     return toCamelCase(data);
   },
 
-  async updateSession(id: string, updates: any) {
+  async updateSession(id, updates) {
     const snakeCaseUpdates = toSnakeCase(updates);
     
     const { data, error } = await supabase
@@ -465,7 +465,7 @@ const storage = {
     return toCamelCase(data);
   },
 
-  async createReview(review: any) {
+  async createReview(review) {
     const snakeCaseReview = toSnakeCase(review);
     
     const { data, error } = await supabase
@@ -481,7 +481,7 @@ const storage = {
     return toCamelCase(data);
   },
 
-  async getSessionReviews(sessionId: string) {
+  async getSessionReviews(sessionId) {
     const { data, error } = await supabase
       .from('reviews')
       .select('*')
@@ -498,10 +498,12 @@ const storage = {
 
 // ==================== SUPABASE STORAGE SERVICE ====================
 
-type StorageBucket = 'avatars' | 'gallery' | 'videos';
+// Storage bucket names: 'avatars' | 'gallery' | 'videos'
 
 class SupabaseStorageService {
-  private client = supabaseAdmin;
+  constructor() {
+    this.client = supabaseAdmin;
+  }
 
   /**
    * Get signed upload URL for a file
@@ -509,8 +511,8 @@ class SupabaseStorageService {
    */
   async getUploadUrl(
     bucket: StorageBucket,
-    userId: string
-  ): Promise<{ uploadUrl: string; publicUrl: string; fileName: string }> {
+    userId
+  ) {
     // Generate unique filename with user ID prefix
     const fileId = randomUUID();
     const fileName = `${userId}/${fileId}`;
@@ -539,7 +541,7 @@ class SupabaseStorageService {
   /**
    * Delete a file from storage
    */
-  async deleteFile(bucket: StorageBucket, fileName: string): Promise<void> {
+  async deleteFile(bucket: StorageBucket, fileName) {
     const { error } = await this.client.storage
       .from(bucket)
       .remove([fileName]);
@@ -554,10 +556,10 @@ class SupabaseStorageService {
    */
   async uploadFile(
     bucket: StorageBucket,
-    fileName: string,
+    fileName,
     file: Buffer | Blob,
-    contentType: string
-  ): Promise<string> {
+    contentType
+  ) {
     const { data, error } = await this.client.storage
       .from(bucket)
       .upload(fileName, file, {
@@ -580,7 +582,7 @@ class SupabaseStorageService {
   /**
    * List files in a bucket for a specific user
    */
-  async listUserFiles(bucket: StorageBucket, userId: string): Promise<string[]> {
+  async listUserFiles(bucket: StorageBucket, userId) {
     const { data, error } = await this.client.storage
       .from(bucket)
       .list(userId);
@@ -600,7 +602,7 @@ class SupabaseStorageService {
   /**
    * Get public URL for an existing file
    */
-  getPublicUrl(bucket: StorageBucket, fileName: string): string {
+  getPublicUrl(bucket: StorageBucket, fileName) {
     const { data } = this.client.storage
       .from(bucket)
       .getPublicUrl(fileName);
@@ -611,8 +613,8 @@ class SupabaseStorageService {
   /**
    * Initialize storage buckets on startup
    */
-  async initializeBuckets(): Promise<void> {
-    const buckets: Array<{ name: StorageBucket, public: boolean }> = [
+  async initializeBuckets() {
+    const buckets = [
       { name: 'avatars', public: true },
       { name: 'gallery', public: true },
       { name: 'videos', public: true }
@@ -655,7 +657,7 @@ const supabaseStorage = new SupabaseStorageService();
 // ==================== HELPER FUNCTIONS ====================
 
 // Helper function to parse JSON body
-async function parseBody(req: VercelRequest): Promise<any> {
+async function parseBody(req: VercelRequest) {
   if (!req.body) return null;
   
   // If body is already parsed (shouldn't happen in Vercel, but just in case)
@@ -688,7 +690,7 @@ async function parseBody(req: VercelRequest): Promise<any> {
   if (req.body && typeof req.body.pipe === 'function') {
     return new Promise((resolve, reject) => {
       let data = '';
-      req.body.on('data', (chunk: any) => {
+      req.body.on('data', (chunk) => {
         data += chunk.toString();
       });
       req.body.on('end', () => {
@@ -707,8 +709,8 @@ async function parseBody(req: VercelRequest): Promise<any> {
 }
 
 // Helper function to parse cookies
-function parseCookies(cookieHeader: string | undefined): Record<string, string> {
-  const cookies: Record<string, string> = {};
+function parseCookies(cookieHeader) {
+  const cookies = {};
   if (!cookieHeader) return cookies;
   
   cookieHeader.split(';').forEach(cookie => {
@@ -723,7 +725,7 @@ function parseCookies(cookieHeader: string | undefined): Record<string, string> 
 
 // All route handlers are now inline functions
 
-const healthHandler = async (req: VercelRequest, res: VercelResponse) => {
+const healthHandler = async (req, res) => {
   if (handleCors(req, res)) return;
   
   if (req.method !== 'GET') {
@@ -736,7 +738,7 @@ const healthHandler = async (req: VercelRequest, res: VercelResponse) => {
   });
 };
 
-const versionHandler = async (req: VercelRequest, res: VercelResponse) => {
+const versionHandler = async (req, res) => {
   if (handleCors(req, res)) return;
   
   if (req.method !== 'GET') {
@@ -750,7 +752,7 @@ const versionHandler = async (req: VercelRequest, res: VercelResponse) => {
   });
 };
 
-const cacheBustHandler = async (req: VercelRequest, res: VercelResponse) => {
+const cacheBustHandler = async (req, res) => {
   if (handleCors(req, res)) return;
   
   if (req.method !== 'GET') {
@@ -773,7 +775,7 @@ const cacheBustHandler = async (req: VercelRequest, res: VercelResponse) => {
   res.json(versionInfo);
 };
 
-const signupHandler = async (req: VercelRequest, res: VercelResponse) => {
+const signupHandler = async (req, res) => {
   if (handleCors(req, res)) return;
   
   if (req.method !== 'POST') {
@@ -838,7 +840,7 @@ const signupHandler = async (req: VercelRequest, res: VercelResponse) => {
       access_token: authData.session?.access_token,
       profile
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Signup error:', error);
     if (error.name === 'ZodError') {
       return res.status(400).json({ error: 'Invalid input', details: error.errors });
@@ -847,7 +849,7 @@ const signupHandler = async (req: VercelRequest, res: VercelResponse) => {
   }
 };
 
-const loginHandler = async (req: VercelRequest, res: VercelResponse) => {
+const loginHandler = async (req, res) => {
   if (handleCors(req, res)) return;
   
   if (req.method !== 'POST') {
@@ -924,7 +926,7 @@ const loginHandler = async (req: VercelRequest, res: VercelResponse) => {
       access_token: authData.session.access_token,
       profile
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Login error:', error);
     if (error.name === 'ZodError') {
       return res.status(400).json({ error: 'Invalid input', details: error.errors });
@@ -933,7 +935,7 @@ const loginHandler = async (req: VercelRequest, res: VercelResponse) => {
   }
 };
 
-const logoutHandler = async (req: VercelRequest, res: VercelResponse) => {
+const logoutHandler = async (req, res) => {
   if (handleCors(req, res)) return;
   
   if (req.method !== 'POST') {
@@ -943,7 +945,7 @@ const logoutHandler = async (req: VercelRequest, res: VercelResponse) => {
   try {
     // Try to get token from Authorization header first
     const authHeader = req.headers.authorization;
-    let token: string | undefined;
+    let token | undefined;
 
     if (authHeader && typeof authHeader === 'string' && authHeader.startsWith('Bearer ')) {
       token = authHeader.substring(7);
@@ -962,14 +964,14 @@ const logoutHandler = async (req: VercelRequest, res: VercelResponse) => {
 
     // Always return 204 No Content for logout
     res.status(204).send('');
-  } catch (error: any) {
+  } catch (error) {
     console.error('Logout error:', error);
     // Still return 204 even if there's an error
     res.status(204).send('');
   }
 };
 
-const userHandler = async (req: VercelRequest, res: VercelResponse) => {
+const userHandler = async (req, res) => {
   if (handleCors(req, res)) return;
   
   if (req.method !== 'GET') {
@@ -997,13 +999,13 @@ const userHandler = async (req: VercelRequest, res: VercelResponse) => {
       profile,
       practitioner: practitionerData
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Get user error:', error);
     res.status(400).json({ error: error.message || 'Failed to get user data' });
   }
 };
 
-const profileHandler = async (req: VercelRequest, res: VercelResponse) => {
+const profileHandler = async (req, res) => {
   if (handleCors(req, res)) return;
   
   const auth = await requireAuth(req, res);
@@ -1018,7 +1020,7 @@ const profileHandler = async (req: VercelRequest, res: VercelResponse) => {
       }
 
       res.json(profile);
-    } catch (error: any) {
+    } catch (error) {
       console.error('Get profile error:', error);
       res.status(400).json({ error: error.message || 'Failed to get profile' });
     }
@@ -1027,7 +1029,7 @@ const profileHandler = async (req: VercelRequest, res: VercelResponse) => {
       const updates = req.body;
       const profile = await storage.updateProfile(auth.userId, updates);
       res.json(profile);
-    } catch (error: any) {
+    } catch (error) {
       console.error('Update profile error:', error);
       res.status(400).json({ error: error.message || 'Failed to update profile' });
     }
@@ -1036,7 +1038,7 @@ const profileHandler = async (req: VercelRequest, res: VercelResponse) => {
   }
 };
 
-const practitionersListHandler = async (req: VercelRequest, res: VercelResponse) => {
+const practitionersListHandler = async (req, res) => {
   if (handleCors(req, res)) return;
   
   if (req.method !== 'GET') {
@@ -1046,13 +1048,13 @@ const practitionersListHandler = async (req: VercelRequest, res: VercelResponse)
   try {
     const practitioners = await storage.getAllPractitioners();
     res.json(practitioners);
-  } catch (error: any) {
+  } catch (error) {
     console.error('Get practitioners error:', error);
     res.status(400).json({ error: error.message || 'Failed to get practitioners' });
   }
 };
 
-const practitionerDetailHandler = async (req: VercelRequest, res: VercelResponse) => {
+const practitionerDetailHandler = async (req, res) => {
   if (handleCors(req, res)) return;
   
   if (req.method !== 'GET') {
@@ -1073,13 +1075,13 @@ const practitionerDetailHandler = async (req: VercelRequest, res: VercelResponse
     }
     
     res.json(practitioner);
-  } catch (error: any) {
+  } catch (error) {
     console.error('Get practitioner error:', error);
     res.status(400).json({ error: error.message || 'Failed to get practitioner' });
   }
 };
 
-const practitionerOnlineHandler = async (req: VercelRequest, res: VercelResponse) => {
+const practitionerOnlineHandler = async (req, res) => {
   if (handleCors(req, res)) return;
   
   if (req.method !== 'GET') {
@@ -1089,13 +1091,13 @@ const practitionerOnlineHandler = async (req: VercelRequest, res: VercelResponse
   try {
     const practitioners = await storage.getOnlinePractitioners();
     res.json(practitioners);
-  } catch (error: any) {
+  } catch (error) {
     console.error('Get online practitioners error:', error);
     res.status(400).json({ error: error.message || 'Failed to get online practitioners' });
   }
 };
 
-const practitionerToggleStatusHandler = async (req: VercelRequest, res: VercelResponse) => {
+const practitionerToggleStatusHandler = async (req, res) => {
   if (handleCors(req, res)) return;
   
   if (req.method !== 'PUT') {
@@ -1116,13 +1118,13 @@ const practitionerToggleStatusHandler = async (req: VercelRequest, res: VercelRe
       return res.status(404).json({ error: 'Practitioner not found' });
     }
     
-    const updates: any = {};
+    const updates = {};
     if (isOnline !== undefined) updates.isOnline = isOnline;
     if (inService !== undefined) updates.inService = inService;
     
     const practitioner = await storage.updatePractitioner(auth.userId, updates);
     res.json(practitioner);
-  } catch (error: any) {
+  } catch (error) {
     console.error('Toggle status error:', error);
     if (error.name === 'ZodError') {
       return res.status(400).json({ error: 'Invalid input', details: error.errors });
@@ -1131,7 +1133,7 @@ const practitionerToggleStatusHandler = async (req: VercelRequest, res: VercelRe
   }
 };
 
-const sessionStartHandler = async (req: VercelRequest, res: VercelResponse) => {
+const sessionStartHandler = async (req, res) => {
   if (handleCors(req, res)) return;
   
   if (req.method !== 'POST') {
@@ -1162,7 +1164,7 @@ const sessionStartHandler = async (req: VercelRequest, res: VercelResponse) => {
     // Verify practitioner exists and is online
     const practitioner = await storage.getPractitioner(practitionerId);
     console.log('Practitioner status:', practitioner);
-    if (!practitioner || !(practitioner as any).isOnline) {
+    if (!practitioner || !(practitioner).isOnline) {
       return res.status(400).json({ error: 'Practitioner is not available' });
     }
 
@@ -1189,13 +1191,13 @@ const sessionStartHandler = async (req: VercelRequest, res: VercelResponse) => {
     await storage.updatePractitioner(practitionerId, { inService: true });
 
     res.json({ sessionId: session.id });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error creating session:', error);
     res.status(400).json({ error: error.message });
   }
 };
 
-const sessionAcceptHandler = async (req: VercelRequest, res: VercelResponse) => {
+const sessionAcceptHandler = async (req, res) => {
   if (handleCors(req, res)) return;
   
   if (req.method !== 'POST') {
@@ -1234,12 +1236,12 @@ const sessionAcceptHandler = async (req: VercelRequest, res: VercelResponse) => 
     });
 
     res.json(updatedSession);
-  } catch (error: any) {
+  } catch (error) {
     res.status(400).json({ error: error.message });
   }
 };
 
-const sessionAcknowledgeHandler = async (req: VercelRequest, res: VercelResponse) => {
+const sessionAcknowledgeHandler = async (req, res) => {
   if (handleCors(req, res)) return;
   
   if (req.method !== 'POST') {
@@ -1281,7 +1283,7 @@ const sessionAcknowledgeHandler = async (req: VercelRequest, res: VercelResponse
       message: 'Session acknowledged. Guest has been notified.',
       session: updatedSession
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Acknowledge error:', error);
     if (error.name === 'ZodError') {
       return res.status(400).json({ error: 'Invalid input', details: error.errors });
@@ -1290,7 +1292,7 @@ const sessionAcknowledgeHandler = async (req: VercelRequest, res: VercelResponse
   }
 };
 
-const sessionReadyHandler = async (req: VercelRequest, res: VercelResponse) => {
+const sessionReadyHandler = async (req, res) => {
   if (handleCors(req, res)) return;
   
   if (req.method !== 'POST') {
@@ -1325,7 +1327,7 @@ const sessionReadyHandler = async (req: VercelRequest, res: VercelResponse) => {
       });
     }
 
-    const updates: any = {};
+    const updates = {};
     
     if (who === 'guest') {
       updates.readyGuest = true;
@@ -1348,12 +1350,12 @@ const sessionReadyHandler = async (req: VercelRequest, res: VercelResponse) => {
 
     const updatedSession = await storage.updateSession(sessionId, updates);
     res.json(updatedSession);
-  } catch (error: any) {
+  } catch (error) {
     res.status(400).json({ error: error.message });
   }
 };
 
-const sessionRejectHandler = async (req: VercelRequest, res: VercelResponse) => {
+const sessionRejectHandler = async (req, res) => {
   if (handleCors(req, res)) return;
   
   if (req.method !== 'POST') {
@@ -1394,12 +1396,12 @@ const sessionRejectHandler = async (req: VercelRequest, res: VercelResponse) => 
     await storage.updatePractitioner(session.practitionerId, { inService: false });
 
     res.json(updatedSession);
-  } catch (error: any) {
+  } catch (error) {
     res.status(400).json({ error: error.message });
   }
 };
 
-const sessionEndHandler = async (req: VercelRequest, res: VercelResponse) => {
+const sessionEndHandler = async (req, res) => {
   if (handleCors(req, res)) return;
   
   if (req.method !== 'POST') {
@@ -1434,12 +1436,12 @@ const sessionEndHandler = async (req: VercelRequest, res: VercelResponse) => {
     await storage.updatePractitioner(session.practitionerId, { inService: false });
 
     res.json(updatedSession);
-  } catch (error: any) {
+  } catch (error) {
     res.status(400).json({ error: error.message });
   }
 };
 
-const sessionPractitionerHandler = async (req: VercelRequest, res: VercelResponse) => {
+const sessionPractitionerHandler = async (req, res) => {
   if (handleCors(req, res)) return;
   
   if (req.method !== 'GET') {
@@ -1461,12 +1463,12 @@ const sessionPractitionerHandler = async (req: VercelRequest, res: VercelRespons
     // Get all sessions for this practitioner (waiting and live phases)
     const sessions = await storage.getSessionsForPractitioner(userId);
     res.json(sessions);
-  } catch (error: any) {
+  } catch (error) {
     res.status(400).json({ error: error.message });
   }
 };
 
-const sessionDetailHandler = async (req: VercelRequest, res: VercelResponse) => {
+const sessionDetailHandler = async (req, res) => {
   if (handleCors(req, res)) return;
   
   if (req.method !== 'GET') {
@@ -1490,13 +1492,13 @@ const sessionDetailHandler = async (req: VercelRequest, res: VercelResponse) => 
     }
     
     res.json(session);
-  } catch (error: any) {
+  } catch (error) {
     console.error('Get session error:', error);
     res.status(400).json({ error: error.message || 'Failed to get session' });
   }
 };
 
-const reviewCreateHandler = async (req: VercelRequest, res: VercelResponse) => {
+const reviewCreateHandler = async (req, res) => {
   if (handleCors(req, res)) return;
   
   if (req.method !== 'POST') {
@@ -1550,7 +1552,7 @@ const reviewCreateHandler = async (req: VercelRequest, res: VercelResponse) => {
     });
     
     res.json(review);
-  } catch (error: any) {
+  } catch (error) {
     console.error('Create review error:', error);
     if (error.name === 'ZodError') {
       return res.status(400).json({ error: 'Invalid input', details: error.errors });
@@ -1559,7 +1561,7 @@ const reviewCreateHandler = async (req: VercelRequest, res: VercelResponse) => {
   }
 };
 
-const reviewSessionHandler = async (req: VercelRequest, res: VercelResponse) => {
+const reviewSessionHandler = async (req, res) => {
   if (handleCors(req, res)) return;
   
   if (req.method !== 'GET') {
@@ -1578,13 +1580,13 @@ const reviewSessionHandler = async (req: VercelRequest, res: VercelResponse) => 
     
     const reviews = await storage.getSessionReviews(sessionId);
     res.json(reviews);
-  } catch (error: any) {
+  } catch (error) {
     console.error('Get reviews error:', error);
     res.status(400).json({ error: error.message || 'Failed to get reviews' });
   }
 };
 
-const uploadUrlHandler = async (req: VercelRequest, res: VercelResponse) => {
+const uploadUrlHandler = async (req, res) => {
   if (handleCors(req, res)) return;
   
   if (req.method !== 'POST') {
@@ -1596,16 +1598,16 @@ const uploadUrlHandler = async (req: VercelRequest, res: VercelResponse) => {
     if (!auth) return;
     
     const { bucket } = z.object({
-      bucket: z.enum(['avatars', 'gallery', 'videos'] as const)
+      bucket: z.enum(['avatars', 'gallery', 'videos'])
     }).parse(req.body);
     
     const result = await supabaseStorage.getUploadUrl(
-      bucket as StorageBucket,
+      bucket,
       auth.userId
     );
     
     res.json(result);
-  } catch (error: any) {
+  } catch (error) {
     console.error('Upload URL error:', error);
     if (error.name === 'ZodError') {
       return res.status(400).json({ error: 'Invalid input', details: error.errors });
@@ -1614,7 +1616,7 @@ const uploadUrlHandler = async (req: VercelRequest, res: VercelResponse) => {
   }
 };
 
-const agoraTokenHandler = async (req: VercelRequest, res: VercelResponse) => {
+const agoraTokenHandler = async (req, res) => {
   if (handleCors(req, res)) return;
   
   if (req.method !== 'GET') {
@@ -1655,7 +1657,7 @@ const agoraTokenHandler = async (req: VercelRequest, res: VercelResponse) => {
       appId,
       uid
     });
-  } catch (error: any) {
+  } catch (error) {
     res.status(400).json({ error: error.message });
   }
 };
@@ -1680,7 +1682,7 @@ export default async function handler(req, res) {
   
   // Parse cookies and attach to request for session management
   const cookies = parseCookies(req.headers.cookie);
-  (req as any).cookies = cookies;
+  (req).cookies = cookies;
 
   try {
     // Health check

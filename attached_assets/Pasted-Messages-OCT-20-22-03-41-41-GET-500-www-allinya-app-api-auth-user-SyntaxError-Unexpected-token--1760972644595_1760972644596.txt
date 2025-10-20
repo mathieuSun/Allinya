@@ -1,0 +1,68 @@
+Messages
+OCT 20 22:03:41.41
+GET
+500
+www.allinya.app
+/api/auth/user
+SyntaxError: Unexpected token ':' at compileSourceTextModule (node:internal/modules/esm/utils:346:16) at ModuleLoader.moduleStrategy (node:internal/modules/esm/translators:107:18) at #translate (node:internal/modules/esm/loader:536:12) at ModuleLoader.loadAndTranslate (node:internal/modules/esm/loader:583:27) at process.processTicksAndRejections (node:internal/process/task_queues:105:5) at async ModuleJob._link (node:internal/modules/esm/module_job:162:19) Node.js process exited with exit status: 1. The logs above can help with debugging the issue.
+OCT 20 22:03:40.80
+GET
+500
+www.allinya.app
+/api/version
+SyntaxError: Unexpected token ':' at compileSourceTextModule (node:internal/modules/esm/utils:346:16) at ModuleLoader.moduleStrategy (node:internal/modules/esm/translators:107:18) at #translate (node:internal/modules/esm/loader:536:12) at ModuleLoader.loadAndTranslate (node:internal/modules/esm/loader:583:27) at process.processTicksAndRejections (node:internal/process/task_queues:105:5) at async ModuleJob._link (node:internal/modules/esm/module_job:162:19) Node.js process exited with exit status: 1. The logs above can help with debugging the issue.
+OCT 20 22:03:38.30
+GET
+500
+www.allinya.app
+/api/auth/user
+SyntaxError: Unexpected token ':' at compileSourceTextModule (node:internal/modules/esm/utils:346:16) at ModuleLoader.moduleStrategy (node:internal/modules/esm/translators:107:18) at #translate (node:internal/modules/esm/loader:536:12) at ModuleLoader.loadAndTranslate (node:internal/modules/esm/loader:583:27) at process.processTicksAndRejections (node:internal/process/task_queues:105:5) at async ModuleJob._link (node:internal/modules/esm/module_job:162:19) Node.js process exited with exit status: 1. The logs above can help with debugging the issue.
+OCT 20 22:03:38.29
+GET
+500
+www.allinya.app
+/api/auth/user
+SyntaxError: Unexpected token ':' at compileSourceTextModule (node:internal/modules/esm/utils:346:16) at ModuleLoader.moduleStrategy (node:internal/modules/esm/translators:107:18) at #translate (node:internal/modules/esm/loader:536:12) at ModuleLoader.loadAndTranslate (node:internal/modules/esm/loader:583:27) at process.processTicksAndRejections (node:internal/process/task_queues:105:5) at async ModuleJob._link (node:internal/modules/esm/module_job:162:19) Node.js process exited with exit status: 1. The logs above can help with debugging the issue.
+OCT 20 22:03:34.09
+GET
+500
+www.allinya.app
+/api/auth/user
+SyntaxError: Unexpected token ':' at compileSourceTextModule (node:internal/modules/esm/utils:346:16) at ModuleLoader.moduleStrategy (node:internal/modules/esm/translators:107:18) at #translate (node:internal/modules/esm/loader:536:12) at ModuleLoader.loadAndTranslate (node:internal/modules/esm/loader:583:27) at process.processTicksAndRejections (node:internal/process/task_queues:105:5) at async ModuleJob._link (node:internal/modules/esm/module_job:162:19) Node.js process exited with exit status: 1. The logs above can help with debugging the issue.
+OCT 20 22:03:33.75
+GET
+500
+www.allinya.app
+/api/auth/user
+SyntaxError: Unexpected token ':' at compileSourceTextModule (node:internal/modules/esm/utils:346:16) at ModuleLoader.moduleStrategy (node:internal/modules/esm/translators:107:18) at #translate (node:internal/modules/esm/loader:536:12) at ModuleLoader.loadAndTranslate (node:internal/modules/esm/loader:583:27) at process.processTicksAndRejections (node:internal/process/task_queues:105:5) at async ModuleJob._link (node:internal/modules/esm/module_job:162:19) Node.js process exited with exit status: 1. The logs above can help with debugging the issue.
+OCT 20 22:00:09.75
+GET
+500
+www.allinya.app
+/api/auth/user
+SyntaxError: Unexpected token '{' at compileSourceTextModule (node:internal/modules/esm/utils:346:16) at ModuleLoader.moduleStrategy (node:internal/modules/esm/translators:107:18) at #translate (node:internal/modules/esm/loader:536:12) at ModuleLoader.loadAndTranslate (node:internal/modules/esm/loader:583:27) at process.processTicksAndRejections (node:internal/process/task_queues:105:5) at async ModuleJob._link (node:internal/modules/esm/module_job:162:19) Node.js process exited with exit status: 1. The logs above can help with debugging the issue.
+OCT 20 22:00:09.26
+GET
+500
+www.allinya.app
+/api/auth/user
+SyntaxError: Unexpected token '{' at compileSourceTextModule (node:internal/modules/esm/utils:346:16) at ModuleLoader.moduleStrategy (node:internal/modules/esm/translators:107:18) at #translate (node:internal/modules/esm/loader:536:12) at ModuleLoader.loadAndTranslate (node:internal/modules/esm/loader:583:27) at process.processTicksAndRejections (node:internal/process/task_queues:105:5) at async ModuleJob._link (node:internal/modules/esm/module_job:162:19) Node.js process exited with exit status: 1. The logs above can help with debugging the issue.
+OCT 20 22:00:09.26
+GET
+500
+www.allinya.app
+/api/version
+SyntaxError: Unexpected token '{' at compileSourceTextModule (node:internal/modules/esm/utils:346:16) at ModuleLoader.moduleStrategy (node:internal/modules/esm/translators:107:18) at #translate (node:internal/modules/esm/loader:536:12) at ModuleLoader.loadAndTranslate (node:internal/modules/esm/loader:583:27) at process.processTicksAndRejections (node:internal/process/task_queues:105:5) at async ModuleJob._link (node:internal/modules/esm/module_job:162:19) Node.js process exited with exit status: 1. The logs above can help with debugging the issue.
+OCT 20 21:57:01.90
+GET
+500
+www.allinya.app
+/api/auth/user
+SyntaxError: Unexpected token '{' at compileSourceTextModule (node:internal/modules/esm/utils:346:16) at ModuleLoader.moduleStrategy (node:internal/modules/esm/translators:107:18) at #translate (node:internal/modules/esm/loader:536:12) at ModuleLoader.loadAndTranslate (node:internal/modules/esm/loader:583:27) at process.processTicksAndRejections (node:internal/process/task_queues:105:5) at async ModuleJob._link (node:internal/modules/esm/module_job:162:19) Node.js process exited with exit status: 1. The logs above can help with debugging the issue.
+OCT 20 21:57:00.95
+GET
+500
+www.allinya.app
+/api/auth/user
+SyntaxError: Unexpected token '{' at compileSourceTextModule (node:internal/modules/esm/utils:346:16) at ModuleLoader.moduleStrategy (node:internal/modules/esm/translators:107:18) at #translate (node:internal/modules/esm/loader:536:12) at ModuleLoader.loadAndTranslate (node:internal/modules/esm/loader:583:27) at process.processTicksAndRejections (node:internal/process/task_queues:105:5) at async ModuleJob._link (node:internal/modules/esm/module_job:162:19) Node.js process exited with exit status: 1. The logs above can help with debugging the issue.
+OCT
