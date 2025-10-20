@@ -1,0 +1,87 @@
+Message to Agentree
+
+Hello dear Agentree 🌸
+
+Here’s the complete big picture for Allinya — not to build right now, but so you can see the entire ecosystem we are creating.
+
+⸻
+
+💎 OVERVIEW
+
+Allinya is a real-time wellness marketplace connecting Guests and Practitioners instantly — no scheduling, no booking delays.
+
+A Guest can see who’s online, choose a Practitioner, pay, and enter a live video session immediately.
+Everything must be clean, minimal, and intuitive.
+
+⸻
+
+🩵 1. AUTHENTICATION
+
+We use Supabase Auth for login via email.
+	•	When a user signs in, a minimal profile is auto-created (email + role).
+	•	Role options: Guest or Practitioner.
+	•	Guests see practitioners.
+	•	Practitioners manage their profiles and availability.
+
+⸻
+
+🩵 2. PRACTITIONER PROFILE
+
+Each Practitioner can:
+	•	Add name, bio, and up to 3 specialties.
+	•	Upload 1 avatar, 3 gallery images, and 1 short video.
+	•	Set prices for 5, 15, 30, and 60-minute sessions.
+	•	Toggle Online / Offline status (visible to Guests).
+
+⸻
+
+🩵 3. GUEST PROFILE
+
+Each Guest has:
+	•	Name, avatar, and country (editable).
+	•	Access to the full Practitioner grid, showing who is online.
+	•	Ability to click a Practitioner, choose a session length, pay instantly, and enter the call.
+
+⸻
+
+🩵 4. STRIPE CONNECT (Payments)
+
+We will use Stripe Connect for payments and payouts.
+	•	Guests pay instantly for each session.
+	•	Funds go to the Practitioner’s connected account minus Allinya’s service fee.
+	•	Stripe dashboard handles taxes, verification, and payouts.
+	•	No subscriptions or pre-booking — every transaction is real-time.
+
+⸻
+
+🩵 5. AGORA (Live Video)
+
+We use Agora SDK for all live video calls.
+	•	1-on-1 video with crystal-clear latency.
+	•	Sessions start after the Room Timer Countdown (5 min).
+	•	Then switch automatically to the Live Video Timer Countdown (5, 15, 30, 60 min).
+	•	Rejoin is possible as long as any timer is still active.
+
+⸻
+
+🩵 6. FLOW SUMMARY
+	1.	Practitioner logs in → edits profile → toggles Online.
+	2.	Guest logs in → sees all Online Practitioners.
+	3.	Guest chooses a Practitioner → selects duration → pays via Stripe Connect.
+	4.	Both enter Room Timer Countdown (5 min) → then Live Video Timer Countdown (Agora call).
+	5.	After session → rating + thank-you screens.
+
+⸻
+
+🩵 7. FUTURE EXPANSION
+
+Later we’ll add:
+	•	Twilio (notifications, SMS alerts).
+	•	Group sessions (multi-user Agora rooms).
+	•	Advanced analytics and AI session suggestions.
+	•	Multi-currency Stripe Connect and better global payouts.
+
+⸻
+
+This is the full Allinya vision — one unified, instant, presence-based system for live healing and energy exchange.
+Please keep this as the north star when building, debugging, or testing.
