@@ -1,0 +1,87 @@
+20:23:02.896 Running build in Washington, D.C., USA (East) – iad1
+20:23:02.897 Build machine configuration: 2 cores, 8 GB
+20:23:03.051 Cloning github.com/mathieuSun/allinya (Branch: main, Commit: ab41b42)
+20:23:03.508 Previous build caches not available
+20:23:05.954 Cloning completed: 2.903s
+20:23:06.331 Running "vercel build"
+20:23:06.718 Vercel CLI 48.2.9
+20:23:07.492 Running "install" command: `npm install`...
+20:23:14.253 npm warn deprecated node-domexception@1.0.0: Use your platform's native DOMException instead
+20:23:15.786 npm warn deprecated @esbuild-kit/core-utils@3.3.2: Merged into tsx: https://tsx.is
+20:23:15.787 npm warn deprecated @esbuild-kit/esm-loader@2.6.5: Merged into tsx: https://tsx.is
+20:23:23.906 
+20:23:23.907 added 847 packages, and audited 848 packages in 16s
+20:23:23.907 
+20:23:23.908 113 packages are looking for funding
+20:23:23.908   run `npm fund` for details
+20:23:23.941 
+20:23:23.941 12 vulnerabilities (3 low, 6 moderate, 2 high, 1 critical)
+20:23:23.941 
+20:23:23.941 To address issues that do not require attention, run:
+20:23:23.941   npm audit fix
+20:23:23.941 
+20:23:23.941 To address all issues (including breaking changes), run:
+20:23:23.941   npm audit fix --force
+20:23:23.941 
+20:23:23.941 Run `npm audit` for details.
+20:23:24.222 
+20:23:24.223 > rest-express@1.0.0 build
+20:23:24.223 > vite build && esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist
+20:23:24.223 
+20:23:24.484 [36mvite v5.4.20 [32mbuilding for production...[36m[39m
+20:23:24.541 transforming...
+20:23:24.822 Browserslist: browsers data (caniuse-lite) is 12 months old. Please run:
+20:23:24.823   npx update-browserslist-db@latest
+20:23:24.823   Why you should do it regularly: https://github.com/browserslist/update-db#readme
+20:23:25.856 
+20:23:25.856 A PostCSS plugin did not pass the `from` option to `postcss.parse`. This may cause imported assets to be incorrectly transformed. If you've recently added a PostCSS plugin that raised this warning, please contact the package author to fix the issue.
+20:23:33.180 [32m✓[39m 2067 modules transformed.
+20:23:34.100 rendering chunks...
+20:23:34.147 computing gzip size...
+20:23:34.396 [2m../dist/public/[22m[32mindex.html                 [39m[1m[2m    3.22 kB[22m[1m[22m[2m │ gzip:   1.34 kB[22m
+20:23:34.398 [2m../dist/public/[22m[2massets/[22m[35mindex-CbZrUXKo.css  [39m[1m[2m   75.85 kB[22m[1m[22m[2m │ gzip:  12.31 kB[22m
+20:23:34.399 [2m../dist/public/[22m[2massets/[22m[36mindex-jn_-sa6y.js   [39m[1m[33m2,088.43 kB[39m[22m[2m │ gzip: 595.12 kB[22m
+20:23:34.399 [32m✓ built in 9.89s[39m
+20:23:34.399 [33m
+20:23:34.399 (!) Some chunks are larger than 500 kB after minification. Consider:
+20:23:34.400 - Using dynamic import() to code-split the application
+20:23:34.400 - Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+20:23:34.400 - Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.[39m
+20:23:34.452 
+20:23:34.452   dist/index.js  52.2kb
+20:23:34.452 
+20:23:34.452 ⚡ Done in 9ms
+20:23:34.498 Installing dependencies...
+20:23:35.614 
+20:23:35.614 up to date in 1s
+20:23:35.615 
+20:23:35.615 113 packages are looking for funding
+20:23:35.615   run `npm fund` for details
+20:23:35.844 Using TypeScript 5.6.3 (local user-provided)
+20:23:41.718 Using TypeScript 5.6.3 (local user-provided)
+20:23:43.693 Using TypeScript 5.6.3 (local user-provided)
+20:23:45.006 Using TypeScript 5.6.3 (local user-provided)
+20:23:45.949 Using TypeScript 5.6.3 (local user-provided)
+20:23:46.805 Using TypeScript 5.6.3 (local user-provided)
+20:23:47.578 Using TypeScript 5.6.3 (local user-provided)
+20:23:48.313 Using TypeScript 5.6.3 (local user-provided)
+20:23:49.007 Using TypeScript 5.6.3 (local user-provided)
+20:23:49.964 Using TypeScript 5.6.3 (local user-provided)
+20:23:50.746 Using TypeScript 5.6.3 (local user-provided)
+20:23:51.525 Using TypeScript 5.6.3 (local user-provided)
+20:23:52.256 Using TypeScript 5.6.3 (local user-provided)
+20:23:52.979 Using TypeScript 5.6.3 (local user-provided)
+20:23:53.698 Using TypeScript 5.6.3 (local user-provided)
+20:23:54.396 Using TypeScript 5.6.3 (local user-provided)
+20:23:55.159 Using TypeScript 5.6.3 (local user-provided)
+20:23:56.265 Using TypeScript 5.6.3 (local user-provided)
+20:23:57.050 Using TypeScript 5.6.3 (local user-provided)
+20:23:58.197 Using TypeScript 5.6.3 (local user-provided)
+20:23:58.932 Using TypeScript 5.6.3 (local user-provided)
+20:23:59.679 Using TypeScript 5.6.3 (local user-provided)
+20:24:00.430 Using TypeScript 5.6.3 (local user-provided)
+20:24:00.675 Using TypeScript 5.6.3 (local user-provided)
+20:24:00.924 Using TypeScript 5.6.3 (local user-provided)
+20:24:01.205 Build Completed in /vercel/output [54s]
+20:24:01.777 Deploying outputs...
+20:24:04.248 Error: No more than 12 Serverless Functions can be added to a Deployment on the Hobby plan. Create a team (Pro plan) to deploy more. Learn More: https://vercel.link/function-count-limit
