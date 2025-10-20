@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["../api/version.ts"],
-  "sourcesContent": ["import type { VercelRequest, VercelResponse } from '@vercel/node';\nimport { handleCors } from './_lib/cors';\nimport { BUILD_TIMESTAMP, BUILD_VERSION } from './_lib/config';\n\nexport default async function handler(req: VercelRequest, res: VercelResponse) {\n  if (handleCors(req, res)) return;\n  \n  if (req.method !== 'GET') {\n    return res.status(405).json({ error: 'Method not allowed' });\n  }\n  \n  res.json({\n    timestamp: BUILD_TIMESTAMP,\n    version: BUILD_VERSION,\n    requiresReload: false\n  });\n}"],
-  "mappings": "AACA,SAAS,kBAAkB;AAC3B,SAAS,iBAAiB,qBAAqB;AAE/C,eAAO,QAA+B,KAAoB,KAAqB;AAC7E,MAAI,WAAW,KAAK,GAAG,EAAG;AAE1B,MAAI,IAAI,WAAW,OAAO;AACxB,WAAO,IAAI,OAAO,GAAG,EAAE,KAAK,EAAE,OAAO,qBAAqB,CAAC;AAAA,EAC7D;AAEA,MAAI,KAAK;AAAA,IACP,WAAW;AAAA,IACX,SAAS;AAAA,IACT,gBAAgB;AAAA,EAClB,CAAC;AACH;",
-  "names": []
-}

@@ -1,4 +1,4 @@
-import { handleCors } from "./_lib/cors.js";
+import { handleCors } from "./_lib/cors";
 async function handler(req, res) {
   if (handleCors(req, res)) return;
   if (req.method !== "GET") {

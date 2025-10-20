@@ -1,8 +1,8 @@
 import { z } from "zod";
 import { createRequire } from "module";
-import { handleCors } from "../_lib/cors.js";
-import { requireAuth } from "../_lib/auth.js";
-import { agoraConfig } from "../_lib/config.js";
+import { handleCors } from "../_lib/cors";
+import { requireAuth } from "../_lib/auth";
+import { agoraConfig } from "../_lib/config";
 const require2 = createRequire(import.meta.url);
 const AgoraToken = require2("agora-token");
 const RtcTokenBuilder = AgoraToken.RtcTokenBuilder;

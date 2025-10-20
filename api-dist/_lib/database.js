@@ -1,5 +1,5 @@
-import { supabase } from "./supabase.js";
-import { toSnakeCase, toCamelCase } from "./helpers.js";
+import { supabase } from "./supabase";
+import { toSnakeCase, toCamelCase } from "./helpers";
 const storage = {
   async getProfile(id) {
     const { data, error } = await supabase.from("profiles").select("*").eq("id", id).single();

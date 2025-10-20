@@ -1,6 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 import { randomUUID } from "crypto";
-import { supabaseConfig } from "./config.js";
+import { supabaseConfig } from "./config";
 const supabase = createClient(supabaseConfig.url, supabaseConfig.serviceRoleKey, {
   db: {
     schema: "public"

@@ -1,5 +1,5 @@
-import { handleCors } from "../_lib/cors.js";
-import { supabase } from "../_lib/supabase.js";
+import { handleCors } from "../_lib/cors";
+import { supabase } from "../_lib/supabase";
 async function handler(req, res) {
   if (handleCors(req, res)) return;
   if (req.method !== "POST") {

@@ -1,5 +1,5 @@
-import { handleCors } from "../_lib/cors.js";
-import { storage } from "../_lib/database.js";
+import { handleCors } from "../_lib/cors";
+import { storage } from "../_lib/database";
 async function handler(req, res) {
   if (handleCors(req, res)) return;
   if (req.method !== "GET") {

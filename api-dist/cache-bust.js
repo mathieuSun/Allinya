@@ -1,5 +1,5 @@
-import { handleCors } from "./_lib/cors.js";
-import { BUILD_TIMESTAMP, BUILD_VERSION } from "./_lib/config.js";
+import { handleCors } from "./_lib/cors";
+import { BUILD_TIMESTAMP, BUILD_VERSION } from "./_lib/config";
 async function handler(req, res) {
   if (handleCors(req, res)) return;
   if (req.method !== "GET") {

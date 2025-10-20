@@ -1,7 +1,7 @@
 import { z } from "zod";
-import { handleCors } from "../_lib/cors.js";
-import { supabase } from "../_lib/supabase.js";
-import { storage } from "../_lib/database.js";
+import { handleCors } from "../_lib/cors";
+import { supabase } from "../_lib/supabase";
+import { storage } from "../_lib/database";
 async function handler(req, res) {
   if (handleCors(req, res)) return;
   if (req.method !== "POST") {

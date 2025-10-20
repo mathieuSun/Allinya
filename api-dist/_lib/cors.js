@@ -1,4 +1,4 @@
-import { BUILD_TIMESTAMP } from "./config.js";
+import { BUILD_TIMESTAMP } from "./config";
 function handleCors(req, res) {
   res.setHeader("Access-Control-Allow-Credentials", "true");
   res.setHeader("Access-Control-Allow-Origin", req.headers.origin || "*");
