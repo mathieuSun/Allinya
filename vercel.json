@@ -1,5 +1,5 @@
 {
-  "buildCommand": "vite build",
+  "buildCommand": "npm run build",
   "outputDirectory": "dist/public",
   "installCommand": "npm install",
   "framework": "vite",
@@ -115,7 +115,8 @@
   ],
   "functions": {
     "api/**/*.ts": {
-      "maxDuration": 30
+      "runtime": "nodejs20.x",
+      "maxDuration": 60
     }
   },
   "env": {
