@@ -14,7 +14,7 @@ import { supabase } from '@/lib/supabase';
 import { calculateRemainingTime, formatTime } from '@/lib/timer-utils';
 import { playNotificationSound, showBrowserNotification } from '@/lib/notification-utils';
 import type { SessionWithParticipants } from '@shared/schema';
-import VideoRoom from '@/components/VideoRoom';
+import VideoRoomLazy from '@/components/VideoRoomLazy';
 
 export default function SessionPage() {
   const [, params] = useRoute('/s/:id');
@@ -396,7 +396,7 @@ export default function SessionPage() {
     const uid = isGuest ? session.agoraUidGuest : session.agoraUidPractitioner;
     
     return (
-      <VideoRoom
+      <VideoRoomLazy
         sessionId={sessionId!}
         channelName={session.agoraChannel || ''}
         uid={uid || ''}
