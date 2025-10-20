@@ -1,5 +1,5 @@
-# Ignore the API handlers directory (not deployed as functions)
-api-handlers/
+# Don't ignore api-handlers - they're needed by the catch-all handler
+# api-handlers/
 
 # Ignore server files (not needed for Vercel runtime)
 server/
