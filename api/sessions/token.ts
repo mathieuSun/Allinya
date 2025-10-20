@@ -1,9 +1,9 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { z } from 'zod';
 import { createRequire } from "module";
-import { handleCors } from '../_lib/cors';
-import { requireAuth } from '../_lib/auth';
-import { agoraConfig } from '../_lib/config';
+import { handleCors } from '../_lib/cors.js';
+import { requireAuth } from '../_lib/auth.js';
+import { agoraConfig } from '../_lib/config.js';
 
 // Import Agora token builder (CommonJS module)
 const require = createRequire(import.meta.url);

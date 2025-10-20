@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { BUILD_TIMESTAMP } from './config';
+import { BUILD_TIMESTAMP } from './config.js';
 
 export function handleCors(req: VercelRequest, res: VercelResponse): boolean {
   // Set CORS headers

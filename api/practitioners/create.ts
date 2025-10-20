@@ -1,8 +1,8 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { z } from 'zod';
-import { handleCors } from '../_lib/cors';
-import { requireAuth } from '../_lib/auth';
-import { storage } from '../_lib/database';
+import { handleCors } from '../_lib/cors.js';
+import { requireAuth } from '../_lib/auth.js';
+import { storage } from '../_lib/database.js';
 
 // This handler creates a practitioner record for an existing user
 // Used when a user wants to become a practitioner

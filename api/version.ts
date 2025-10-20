@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { handleCors } from './_lib/cors';
-import { BUILD_TIMESTAMP, BUILD_VERSION } from './_lib/config';
+import { handleCors } from './_lib/cors.js';
+import { BUILD_TIMESTAMP, BUILD_VERSION } from './_lib/config.js';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (handleCors(req, res)) return;

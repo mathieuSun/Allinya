@@ -1,5 +1,5 @@
-import { supabase } from './supabase';
-import { toSnakeCase, toCamelCase } from './helpers';
+import { supabase } from './supabase.js';
+import { toSnakeCase, toCamelCase } from './helpers.js';
 
 // Storage operations interface
 export const storage = {

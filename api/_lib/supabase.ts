@@ -1,6 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import { randomUUID } from 'crypto';
-import { supabaseConfig } from './config';
+import { supabaseConfig } from './config.js';
 
 // Create Supabase client with service role key for backend operations
 export const supabase = createClient(supabaseConfig.url, supabaseConfig.serviceRoleKey, {

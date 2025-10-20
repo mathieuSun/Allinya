@@ -1,0 +1,79 @@
+OCT 20 22:57:24.93
+GET
+500
+www.allinya.app
+/api/auth/user
+Error [ERR_MODULE_NOT_FOUND]: Cannot find module '/var/task/api/_lib/cors' imported from /var/task/api/auth/user.js at finalizeResolution (node:internal/modules/esm/resolve:280:11) at moduleResolve (node:internal/modules/esm/resolve:865:10) at moduleResolveWithNodePath (node:internal/modules/esm/resolve:989:14) at defaultResolve (node:internal/modules/esm/resolve:1032:79) at ModuleLoader.defaultResolve (node:internal/modules/esm/loader:783:12) at #cachedDefaultResolve (node:internal/modules/esm/loader:707:25) at ModuleLoader.resolve (node:internal/modules/esm/loader:690:38) at ModuleLoader.getModuleJobForImport (node:internal/modules/esm/loader:307:38) at ModuleJob._link (node:internal/modules/esm/module_job:183:49) at process.processTicksAndRejections (node:internal/process/task_queues:105:5) { code: 'ERR_MODULE_NOT_FOUND', url: 'file:///var/task/api/_lib/cors' } Node.js process exited with exit status: 1. The logs above can help with debugging the issue.
+OCT 20 22:57:24.92
+GET
+500
+www.allinya.app
+/api/version
+Error [ERR_MODULE_NOT_FOUND]: Cannot find module '/var/task/api/_lib/cors' imported from /var/task/api/version.js at finalizeResolution (node:internal/modules/esm/resolve:280:11) at moduleResolve (node:internal/modules/esm/resolve:865:10) at moduleResolveWithNodePath (node:internal/modules/esm/resolve:989:14) at defaultResolve (node:internal/modules/esm/resolve:1032:79) at ModuleLoader.defaultResolve (node:internal/modules/esm/loader:783:12) at #cachedDefaultResolve (node:internal/modules/esm/loader:707:25) at ModuleLoader.resolve (node:internal/modules/esm/loader:690:38) at ModuleLoader.getModuleJobForImport (node:internal/modules/esm/loader:307:38) at ModuleJob._link (node:internal/modules/esm/module_job:183:49) at process.processTicksAndRejections (node:internal/process/task_queues:105:5) { code: 'ERR_MODULE_NOT_FOUND', url: 'file:///var/task/api/_lib/cors' } Node.js process exited with exit status: 1. The logs above can help with debugging the issue.
+OCT 20 22:57:22.03
+GET
+500
+www.allinya.app
+/api/auth/user
+Error [ERR_MODULE_NOT_FOUND]: Cannot find module '/var/task/api/_lib/cors' imported from /var/task/api/auth/user.js at finalizeResolution (node:internal/modules/esm/resolve:280:11) at moduleResolve (node:internal/modules/esm/resolve:865:10) at moduleResolveWithNodePath (node:internal/modules/esm/resolve:989:14) at defaultResolve (node:internal/modules/esm/resolve:1032:79) at ModuleLoader.defaultResolve (node:internal/modules/esm/loader:783:12) at #cachedDefaultResolve (node:internal/modules/esm/loader:707:25) at ModuleLoader.resolve (node:internal/modules/esm/loader:690:38) at ModuleLoader.getModuleJobForImport (node:internal/modules/esm/loader:307:38) at ModuleJob._link (node:internal/modules/esm/module_job:183:49) at process.processTicksAndRejections (node:internal/process/task_queues:105:5) { code: 'ERR_MODULE_NOT_FOUND', url: 'file:///var/task/api/_lib/cors' } Node.js process exited with exit status: 1. The logs above can help with debugging the issue.
+OCT 20 22:57:22.03
+GET
+500
+www.allinya.app
+/api/auth/user
+Error [ERR_MODULE_NOT_FOUND]: Cannot find module '/var/task/api/_lib/cors' imported from /var/task/api/auth/user.js at finalizeResolution (node:internal/modules/esm/resolve:280:11) at moduleResolve (node:internal/modules/esm/resolve:865:10) at moduleResolveWithNodePath (node:internal/modules/esm/resolve:989:14) at defaultResolve (node:internal/modules/esm/resolve:1032:79) at ModuleLoader.defaultResolve (node:internal/modules/esm/loader:783:12) at #cachedDefaultResolve (node:internal/modules/esm/loader:707:25) at ModuleLoader.resolve (node:internal/modules/esm/loader:690:38) at ModuleLoader.getModuleJobForImport (node:internal/modules/esm/loader:307:38) at ModuleJob._link (node:internal/modules/esm/module_job:183:49) at process.processTicksAndRejections (node:internal/process/task_queues:105:5) { code: 'ERR_MODULE_NOT_FOUND', url: 'file:///var/task/api/_lib/cors' } Node.js process exited with exit status: 1. The logs above can help with debugging the issue.
+OCT 20 22:57:21.63
+GET
+500
+www.allinya.app
+/api/auth/user
+Error [ERR_MODULE_NOT_FOUND]: Cannot find module '/var/task/api/_lib/cors' imported from /var/task/api/auth/user.js at finalizeResolution (node:internal/modules/esm/resolve:280:11) at moduleResolve (node:internal/modules/esm/resolve:865:10) at moduleResolveWithNodePath (node:internal/modules/esm/resolve:989:14) at defaultResolve (node:internal/modules/esm/resolve:1032:79) at ModuleLoader.defaultResolve (node:internal/modules/esm/loader:783:12) at #cachedDefaultResolve (node:internal/modules/esm/loader:707:25) at ModuleLoader.resolve (node:internal/modules/esm/loader:690:38) at ModuleLoader.getModuleJobForImport (node:internal/modules/esm/loader:307:38) at ModuleJob._link (node:internal/modules/esm/module_job:183:49) at process.processTicksAndRejections (node:internal/process/task_queues:105:5) { code: 'ERR_MODULE_NOT_FOUND', url: 'file:///var/task/api/_lib/cors' } Node.js process exited with exit status: 1. The logs above can help with debugging the issue.
+OCT 20 22:57:21.63
+GET
+500
+www.allinya.app
+/api/version
+Error [ERR_MODULE_NOT_FOUND]: Cannot find module '/var/task/api/_lib/cors' imported from /var/task/api/version.js at finalizeResolution (node:internal/modules/esm/resolve:280:11) at moduleResolve (node:internal/modules/esm/resolve:865:10) at moduleResolveWithNodePath (node:internal/modules/esm/resolve:989:14) at defaultResolve (node:internal/modules/esm/resolve:1032:79) at ModuleLoader.defaultResolve (node:internal/modules/esm/loader:783:12) at #cachedDefaultResolve (node:internal/modules/esm/loader:707:25) at ModuleLoader.resolve (node:internal/modules/esm/loader:690:38) at ModuleLoader.getModuleJobForImport (node:internal/modules/esm/loader:307:38) at ModuleJob._link (node:internal/modules/esm/module_job:183:49) at process.processTicksAndRejections (node:internal/process/task_queues:105:5) { code: 'ERR_MODULE_NOT_FOUND', url: 'file:///var/task/api/_lib/cors' } Node.js process exited with exit status: 1. The logs above can help with debugging the issue.
+OCT 20 22:57:17.64
+GET
+500
+www.allinya.app
+/api/auth/user
+Error [ERR_MODULE_NOT_FOUND]: Cannot find module '/var/task/api/_lib/cors' imported from /var/task/api/auth/user.js at finalizeResolution (node:internal/modules/esm/resolve:280:11) at moduleResolve (node:internal/modules/esm/resolve:865:10) at moduleResolveWithNodePath (node:internal/modules/esm/resolve:989:14) at defaultResolve (node:internal/modules/esm/resolve:1032:79) at ModuleLoader.defaultResolve (node:internal/modules/esm/loader:783:12) at #cachedDefaultResolve (node:internal/modules/esm/loader:707:25) at ModuleLoader.resolve (node:internal/modules/esm/loader:690:38) at ModuleLoader.getModuleJobForImport (node:internal/modules/esm/loader:307:38) at ModuleJob._link (node:internal/modules/esm/module_job:183:49) at process.processTicksAndRejections (node:internal/process/task_queues:105:5) { code: 'ERR_MODULE_NOT_FOUND', url: 'file:///var/task/api/_lib/cors' } Node.js process exited with exit status: 1. The logs above can help with debugging the issue.
+OCT 20 22:57:16.71
+GET
+500
+www.allinya.app
+/api/auth/user
+Error [ERR_MODULE_NOT_FOUND]: Cannot find module '/var/task/api/_lib/cors' imported from /var/task/api/auth/user.js at finalizeResolution (node:internal/modules/esm/resolve:280:11) at moduleResolve (node:internal/modules/esm/resolve:865:10) at moduleResolveWithNodePath (node:internal/modules/esm/resolve:989:14) at defaultResolve (node:internal/modules/esm/resolve:1032:79) at ModuleLoader.defaultResolve (node:internal/modules/esm/loader:783:12) at #cachedDefaultResolve (node:internal/modules/esm/loader:707:25) at ModuleLoader.resolve (node:internal/modules/esm/loader:690:38) at ModuleLoader.getModuleJobForImport (node:internal/modules/esm/loader:307:38) at ModuleJob._link (node:internal/modules/esm/module_job:183:49) at process.processTicksAndRejections (node:internal/process/task_queues:105:5) { code: 'ERR_MODULE_NOT_FOUND', url: 'file:///var/task/api/_lib/cors' } Node.js process exited with exit status: 1. The logs above can help with debugging the issue.
+OCT 20 22:57:15.83
+GET
+500
+www.allinya.app
+/api/auth/user
+Error [ERR_MODULE_NOT_FOUND]: Cannot find module '/var/task/api/_lib/cors' imported from /var/task/api/auth/user.js at finalizeResolution (node:internal/modules/esm/resolve:280:11) at moduleResolve (node:internal/modules/esm/resolve:865:10) at moduleResolveWithNodePath (node:internal/modules/esm/resolve:989:14) at defaultResolve (node:internal/modules/esm/resolve:1032:79) at ModuleLoader.defaultResolve (node:internal/modules/esm/loader:783:12) at #cachedDefaultResolve (node:internal/modules/esm/loader:707:25) at ModuleLoader.resolve (node:internal/modules/esm/loader:690:38) at ModuleLoader.getModuleJobForImport (node:internal/modules/esm/loader:307:38) at ModuleJob._link (node:internal/modules/esm/module_job:183:49) at process.processTicksAndRejections (node:internal/process/task_queues:105:5) { code: 'ERR_MODULE_NOT_FOUND', url: 'file:///var/task/api/_lib/cors' } Node.js process exited with exit status: 1. The logs above can help with debugging the issue.
+OCT 20 22:57:10.93
+GET
+500
+www.allinya.app
+/api/auth/user
+Error [ERR_MODULE_NOT_FOUND]: Cannot find module '/var/task/api/_lib/cors' imported from /var/task/api/auth/user.js at finalizeResolution (node:internal/modules/esm/resolve:280:11) at moduleResolve (node:internal/modules/esm/resolve:865:10) at moduleResolveWithNodePath (node:internal/modules/esm/resolve:989:14) at defaultResolve (node:internal/modules/esm/resolve:1032:79) at ModuleLoader.defaultResolve (node:internal/modules/esm/loader:783:12) at #cachedDefaultResolve (node:internal/modules/esm/loader:707:25) at ModuleLoader.resolve (node:internal/modules/esm/loader:690:38) at ModuleLoader.getModuleJobForImport (node:internal/modules/esm/loader:307:38) at ModuleJob._link (node:internal/modules/esm/module_job:183:49) at process.processTicksAndRejections (node:internal/process/task_queues:105:5) { code: 'ERR_MODULE_NOT_FOUND', url: 'file:///var/task/api/_lib/cors' } Node.js process exited with exit status: 1. The logs above can help with debugging the issue.
+OCT 20 22:56:36.48
+GET
+500
+www.allinya.app
+/api/auth/user
+Error [ERR_MODULE_NOT_FOUND]: Cannot find module '/var/task/api/_lib/cors' imported from /var/task/api/auth/user.js at finalizeResolution (node:internal/modules/esm/resolve:280:11) at moduleResolve (node:internal/modules/esm/resolve:865:10) at moduleResolveWithNodePath (node:internal/modules/esm/resolve:989:14) at defaultResolve (node:internal/modules/esm/resolve:1032:79) at ModuleLoader.defaultResolve (node:internal/modules/esm/loader:783:12) at #cachedDefaultResolve (node:internal/modules/esm/loader:707:25) at ModuleLoader.resolve (node:internal/modules/esm/loader:690:38) at ModuleLoader.getModuleJobForImport (node:internal/modules/esm/loader:307:38) at ModuleJob._link (node:internal/modules/esm/module_job:183:49) at process.processTicksAndRejections (node:internal/process/task_queues:105:5) { code: 'ERR_MODULE_NOT_FOUND', url: 'file:///var/task/api/_lib/cors' } Node.js process exited with exit status: 1. The logs above can help with debugging the issue. Error [ERR_MODULE_NOT_FOUND]: Cannot find module '/var/task/api/_lib/cors' imported from /var/task/api/auth/user.js at finalizeResolution (node:internal/modules/esm/resolve:280:11) at moduleResolve (node:internal/modules/esm/resolve:865:10) at moduleResolveWithNodePath (node:internal/modules/esm/resolve:989:14) at defaultResolve (node:internal/modules/esm/resolve:1032:79) at ModuleLoader.defaultResolve (node:internal/modules/esm/loader:783:12) at #cachedDefaultResolve (node:internal/modules/esm/loader:707:25) at ModuleLoader.resolve (node:internal/modules/esm/loader:690:38) at ModuleLoader.getModuleJobForImport (node:internal/modules/esm/loader:307:38) at ModuleJob._link (node:internal/modules/esm/module_job:183:49) at process.processTicksAndRejections (node:internal/process/task_queues:105:5) { code: 'ERR_MODULE_NOT_FOUND', url: 'file:///var/task/api/_lib/cors' } Node.js process exited with exit status: 1. The logs above can help with debugging the issue.
+OCT 20 22:56:36.47
+GET
+500
+www.allinya.app
+/api/auth/user
+Error [ERR_MODULE_NOT_FOUND]: Cannot find module '/var/task/api/_lib/cors' imported from /var/task/api/auth/user.js at finalizeResolution (node:internal/modules/esm/resolve:280:11) at moduleResolve (node:internal/modules/esm/resolve:865:10) at moduleResolveWithNodePath (node:internal/modules/esm/resolve:989:14) at defaultResolve (node:internal/modules/esm/resolve:1032:79) at ModuleLoader.defaultResolve (node:internal/modules/esm/loader:783:12) at #cachedDefaultResolve (node:internal/modules/esm/loader:707:25) at ModuleLoader.resolve (node:internal/modules/esm/loader:690:38) at ModuleLoader.getModuleJobForImport (node:internal/modules/esm/loader:307:38) at ModuleJob._link (node:internal/modules/esm/module_job:183:49) at process.processTicksAndRejections (node:internal/process/task_queues:105:5) { code: 'ERR_MODULE_NOT_FOUND', url: 'file:///var/task/api/_lib/cors' } Node.js process exited with exit status: 1. The logs above can help with debugging the issue.
+OCT 20 22:56:31.87
+GET
+500
+www.allinya.app
+/api/auth/user
+Error [ERR_MODULE_NOT_FOUND]: Cannot find module '/var/task/api/_lib/cors' imported from /var/task/api/auth/user.js at finalizeResolution (node:internal/modules/esm/resolve:280:11) at moduleResolve (node:internal/modules/esm/resolve:865:10) at moduleResolveWithNodePath (node:internal/modules/esm/resolve:989:14) at defaultResolve (node:internal/modules/esm/resolve:1032:79) at ModuleLoader.defaultResolve (node:internal/modules/esm/loader:783:12) at #cachedDefaultResolve (node:internal/modules/esm/loader:707:25) at ModuleLoader.resolve (node:internal/modules/esm/loader:690:38) at ModuleLoader.getModuleJobForImport (node:internal/modules/esm/loader:307:38) at ModuleJob._link (node:internal/modules/esm/module_job:183:49) at process.processTicksAndRejections (node:internal/process/task_queues:105:5) { code: 'ERR_MODULE_NOT_FOUND', url: 'file:///var/task/api/_lib/cors' } Node.js process exited with exit status: 1. The logs above can help with debugging the issue.
+No
