@@ -41,19 +41,90 @@ import uploadUrlHandler from './uploads/url';
 // Agora route
 import agoraTokenHandler from './agora/token';
 
+// Helper function to parse JSON body
+async function parseBody(req: VercelRequest): Promise<any> {
+  if (!req.body) return null;
+  
+  // If body is already parsed (shouldn't happen in Vercel, but just in case)
+  if (typeof req.body === 'object' && !(req.body instanceof Buffer)) {
+    return req.body;
+  }
+  
+  // Parse string body
+  if (typeof req.body === 'string') {
+    try {
+      return JSON.parse(req.body);
+    } catch (e) {
+      console.error('Failed to parse string body:', e);
+      return req.body;
+    }
+  }
+  
+  // Parse Buffer body
+  if (req.body instanceof Buffer) {
+    try {
+      const bodyString = req.body.toString('utf-8');
+      return JSON.parse(bodyString);
+    } catch (e) {
+      console.error('Failed to parse buffer body:', e);
+      return req.body.toString('utf-8');
+    }
+  }
+  
+  // For streams (ReadableStream), read and parse
+  if (req.body && typeof req.body.pipe === 'function') {
+    return new Promise((resolve, reject) => {
+      let data = '';
+      req.body.on('data', chunk => {
+        data += chunk.toString();
+      });
+      req.body.on('end', () => {
+        try {
+          resolve(data ? JSON.parse(data) : null);
+        } catch (e) {
+          console.error('Failed to parse stream body:', e);
+          resolve(data);
+        }
+      });
+      req.body.on('error', reject);
+    });
+  }
+  
+  return req.body;
+}
+
+// Helper function to parse cookies
+function parseCookies(cookieHeader: string | undefined): Record<string, string> {
+  const cookies: Record<string, string> = {};
+  if (!cookieHeader) return cookies;
+  
+  cookieHeader.split(';').forEach(cookie => {
+    const [key, value] = cookie.trim().split('=');
+    if (key) cookies[key] = decodeURIComponent(value || '');
+  });
+  
+  return cookies;
+}
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   const { url, method } = req;
   const path = url?.replace(/^\/api/, '') || '';
   
-  // Set CORS headers
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-  
-  // Handle OPTIONS requests
-  if (method === 'OPTIONS') {
-    return res.status(200).end();
+  // Parse body for POST, PUT, PATCH requests BEFORE delegating to handlers
+  // This is critical because Vercel provides raw streams but handlers expect parsed JSON
+  if (method === 'POST' || method === 'PUT' || method === 'PATCH') {
+    try {
+      req.body = await parseBody(req);
+      console.log(`Parsed body for ${method} ${path}:`, req.body);
+    } catch (error) {
+      console.error('Error parsing body:', error);
+      return res.status(400).json({ error: 'Invalid request body' });
+    }
   }
+  
+  // Parse cookies and attach to request for session management
+  const cookies = parseCookies(req.headers.cookie);
+  (req as any).cookies = cookies;
 
   try {
     // Health check
@@ -97,7 +168,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (path === '/practitioners/online' && method === 'GET') {
       return practitionerOnlineHandler(req, res);
     }
-    if (path === '/practitioners/toggle-status' && method === 'POST') {
+    if (path === '/practitioners/toggle-status' && method === 'PUT') {
       return practitionerToggleStatusHandler(req, res);
     }
     
