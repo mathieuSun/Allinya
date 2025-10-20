@@ -2,44 +2,81 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 
 // Import all route handlers
-import healthHandler from './health';
-import versionHandler from './version';
-import cacheBustHandler from './cache-bust';
+import healthHandler from '../api-handlers/health';
+import versionHandler from '../api-handlers/version';
+import cacheBustHandler from '../api-handlers/cache-bust';
 
 // Auth routes
-import signupHandler from './auth/signup';
-import loginHandler from './auth/login';
-import logoutHandler from './auth/logout';
-import userHandler from './auth/user';
+import signupHandler from '../api-handlers/signup';
+import loginHandler from '../api-handlers/login';
+import logoutHandler from '../api-handlers/logout';
+import userHandler from '../api-handlers/user';
 
 // Profile routes
-import profileHandler from './profile/index';
+import profileHandler from '../api-handlers/profile';
 
 // Practitioner routes
-import practitionersListHandler from './practitioners/list';
-import practitionerDetailHandler from './practitioners/[id]';
-import practitionerOnlineHandler from './practitioners/online';
-import practitionerToggleStatusHandler from './practitioners/toggle-status';
+import practitionersListHandler from '../api-handlers/list';
+import practitionerDetailHandler from '../api-handlers/[id]';
+import practitionerOnlineHandler from '../api-handlers/online';
+import practitionerToggleStatusHandler from '../api-handlers/toggle-status';
 
 // Session routes
-import sessionDetailHandler from './sessions/[id]';
-import sessionStartHandler from './sessions/start';
-import sessionAcceptHandler from './sessions/accept';
-import sessionAcknowledgeHandler from './sessions/acknowledge';
-import sessionReadyHandler from './sessions/ready';
-import sessionRejectHandler from './sessions/reject';
-import sessionEndHandler from './sessions/end';
-import sessionPractitionerHandler from './sessions/practitioner';
+// Note: Session detail handler is not available in the new structure
+// We'll create a temporary handler inline for this functionality
+import sessionStartHandler from '../api-handlers/start';
+import sessionAcceptHandler from '../api-handlers/accept';
+import sessionAcknowledgeHandler from '../api-handlers/acknowledge';
+import sessionReadyHandler from '../api-handlers/ready';
+import sessionRejectHandler from '../api-handlers/reject';
+import sessionEndHandler from '../api-handlers/end';
+import sessionPractitionerHandler from '../api-handlers/practitioner';
 
 // Review routes
-import reviewCreateHandler from './reviews/create';
-import reviewSessionHandler from './reviews/[sessionId]';
+import reviewCreateHandler from '../api-handlers/create';
+import reviewSessionHandler from '../api-handlers/[sessionId]';
 
 // Upload routes
-import uploadUrlHandler from './uploads/url';
+import uploadUrlHandler from '../api-handlers/url';
 
 // Agora route
-import agoraTokenHandler from './agora/token';
+import agoraTokenHandler from '../api-handlers/token';
+
+// Import storage for session detail handler
+import { storage } from '../api-handlers/storage';
+import { handleCors } from '../api-handlers/cors';
+import { requireAuth } from '../api-handlers/auth';
+
+// Inline session detail handler (not available as separate file in new structure)
+const sessionDetailHandler = async (req: VercelRequest, res: VercelResponse) => {
+  if (handleCors(req, res)) return;
+  
+  if (req.method !== 'GET') {
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
+  
+  try {
+    const auth = await requireAuth(req, res);
+    if (!auth) return;
+    
+    const { id } = req.query;
+    
+    if (!id || typeof id !== 'string') {
+      return res.status(400).json({ error: 'Invalid session ID' });
+    }
+    
+    const session = await storage.getSession(id);
+    
+    if (!session) {
+      return res.status(404).json({ error: 'Session not found' });
+    }
+    
+    res.json(session);
+  } catch (error: any) {
+    console.error('Get session error:', error);
+    res.status(400).json({ error: error.message || 'Failed to get session' });
+  }
+};
 
 // Helper function to parse JSON body
 async function parseBody(req: VercelRequest): Promise<any> {
@@ -75,7 +112,7 @@ async function parseBody(req: VercelRequest): Promise<any> {
   if (req.body && typeof req.body.pipe === 'function') {
     return new Promise((resolve, reject) => {
       let data = '';
-      req.body.on('data', chunk => {
+      req.body.on('data', (chunk: any) => {
         data += chunk.toString();
       });
       req.body.on('end', () => {

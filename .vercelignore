@@ -1,0 +1,18 @@
+# Ignore the API handlers directory (not deployed as functions)
+api-handlers/
+
+# Ignore server and source files (not needed for Vercel runtime)
+server/
+shared/
+client/
+
+# Ignore development files
+.env
+.env.local
+.env.development
+*.log
+node_modules/
+.git/
+.gitignore
+README.md
+*.md
