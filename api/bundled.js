@@ -77,7 +77,7 @@ const supabaseAdmin = createClient(
 
 // ==================== CORS HANDLING ====================
 
-function handleCors(req: VercelRequest, res: VercelResponse) {
+function handleCors(req, res) {
   // Set CORS headers
   res.setHeader('Access-Control-Allow-Credentials', 'true');
   res.setHeader('Access-Control-Allow-Origin', req.headers.origin || '*');
@@ -112,8 +112,8 @@ function handleCors(req: VercelRequest, res: VercelResponse) {
 // ==================== AUTH MIDDLEWARE ====================
 
 async function requireAuth(
-  req: VercelRequest,
-  res: VercelResponse
+  req,
+  res
 ) {
   try {
     const authHeader = req.headers.authorization;
@@ -510,7 +510,7 @@ class SupabaseStorageService {
    * Returns both the upload URL and the final public URL
    */
   async getUploadUrl(
-    bucket: StorageBucket,
+    bucket,
     userId
   ) {
     // Generate unique filename with user ID prefix
@@ -541,7 +541,7 @@ class SupabaseStorageService {
   /**
    * Delete a file from storage
    */
-  async deleteFile(bucket: StorageBucket, fileName) {
+  async deleteFile(bucket, fileName) {
     const { error } = await this.client.storage
       .from(bucket)
       .remove([fileName]);
@@ -555,9 +555,9 @@ class SupabaseStorageService {
    * Upload a file directly from server (for migrations or admin operations)
    */
   async uploadFile(
-    bucket: StorageBucket,
+    bucket,
     fileName,
-    file: Buffer | Blob,
+    file,
     contentType
   ) {
     const { data, error } = await this.client.storage
@@ -582,7 +582,7 @@ class SupabaseStorageService {
   /**
    * List files in a bucket for a specific user
    */
-  async listUserFiles(bucket: StorageBucket, userId) {
+  async listUserFiles(bucket, userId) {
     const { data, error } = await this.client.storage
       .from(bucket)
       .list(userId);
@@ -602,7 +602,7 @@ class SupabaseStorageService {
   /**
    * Get public URL for an existing file
    */
-  getPublicUrl(bucket: StorageBucket, fileName) {
+  getPublicUrl(bucket, fileName) {
     const { data } = this.client.storage
       .from(bucket)
       .getPublicUrl(fileName);
@@ -657,7 +657,7 @@ const supabaseStorage = new SupabaseStorageService();
 // ==================== HELPER FUNCTIONS ====================
 
 // Helper function to parse JSON body
-async function parseBody(req: VercelRequest) {
+async function parseBody(req) {
   if (!req.body) return null;
   
   // If body is already parsed (shouldn't happen in Vercel, but just in case)
@@ -945,7 +945,7 @@ const logoutHandler = async (req, res) => {
   try {
     // Try to get token from Authorization header first
     const authHeader = req.headers.authorization;
-    let token | undefined;
+    let token;
 
     if (authHeader && typeof authHeader === 'string' && authHeader.startsWith('Bearer ')) {
       token = authHeader.substring(7);
