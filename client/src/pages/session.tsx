@@ -119,8 +119,8 @@ export default function SessionPage() {
           // Show notifications for important events
           const updatedSession = payload.new as any;
           
-          if (updatedSession.phase === 'live' && session.phase === 'waiting') {
-            // Auto-start when both parties are ready
+          if (updatedSession.phase === 'live' && session.phase === 'room_timer') {
+            // CRITICAL: Transition from Room Timer to Live Video phase
             toast({
               title: '🎥 Session Starting!',
               description: 'Both participants are ready - launching video now...',
@@ -178,7 +178,8 @@ export default function SessionPage() {
     if (!session) return;
 
     const updateTimer = () => {
-      if (session.phase === 'waiting') {
+      if (session.phase === 'room_timer') {
+        // CRITICAL: Room Timer Phase - completely separate from Live Video Timer
         const startedAt = session.waitingStartedAt || null;
         const remaining = calculateRemainingTime(startedAt, session.waitingSeconds);
         setRemainingTime(remaining);
@@ -190,7 +191,7 @@ export default function SessionPage() {
         }
         
         if (remaining === 0 && !session.readyPractitioner && !session.readyGuest) {
-          // Auto-transition failsafe - end session if time runs out with nobody ready
+          // Room timer expired - end session
           endSessionMutation.mutate();
         }
       } else if (session.phase === 'live') {
@@ -238,13 +239,13 @@ export default function SessionPage() {
   const otherReady = isGuest ? session.readyPractitioner : session.readyGuest;
   const hasAcknowledged = session.acknowledgedPractitioner;
 
-  // Waiting Room
-  if (session.phase === 'waiting') {
+  // Room Timer Phase - CRITICAL: Separate from Live Video Timer
+  if (session.phase === 'room_timer') {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center p-4">
         <Card className="w-full max-w-2xl">
           <CardContent className="p-12 text-center">
-            <Badge className="mb-8 text-lg px-4 py-2" data-testid="badge-phase-waiting">Waiting Room</Badge>
+            <Badge className="mb-8 text-lg px-4 py-2" data-testid="badge-phase-room-timer">Room Timer</Badge>
             
             <div className="text-hero md:text-hero-md font-bold mb-8 text-primary" data-testid="text-timer">
               {formatTime(remainingTime)}

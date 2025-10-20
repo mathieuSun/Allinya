@@ -14,22 +14,22 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
   
   try {
-    // Get all sessions in waiting phase
-    const { data: waitingSessions, error } = await supabase
+    // CRITICAL: Get all sessions in room_timer phase (NOT waiting)
+    const { data: roomTimerSessions, error } = await supabase
       .from('sessions')
       .select('*')
-      .eq('phase', 'waiting');
+      .eq('phase', 'room_timer');
     
     if (error) {
-      console.error('Error fetching waiting sessions:', error);
+      console.error('Error fetching room timer sessions:', error);
       return res.status(500).json({ error: 'Failed to check session timeouts' });
     }
     
     const now = new Date();
     const canceledSessions = [];
     
-    // Check each waiting session for timeout
-    for (const session of waitingSessions || []) {
+    // Check each room timer session for timeout
+    for (const session of roomTimerSessions || []) {
       const createdAt = new Date(session.created_at);
       const elapsed = now.getTime() - createdAt.getTime();
       
@@ -58,7 +58,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
     
     res.json({ 
-      checked: waitingSessions?.length || 0,
+      checked: roomTimerSessions?.length || 0,
       canceled: canceledSessions.length,
       sessions: canceledSessions 
     });
