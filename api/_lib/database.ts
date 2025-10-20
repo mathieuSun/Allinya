@@ -259,6 +259,22 @@ export const storage = {
     return sessionsWithParticipants;
   },
 
+  async getActivePractitionerSessions(practitionerId: string) {
+    const { data, error } = await supabase
+      .from('sessions')
+      .select('*')
+      .eq('practitioner_id', practitionerId)
+      .in('phase', ['waiting', 'room_timer', 'live'])
+      .order('created_at', { ascending: false });
+    
+    if (error) {
+      console.error('Error fetching active sessions for practitioner:', error);
+      return [];
+    }
+    
+    return (data || []).map(toCamelCase);
+  },
+
   async createSession(session: any) {
     const snakeCaseSession = toSnakeCase(session);
     

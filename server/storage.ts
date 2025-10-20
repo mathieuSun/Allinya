@@ -81,6 +81,7 @@ export interface IStorage {
   // Session operations
   getSession(id: string): Promise<SessionWithParticipants | undefined>;
   getSessionsForPractitioner(practitionerId: string): Promise<SessionWithParticipants[]>;
+  getActivePractitionerSessions(practitionerId: string): Promise<RuntimeSession[]>;
   createSession(session: InsertSessionInput): Promise<RuntimeSession>;
   updateSession(id: string, updates: Partial<RuntimeSession>): Promise<RuntimeSession>;
 
@@ -413,6 +414,22 @@ export class DbStorage implements IStorage {
     }
     
     return toCamelCase(data || []) as SessionWithParticipants[];
+  }
+
+  async getActivePractitionerSessions(practitionerId: string): Promise<RuntimeSession[]> {
+    const { data, error } = await supabase
+      .from('sessions')
+      .select('*')
+      .eq('practitioner_id', practitionerId)
+      .in('phase', ['waiting', 'room_timer', 'live'])
+      .order('created_at', { ascending: false });
+    
+    if (error) {
+      console.error('Error fetching active sessions for practitioner:', error);
+      return [];
+    }
+    
+    return toCamelCase(data || []) as RuntimeSession[];
   }
 
   async createSession(session: InsertSessionInput): Promise<RuntimeSession> {

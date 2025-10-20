@@ -40,6 +40,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(400).json({ error: 'Practitioner is not available' });
     }
 
+    // CRITICAL: Check if practitioner already has an active session
+    const activeSessions = await storage.getActivePractitionerSessions(practitionerId);
+    if (activeSessions && activeSessions.length > 0) {
+      console.error('Practitioner already has an active session:', activeSessions[0].id);
+      return res.status(409).json({ 
+        error: 'Practitioner is currently in another session. Please try again later.' 
+      });
+    }
+
     // Create session
     const sessionId = randomUUID();
     const agoraChannel = `sess_${sessionId.substring(0, 8)}`;
