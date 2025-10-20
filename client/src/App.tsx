@@ -15,6 +15,7 @@ import SessionPage from "@/pages/session";
 import PractitionerDashboard from "@/pages/practitioner-dashboard";
 import NotFound from "@/pages/not-found";
 import DevInspector from "@/pages/dev-inspector";
+import TestVideo from "@/test-video";
 
 function Router() {
   return (
@@ -28,6 +29,7 @@ function Router() {
       <Route path="/p/:id" component={PractitionerProfilePage} />
       <Route path="/s/:id" component={SessionPage} />
       <Route path="/dev/inspector" component={DevInspector} />
+      <Route path="/test-video" component={TestVideo} />
       <Route path="/" component={AuthPage} />
       <Route component={NotFound} />
     </Switch>
