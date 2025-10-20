@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["../api/health.ts"],
+  "sourcesContent": ["import type { VercelRequest, VercelResponse } from '@vercel/node';\nimport { handleCors } from './_lib/cors';\n\nexport default async function handler(req: VercelRequest, res: VercelResponse) {\n  if (handleCors(req, res)) return;\n  \n  if (req.method !== 'GET') {\n    return res.status(405).json({ error: 'Method not allowed' });\n  }\n  \n  res.json({ \n    status: 'ok', \n    timestamp: new Date().toISOString() \n  });\n}"],
+  "mappings": "AACA,SAAS,kBAAkB;AAE3B,eAAO,QAA+B,KAAoB,KAAqB;AAC7E,MAAI,WAAW,KAAK,GAAG,EAAG;AAE1B,MAAI,IAAI,WAAW,OAAO;AACxB,WAAO,IAAI,OAAO,GAAG,EAAE,KAAK,EAAE,OAAO,qBAAqB,CAAC;AAAA,EAC7D;AAEA,MAAI,KAAK;AAAA,IACP,QAAQ;AAAA,IACR,YAAW,oBAAI,KAAK,GAAE,YAAY;AAAA,EACpC,CAAC;AACH;",
+  "names": []
+}

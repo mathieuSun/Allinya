@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["../../api/practitioners/list.ts"],
+  "sourcesContent": ["import type { VercelRequest, VercelResponse } from '@vercel/node';\nimport { handleCors } from '../_lib/cors';\nimport { storage } from '../_lib/database';\n\nexport default async function handler(req: VercelRequest, res: VercelResponse) {\n  if (handleCors(req, res)) return;\n  \n  if (req.method !== 'GET') {\n    return res.status(405).json({ error: 'Method not allowed' });\n  }\n  \n  try {\n    // Check if request is for online practitioners only\n    const onlineOnly = req.query.online === 'true';\n    \n    const practitioners = onlineOnly \n      ? await storage.getOnlinePractitioners()\n      : await storage.getAllPractitioners();\n      \n    res.json(practitioners);\n  } catch (error: any) {\n    console.error('Get practitioners error:', error);\n    res.status(400).json({ error: error.message || 'Failed to get practitioners' });\n  }\n}"],
+  "mappings": "AACA,SAAS,kBAAkB;AAC3B,SAAS,eAAe;AAExB,eAAO,QAA+B,KAAoB,KAAqB;AAC7E,MAAI,WAAW,KAAK,GAAG,EAAG;AAE1B,MAAI,IAAI,WAAW,OAAO;AACxB,WAAO,IAAI,OAAO,GAAG,EAAE,KAAK,EAAE,OAAO,qBAAqB,CAAC;AAAA,EAC7D;AAEA,MAAI;AAEF,UAAM,aAAa,IAAI,MAAM,WAAW;AAExC,UAAM,gBAAgB,aAClB,MAAM,QAAQ,uBAAuB,IACrC,MAAM,QAAQ,oBAAoB;AAEtC,QAAI,KAAK,aAAa;AAAA,EACxB,SAAS,OAAY;AACnB,YAAQ,MAAM,4BAA4B,KAAK;AAC/C,QAAI,OAAO,GAAG,EAAE,KAAK,EAAE,OAAO,MAAM,WAAW,8BAA8B,CAAC;AAAA,EAChF;AACF;",
+  "names": []
+}

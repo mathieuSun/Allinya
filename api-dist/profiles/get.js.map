@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["../../api/profiles/get.ts"],
+  "sourcesContent": ["import type { VercelRequest, VercelResponse } from '@vercel/node';\nimport { handleCors } from '../_lib/cors';\nimport { requireAuth } from '../_lib/auth';\nimport { storage } from '../_lib/database';\n\nexport default async function handler(req: VercelRequest, res: VercelResponse) {\n  if (handleCors(req, res)) return;\n  \n  if (req.method !== 'GET') {\n    return res.status(405).json({ error: 'Method not allowed' });\n  }\n  \n  try {\n    const auth = await requireAuth(req, res);\n    if (!auth) return;\n    \n    const profile = await storage.getProfile(auth.userId);\n\n    if (!profile) {\n      return res.status(404).json({ error: 'Profile not found' });\n    }\n\n    res.json(profile);\n  } catch (error: any) {\n    console.error('Get profile error:', error);\n    res.status(400).json({ error: error.message || 'Failed to get profile' });\n  }\n}"],
+  "mappings": "AACA,SAAS,kBAAkB;AAC3B,SAAS,mBAAmB;AAC5B,SAAS,eAAe;AAExB,eAAO,QAA+B,KAAoB,KAAqB;AAC7E,MAAI,WAAW,KAAK,GAAG,EAAG;AAE1B,MAAI,IAAI,WAAW,OAAO;AACxB,WAAO,IAAI,OAAO,GAAG,EAAE,KAAK,EAAE,OAAO,qBAAqB,CAAC;AAAA,EAC7D;AAEA,MAAI;AACF,UAAM,OAAO,MAAM,YAAY,KAAK,GAAG;AACvC,QAAI,CAAC,KAAM;AAEX,UAAM,UAAU,MAAM,QAAQ,WAAW,KAAK,MAAM;AAEpD,QAAI,CAAC,SAAS;AACZ,aAAO,IAAI,OAAO,GAAG,EAAE,KAAK,EAAE,OAAO,oBAAoB,CAAC;AAAA,IAC5D;AAEA,QAAI,KAAK,OAAO;AAAA,EAClB,SAAS,OAAY;AACnB,YAAQ,MAAM,sBAAsB,KAAK;AACzC,QAAI,OAAO,GAAG,EAAE,KAAK,EAAE,OAAO,MAAM,WAAW,wBAAwB,CAAC;AAAA,EAC1E;AACF;",
+  "names": []
+}

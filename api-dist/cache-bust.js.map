@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["../api/cache-bust.ts"],
+  "sourcesContent": ["import type { VercelRequest, VercelResponse } from '@vercel/node';\nimport { handleCors } from './_lib/cors';\nimport { BUILD_TIMESTAMP, BUILD_VERSION } from './_lib/config';\n\nexport default async function handler(req: VercelRequest, res: VercelResponse) {\n  if (handleCors(req, res)) return;\n  \n  if (req.method !== 'GET') {\n    return res.status(405).json({ error: 'Method not allowed' });\n  }\n  \n  const versionInfo = {\n    buildTimestamp: BUILD_TIMESTAMP,\n    version: BUILD_VERSION,\n    serverTime: Date.now(),\n    cacheClear: true,\n    message: 'Cache cleared - please reload',\n    userAgent: req.headers['user-agent'] || 'unknown'\n  };\n  \n  // Send with explicit no-cache for iOS\n  res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0');\n  res.setHeader('X-Force-Reload', 'true');\n  \n  res.json(versionInfo);\n}"],
+  "mappings": "AACA,SAAS,kBAAkB;AAC3B,SAAS,iBAAiB,qBAAqB;AAE/C,eAAO,QAA+B,KAAoB,KAAqB;AAC7E,MAAI,WAAW,KAAK,GAAG,EAAG;AAE1B,MAAI,IAAI,WAAW,OAAO;AACxB,WAAO,IAAI,OAAO,GAAG,EAAE,KAAK,EAAE,OAAO,qBAAqB,CAAC;AAAA,EAC7D;AAEA,QAAM,cAAc;AAAA,IAClB,gBAAgB;AAAA,IAChB,SAAS;AAAA,IACT,YAAY,KAAK,IAAI;AAAA,IACrB,YAAY;AAAA,IACZ,SAAS;AAAA,IACT,WAAW,IAAI,QAAQ,YAAY,KAAK;AAAA,EAC1C;AAGA,MAAI,UAAU,iBAAiB,gDAAgD;AAC/E,MAAI,UAAU,kBAAkB,MAAM;AAEtC,MAAI,KAAK,WAAW;AACtB;",
+  "names": []
+}
