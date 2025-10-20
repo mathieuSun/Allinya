@@ -1,0 +1,52 @@
+21:00:11.192 Running build in Washington, D.C., USA (East) – iad1
+21:00:11.201 Build machine configuration: 2 cores, 8 GB
+21:00:11.284 Cloning github.com/mathieuSun/allinya (Branch: main, Commit: 494f723)
+21:00:11.796 Previous build caches not available
+21:00:14.376 Cloning completed: 3.092s
+21:00:14.425 Found .vercelignore
+21:00:14.448 Removed 163 ignored files defined in .vercelignore
+21:00:14.448   /.git/config
+21:00:14.449   /.git/description
+21:00:14.450   /.git/FETCH_HEAD
+21:00:14.450   /.git/HEAD
+21:00:14.450   /.git/hooks/applypatch-msg.sample
+21:00:14.450   /.git/hooks/commit-msg.sample
+21:00:14.450   /.git/hooks/fsmonitor-watchman.sample
+21:00:14.451   /.git/hooks/post-update.sample
+21:00:14.451   /.git/hooks/pre-applypatch.sample
+21:00:14.451   /.git/hooks/pre-commit.sample
+21:00:14.781 Running "vercel build"
+21:00:15.208 Vercel CLI 48.2.9
+21:00:16.048 Running "install" command: `npm install`...
+21:00:21.454 npm warn deprecated node-domexception@1.0.0: Use your platform's native DOMException instead
+21:00:23.241 npm warn deprecated @esbuild-kit/core-utils@3.3.2: Merged into tsx: https://tsx.is
+21:00:23.242 npm warn deprecated @esbuild-kit/esm-loader@2.6.5: Merged into tsx: https://tsx.is
+21:00:31.901 
+21:00:31.902 added 847 packages, and audited 848 packages in 16s
+21:00:31.903 
+21:00:31.903 113 packages are looking for funding
+21:00:31.904   run `npm fund` for details
+21:00:31.956 
+21:00:31.957 12 vulnerabilities (3 low, 6 moderate, 2 high, 1 critical)
+21:00:31.957 
+21:00:31.957 To address issues that do not require attention, run:
+21:00:31.958   npm audit fix
+21:00:31.958 
+21:00:31.959 To address all issues (including breaking changes), run:
+21:00:31.959   npm audit fix --force
+21:00:31.960 
+21:00:31.960 Run `npm audit` for details.
+21:00:32.893 
+21:00:32.893 > rest-express@1.0.0 build
+21:00:32.894 > vite build && esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist
+21:00:32.894 
+21:00:33.169 [36mvite v5.4.20 [32mbuilding for production...[36m[39m
+21:00:33.204 [32m✓[39m 0 modules transformed.
+21:00:33.206 [31mx[39m Build failed in 12ms
+21:00:33.207 [31merror during build:
+21:00:33.207 [31mCould not resolve entry module "client/index.html".[31m
+21:00:33.207     at getRollupError (file:///vercel/path0/node_modules/rollup/dist/es/shared/parseAst.js:396:41)
+21:00:33.208     at error (file:///vercel/path0/node_modules/rollup/dist/es/shared/parseAst.js:392:42)
+21:00:33.208     at ModuleLoader.loadEntryModule (file:///vercel/path0/node_modules/rollup/dist/es/shared/node-entry.js:20086:20)
+21:00:33.208     at async Promise.all (index 0)[39m
+21:00:33.224 Error: Command "npm run build" exited with 1
