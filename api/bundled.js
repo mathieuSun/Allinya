@@ -1,5 +1,4 @@
 // Bundled API handler for Vercel - contains all code inline to avoid module resolution issues
-import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { z } from 'zod';
 import { randomUUID } from 'crypto';
 import { createRequire } from "module";
@@ -42,12 +41,12 @@ const supabaseConfig = {
   url: config.SUPABASE_URL,
   anonKey: config.SUPABASE_ANON_KEY,
   serviceRoleKey: config.SUPABASE_SERVICE_ROLE_KEY,
-} as const;
+};
 
 const agoraConfig = {
   appId: config.AGORA_APP_ID,
   appCertificate: config.AGORA_APP_CERTIFICATE,
-} as const;
+};
 
 // ==================== SUPABASE CLIENT ====================
 
@@ -1663,7 +1662,7 @@ const agoraTokenHandler = async (req: VercelRequest, res: VercelResponse) => {
 
 // ==================== MAIN HANDLER ====================
 
-export default async function handler(req: VercelRequest, res: VercelResponse) {
+export default async function handler(req, res) {
   const { url, method } = req;
   const path = url?.replace(/^\/api/, '') || '';
   
