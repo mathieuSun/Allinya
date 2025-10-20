@@ -1,0 +1,88 @@
+01:25:47.026 Running build in Portland, USA (West) – pdx1
+01:25:47.035 Build machine configuration: 4 cores, 8 GB
+01:25:47.070 Cloning github.com/mathieuSun/allinya (Branch: main, Commit: 339f608)
+01:25:48.779 Cloning completed: 1.709s
+01:25:48.826 Found .vercelignore
+01:25:48.835 Removed 58 ignored files defined in .vercelignore
+01:25:48.835   /.git/config
+01:25:48.835   /.git/description
+01:25:48.835   /.git/FETCH_HEAD
+01:25:48.835   /.git/HEAD
+01:25:48.835   /.git/hooks/applypatch-msg.sample
+01:25:48.835   /.git/hooks/commit-msg.sample
+01:25:48.835   /.git/hooks/fsmonitor-watchman.sample
+01:25:48.835   /.git/hooks/post-update.sample
+01:25:48.835   /.git/hooks/pre-applypatch.sample
+01:25:48.835   /.git/hooks/pre-commit.sample
+01:25:48.911 Restored build cache from previous deployment (7FPqJkcWEmUfN73R7z2WXus1FAMV)
+01:25:49.616 Running "vercel build"
+01:25:49.982 Vercel CLI 48.2.9
+01:25:50.649 Running "install" command: `npm install`...
+01:25:53.109 
+01:25:53.109 up to date, audited 866 packages in 2s
+01:25:53.109 
+01:25:53.110 116 packages are looking for funding
+01:25:53.110   run `npm fund` for details
+01:25:53.138 
+01:25:53.138 12 vulnerabilities (3 low, 6 moderate, 2 high, 1 critical)
+01:25:53.138 
+01:25:53.138 To address issues that do not require attention, run:
+01:25:53.138   npm audit fix
+01:25:53.139 
+01:25:53.139 To address all issues (including breaking changes), run:
+01:25:53.139   npm audit fix --force
+01:25:53.139 
+01:25:53.139 Run `npm audit` for details.
+01:25:53.529 [36mvite v5.4.20 [32mbuilding for production...[36m[39m
+01:25:53.586 transforming...
+01:25:53.847 Browserslist: browsers data (caniuse-lite) is 12 months old. Please run:
+01:25:53.847   npx update-browserslist-db@latest
+01:25:53.847   Why you should do it regularly: https://github.com/browserslist/update-db#readme
+01:25:54.624 
+01:25:54.625 A PostCSS plugin did not pass the `from` option to `postcss.parse`. This may cause imported assets to be incorrectly transformed. If you've recently added a PostCSS plugin that raised this warning, please contact the package author to fix the issue.
+01:26:00.955 [32m✓[39m 2069 modules transformed.
+01:26:01.753 rendering chunks...
+01:26:01.798 computing gzip size...
+01:26:01.847 [2m../dist/public/[22m[32mindex.html                 [39m[1m[2m    3.22 kB[22m[1m[22m[2m │ gzip:   1.34 kB[22m
+01:26:01.847 [2m../dist/public/[22m[2massets/[22m[35mindex-FlGkzCwQ.css  [39m[1m[2m   77.70 kB[22m[1m[22m[2m │ gzip:  12.55 kB[22m
+01:26:01.847 [2m../dist/public/[22m[2massets/[22m[36mindex-C2tmrim8.js   [39m[1m[33m2,088.29 kB[39m[22m[2m │ gzip: 594.42 kB[22m
+01:26:01.847 [33m
+01:26:01.847 (!) Some chunks are larger than 500 kB after minification. Consider:
+01:26:01.847 - Using dynamic import() to code-split the application
+01:26:01.847 - Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+01:26:01.848 - Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.[39m
+01:26:01.848 [32m✓ built in 8.29s[39m
+01:26:01.928 Installing dependencies...
+01:26:02.912 
+01:26:02.912 up to date in 928ms
+01:26:02.912 
+01:26:02.912 116 packages are looking for funding
+01:26:02.912   run `npm fund` for details
+01:26:03.124 Using TypeScript 5.6.3 (local user-provided)
+01:26:05.337 Using TypeScript 5.6.3 (local user-provided)
+01:26:05.846 Using TypeScript 5.6.3 (local user-provided)
+01:26:06.174 Using TypeScript 5.6.3 (local user-provided)
+01:26:06.514 Using TypeScript 5.6.3 (local user-provided)
+01:26:06.821 Using TypeScript 5.6.3 (local user-provided)
+01:26:07.127 Using TypeScript 5.6.3 (local user-provided)
+01:26:07.429 Using TypeScript 5.6.3 (local user-provided)
+01:26:07.735 Using TypeScript 5.6.3 (local user-provided)
+01:26:08.041 Using TypeScript 5.6.3 (local user-provided)
+01:26:08.360 Using TypeScript 5.6.3 (local user-provided)
+01:26:08.665 Using TypeScript 5.6.3 (local user-provided)
+01:26:08.965 Using TypeScript 5.6.3 (local user-provided)
+01:26:09.269 Using TypeScript 5.6.3 (local user-provided)
+01:26:09.592 Using TypeScript 5.6.3 (local user-provided)
+01:26:09.896 Using TypeScript 5.6.3 (local user-provided)
+01:26:10.219 Using TypeScript 5.6.3 (local user-provided)
+01:26:10.523 Using TypeScript 5.6.3 (local user-provided)
+01:26:10.830 Using TypeScript 5.6.3 (local user-provided)
+01:26:11.133 Using TypeScript 5.6.3 (local user-provided)
+01:26:11.436 Using TypeScript 5.6.3 (local user-provided)
+01:26:11.764 Using TypeScript 5.6.3 (local user-provided)
+01:26:12.537 Using TypeScript 5.6.3 (local user-provided)
+01:26:12.693 Using TypeScript 5.6.3 (local user-provided)
+01:26:14.118 Using TypeScript 5.6.3 (local user-provided)
+01:26:14.259 Build Completed in /vercel/output [24s]
+01:26:14.694 Deploying outputs...
+01:26:49.504 An unexpected error happened when running this build. We have been notified of the problem. This may be a transient error. If the problem persists, please contact Vercel Support https://vercel.com/help
