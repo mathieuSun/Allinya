@@ -3,6 +3,42 @@ import { handleCors } from '../_lib/cors.js';
 import { requireAuth } from '../_lib/auth.js';
 import { storage } from '../_lib/database.js';
 
+// 3 minutes 45 seconds timeout
+const SESSION_TIMEOUT_MS = 3 * 60 * 1000 + 45 * 1000;
+
+async function checkAndCancelExpiredSessions(sessions: any[]) {
+  const updatedSessions = [];
+  
+  for (const session of sessions) {
+    // Only check timeout for sessions in waiting phase
+    if (session.phase === 'waiting' && session.createdAt) {
+      const elapsed = Date.now() - new Date(session.createdAt).getTime();
+      
+      if (elapsed > SESSION_TIMEOUT_MS) {
+        // Cancel the session
+        await storage.updateSession(session.id, {
+          phase: 'ended',
+          endedAt: new Date().toISOString(),
+        });
+        
+        // Mark practitioner as available again
+        await storage.updatePractitioner(session.practitionerId, { 
+          inService: false 
+        });
+        
+        console.log(`Auto-canceled expired session ${session.id} after ${Math.floor(elapsed / 1000)}s`);
+        updatedSessions.push({ ...session, phase: 'ended', expired: true });
+      } else {
+        updatedSessions.push(session);
+      }
+    } else {
+      updatedSessions.push(session);
+    }
+  }
+  
+  return updatedSessions;
+}
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (handleCors(req, res)) return;
   
@@ -28,7 +64,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
       // Get all sessions for this practitioner (waiting and live phases)
       const sessions = await storage.getSessionsForPractitioner(userId);
-      return res.json(sessions);
+      
+      // Check and auto-cancel expired sessions
+      const updatedSessions = await checkAndCancelExpiredSessions(sessions);
+      
+      // Filter out expired sessions from the response
+      const activeSessions = updatedSessions.filter(s => s.phase !== 'ended' || !s.expired);
+      
+      return res.json(activeSessions);
     }
     
     // Otherwise, get a specific session by ID
