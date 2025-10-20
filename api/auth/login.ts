@@ -32,47 +32,25 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     // Get user profile
-    let profile = await storage.getProfile(authData.user.id);
+    const profile = await storage.getProfile(authData.user.id);
 
-    // Auto-create profile for existing Supabase Auth accounts without profiles
+    // CRITICAL: Profile MUST exist from signup - no auto-creation allowed
     if (!profile) {
-      console.log(`No profile found for ${email}, auto-creating based on email...`);
-      
-      // Determine role based on email
-      const role = email === 'chefmat2018@gmail.com' ? 'practitioner' : 
-                  email === 'cheekyma@hotmail.com' ? 'guest' : 
-                  'guest'; // Default to guest for any other email
-
-      // Extract display name from email
-      const displayName = email.split('@')[0].replace(/[0-9]/g, '').replace(/[._-]/g, ' ');
-
-      // Create profile
-      profile = await storage.createProfile({
-        id: authData.user.id,
-        role,
-        displayName: displayName.charAt(0).toUpperCase() + displayName.slice(1),
-        country: null,
-        bio: null,
-        avatarUrl: null,
-        galleryUrls: [],
-        videoUrl: null,
-        specialties: [],
+      console.error(`No profile found for ${email} - account not properly registered`);
+      return res.status(401).json({ 
+        error: 'Account not found. Please sign up first.' 
       });
-
-      // If practitioner, create practitioner record
-      if (role === 'practitioner') {
-        console.log('Creating practitioner record for', email);
-        await storage.createPractitioner({
-          userId: authData.user.id,
-          isOnline: false,
-          inService: false,
-          rating: "0.0",
-          reviewCount: 0,
-        });
-      }
-
-      console.log(`Profile auto-created for ${email} with role: ${role}`);
     }
+
+    // CRITICAL: Verify the account has a valid role
+    if (!profile.role || !['guest', 'practitioner'].includes(profile.role)) {
+      console.error(`Invalid role for ${email}: ${profile.role}`);
+      return res.status(401).json({ 
+        error: 'Invalid account configuration. Please contact support.' 
+      });
+    }
+
+    console.log(`Login successful for ${email} with role: ${profile.role}`);
 
     // Return user data and access token
     res.json({

@@ -77,10 +77,8 @@ export default function AuthPage() {
     setLoading(true);
 
     try {
-      await signUp(email, password);
-      
-      // Initialize role
-      await apiRequest('POST', '/api/auth/role-init', { role: selectedRole });
+      // CRITICAL: Pass the role directly to signUp - role separation enforced at signup
+      await signUp(email, password, selectedRole);
       
       toast({
         title: 'Account created!',

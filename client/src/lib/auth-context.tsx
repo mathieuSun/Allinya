@@ -8,7 +8,7 @@ interface AuthContextType {
   profile: RuntimeProfile | null;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<void>;
-  signUp: (email: string, password: string) => Promise<void>;
+  signUp: (email: string, password: string, role?: 'guest' | 'practitioner', fullName?: string) => Promise<void>;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
 }
@@ -114,13 +114,65 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [user]);
 
   const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) throw error;
+    // CRITICAL: Use our backend API to enforce role separation
+    const { data: { session } } = await supabase.auth.getSession();
+    
+    const response = await fetch('/api/auth/login', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(session?.access_token ? { 'Authorization': `Bearer ${session.access_token}` } : {})
+      },
+      body: JSON.stringify({ email, password })
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Login failed');
+    }
+
+    const data = await response.json();
+    
+    // Set the session in Supabase client
+    if (data.session) {
+      await supabase.auth.setSession(data.session);
+    }
+    
+    // Update profile immediately
+    setProfile(data.profile);
   };
 
-  const signUp = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signUp({ email, password });
-    if (error) throw error;
+  const signUp = async (email: string, password: string, role?: 'guest' | 'practitioner', fullName?: string) => {
+    // CRITICAL: Role MUST be provided for signup
+    if (!role) {
+      throw new Error('Role must be specified as either "guest" or "practitioner"');
+    }
+    
+    const response = await fetch('/api/auth/signup', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ 
+        email, 
+        password, 
+        role,
+        full_name: fullName || email.split('@')[0]
+      })
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Signup failed');
+    }
+
+    const data = await response.json();
+    
+    // Set the session in Supabase client
+    if (data.session) {
+      await supabase.auth.setSession(data.session);
+    }
+    
+    // Update profile immediately
+    setProfile(data.profile);
   };
 
   const signOut = async () => {
