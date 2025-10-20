@@ -1,8 +1,8 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { z } from 'zod';
-import { supabase } from '../_lib/supabase';
-import { storage } from '../_lib/storage';
-import { handleCors } from '../_lib/cors';
+import { supabase } from './supabase';
+import { storage } from './storage';
+import { handleCors } from './cors';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (handleCors(req, res)) return;
