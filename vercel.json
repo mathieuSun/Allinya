@@ -5,8 +5,108 @@
   "framework": "vite",
   "rewrites": [
     {
-      "source": "/api/:path*",
-      "destination": "/api"
+      "source": "/api/health",
+      "destination": "/api/health"
+    },
+    {
+      "source": "/api/version",
+      "destination": "/api/version"
+    },
+    {
+      "source": "/api/cache-bust",
+      "destination": "/api/cache-bust"
+    },
+    {
+      "source": "/api/auth/signup",
+      "destination": "/api/auth/signup"
+    },
+    {
+      "source": "/api/auth/login",
+      "destination": "/api/auth/login"
+    },
+    {
+      "source": "/api/auth/logout",
+      "destination": "/api/auth/logout"
+    },
+    {
+      "source": "/api/auth/user",
+      "destination": "/api/auth/user"
+    },
+    {
+      "source": "/api/profile",
+      "destination": "/api/profiles/get"
+    },
+    {
+      "source": "/api/profiles",
+      "destination": "/api/profiles/get"
+    },
+    {
+      "source": "/api/profiles/update",
+      "destination": "/api/profiles/update"
+    },
+    {
+      "source": "/api/practitioners",
+      "destination": "/api/practitioners/list"
+    },
+    {
+      "source": "/api/practitioners/online",
+      "destination": "/api/practitioners/list?online=true"
+    },
+    {
+      "source": "/api/practitioners/toggle-status",
+      "destination": "/api/practitioners/status"
+    },
+    {
+      "source": "/api/practitioners/:id",
+      "destination": "/api/practitioners/get?id=$id"
+    },
+    {
+      "source": "/api/sessions/start",
+      "destination": "/api/sessions/create"
+    },
+    {
+      "source": "/api/sessions/accept",
+      "destination": "/api/sessions/accept"
+    },
+    {
+      "source": "/api/sessions/acknowledge",
+      "destination": "/api/sessions/accept?action=acknowledge"
+    },
+    {
+      "source": "/api/sessions/ready",
+      "destination": "/api/sessions/accept?action=ready"
+    },
+    {
+      "source": "/api/sessions/reject",
+      "destination": "/api/sessions/accept?action=reject"
+    },
+    {
+      "source": "/api/sessions/end",
+      "destination": "/api/sessions/end"
+    },
+    {
+      "source": "/api/sessions/practitioner",
+      "destination": "/api/sessions/get?practitioner=true"
+    },
+    {
+      "source": "/api/sessions/:id",
+      "destination": "/api/sessions/get?id=$id"
+    },
+    {
+      "source": "/api/reviews/create",
+      "destination": "/api/reviews/create"
+    },
+    {
+      "source": "/api/reviews/:sessionId",
+      "destination": "/api/reviews/session?sessionId=$sessionId"
+    },
+    {
+      "source": "/api/uploads/url",
+      "destination": "/api/uploads/url"
+    },
+    {
+      "source": "/api/agora/token",
+      "destination": "/api/agora/token"
     },
     {
       "source": "/(.*)",
@@ -14,7 +114,7 @@
     }
   ],
   "functions": {
-    "api/index.js": {
+    "api/**/*.ts": {
       "maxDuration": 30
     }
   },
