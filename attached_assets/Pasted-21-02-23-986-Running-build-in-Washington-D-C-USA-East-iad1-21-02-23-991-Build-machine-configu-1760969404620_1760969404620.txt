@@ -1,0 +1,65 @@
+21:02:23.986 Running build in Washington, D.C., USA (East) – iad1
+21:02:23.991 Build machine configuration: 2 cores, 8 GB
+21:02:24.204 Cloning github.com/mathieuSun/allinya (Branch: main, Commit: 3942ade)
+21:02:24.686 Previous build caches not available
+21:02:28.135 Cloning completed: 3.931s
+21:02:28.252 Found .vercelignore
+21:02:28.305 Removed 86 ignored files defined in .vercelignore
+21:02:28.305   /.git/config
+21:02:28.306   /.git/description
+21:02:28.306   /.git/FETCH_HEAD
+21:02:28.306   /.git/HEAD
+21:02:28.306   /.git/hooks/applypatch-msg.sample
+21:02:28.306   /.git/hooks/commit-msg.sample
+21:02:28.306   /.git/hooks/fsmonitor-watchman.sample
+21:02:28.306   /.git/hooks/post-update.sample
+21:02:28.307   /.git/hooks/pre-applypatch.sample
+21:02:28.307   /.git/hooks/pre-commit.sample
+21:02:28.935 Running "vercel build"
+21:02:30.841 Vercel CLI 48.2.9
+21:02:31.946 Running "install" command: `npm install`...
+21:02:39.544 npm warn deprecated node-domexception@1.0.0: Use your platform's native DOMException instead
+21:02:41.746 npm warn deprecated @esbuild-kit/core-utils@3.3.2: Merged into tsx: https://tsx.is
+21:02:41.747 npm warn deprecated @esbuild-kit/esm-loader@2.6.5: Merged into tsx: https://tsx.is
+21:02:54.002 
+21:02:54.003 added 847 packages, and audited 848 packages in 22s
+21:02:54.004 
+21:02:54.004 113 packages are looking for funding
+21:02:54.005   run `npm fund` for details
+21:02:54.044 
+21:02:54.045 12 vulnerabilities (3 low, 6 moderate, 2 high, 1 critical)
+21:02:54.045 
+21:02:54.046 To address issues that do not require attention, run:
+21:02:54.046   npm audit fix
+21:02:54.047 
+21:02:54.047 To address all issues (including breaking changes), run:
+21:02:54.050   npm audit fix --force
+21:02:54.050 
+21:02:54.051 Run `npm audit` for details.
+21:02:54.606 
+21:02:54.606 > rest-express@1.0.0 build
+21:02:54.607 > vite build && esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist
+21:02:54.607 
+21:02:55.113 [36mvite v5.4.20 [32mbuilding for production...[36m[39m
+21:02:55.268 transforming...
+21:02:55.595 Browserslist: browsers data (caniuse-lite) is 12 months old. Please run:
+21:02:55.595   npx update-browserslist-db@latest
+21:02:55.595   Why you should do it regularly: https://github.com/browserslist/update-db#readme
+21:02:57.067 
+21:02:57.068 A PostCSS plugin did not pass the `from` option to `postcss.parse`. This may cause imported assets to be incorrectly transformed. If you've recently added a PostCSS plugin that raised this warning, please contact the package author to fix the issue.
+21:03:08.492 [32m✓[39m 2067 modules transformed.
+21:03:09.761 rendering chunks...
+21:03:09.824 computing gzip size...
+21:03:09.891 [2m../dist/public/[22m[32mindex.html                 [39m[1m[2m    3.22 kB[22m[1m[22m[2m │ gzip:   1.34 kB[22m
+21:03:09.892 [2m../dist/public/[22m[2massets/[22m[35mindex-CbZrUXKo.css  [39m[1m[2m   75.85 kB[22m[1m[22m[2m │ gzip:  12.31 kB[22m
+21:03:09.892 [2m../dist/public/[22m[2massets/[22m[36mindex-B0aeOwNg.js   [39m[1m[33m2,088.57 kB[39m[22m[2m │ gzip: 595.14 kB[22m
+21:03:09.893 [33m
+21:03:09.893 (!) Some chunks are larger than 500 kB after minification. Consider:
+21:03:09.903 - Using dynamic import() to code-split the application
+21:03:09.904 - Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+21:03:09.904 - Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.[39m
+21:03:09.907 [32m✓ built in 14.75s[39m
+21:03:09.978 ✘ [ERROR] The entry point "server/index.ts" cannot be marked as external
+21:03:09.979 
+21:03:09.979 1 error
+21:03:09.997 Error: Command "npm run build" exited with 1
