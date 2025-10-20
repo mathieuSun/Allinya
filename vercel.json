@@ -15,8 +15,7 @@
   ],
   "functions": {
     "api/**/*.ts": {
-      "maxDuration": 30,
-      "runtime": "nodejs20.x"
+      "maxDuration": 30
     }
   },
   "env": {
