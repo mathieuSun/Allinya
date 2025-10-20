@@ -11,6 +11,7 @@ import { Bell, Clock, Video, Check, X, Loader2, Power, PowerOff } from 'lucide-r
 import { supabase } from '@/lib/supabase';
 import { apiRequest, queryClient } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
+import { SessionCountdown } from '@/components/SessionCountdown';
 import type { SessionWithParticipants } from '@shared/schema';
 
 export default function PractitionerDashboard() {
@@ -252,6 +253,15 @@ export default function PractitionerDashboard() {
                           <div className="flex items-center gap-2 text-sm text-muted-foreground">
                             <Clock className="h-3 w-3" />
                             {Math.floor(session.liveSeconds / 60)} minute session
+                          </div>
+                          <div className="mt-1">
+                            <SessionCountdown 
+                              sessionCreatedAt={session.createdAt || new Date().toISOString()} 
+                              onExpired={() => {
+                                // Refresh sessions to remove expired ones
+                                queryClient.invalidateQueries({ queryKey: ['/api/sessions/practitioner'] });
+                              }}
+                            />
                           </div>
                         </div>
                       </div>
