@@ -49,26 +49,29 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       });
     }
 
-    // Create session
+    // Create session - Room timer starts immediately
     const sessionId = randomUUID();
     const agoraChannel = `sess_${sessionId.substring(0, 8)}`;
+    const now = new Date().toISOString();
     
-    console.log('Creating session with ID:', sessionId);
+    console.log('Creating session with ID:', sessionId, 'Duration:', liveSeconds, 'seconds');
     
     const session = await storage.createSession({
       practitionerId: practitionerId,
       guestId: guestId,
-      phase: 'waiting',
+      phase: 'room_timer', // Start in room_timer phase immediately
       liveSeconds: liveSeconds,
+      waitingSeconds: liveSeconds, // Room timer duration is the waiting time
+      waitingStartedAt: now, // Room timer starts NOW
       practitionerReady: false,
       guestReady: false,
       acknowledgedPractitioner: false,
       agoraChannel: agoraChannel,
     });
 
-    console.log('Session created:', session);
+    console.log('Session created - Room timer started:', session);
 
-    // Mark practitioner as in service
+    // Mark practitioner as IN SERVICE immediately
     await storage.updatePractitioner(practitionerId, { inService: true });
 
     res.json({ sessionId: session.id });

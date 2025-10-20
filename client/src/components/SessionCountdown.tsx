@@ -1,25 +1,30 @@
 import { useState, useEffect } from 'react';
-import { AlertCircle } from 'lucide-react';
+import { AlertCircle, Clock } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 
 interface SessionCountdownProps {
-  sessionCreatedAt: string;
+  sessionStartedAt: string;
+  sessionDurationSeconds: number;
   onExpired?: () => void;
+  label?: string;
 }
 
-// 3 minutes 45 seconds in milliseconds
-const SESSION_TIMEOUT_MS = 3 * 60 * 1000 + 45 * 1000;
-
-export function SessionCountdown({ sessionCreatedAt, onExpired }: SessionCountdownProps) {
+export function SessionCountdown({ 
+  sessionStartedAt, 
+  sessionDurationSeconds, 
+  onExpired, 
+  label = "Room timer" 
+}: SessionCountdownProps) {
   const [timeRemaining, setTimeRemaining] = useState<number>(0);
   const [isExpired, setIsExpired] = useState(false);
 
   useEffect(() => {
     const calculateTimeRemaining = () => {
-      const createdTime = new Date(sessionCreatedAt).getTime();
+      const startTime = new Date(sessionStartedAt).getTime();
       const now = Date.now();
-      const elapsed = now - createdTime;
-      const remaining = SESSION_TIMEOUT_MS - elapsed;
+      const elapsed = now - startTime;
+      const sessionDurationMs = sessionDurationSeconds * 1000;
+      const remaining = sessionDurationMs - elapsed;
       
       if (remaining <= 0) {
         setIsExpired(true);
@@ -45,7 +50,7 @@ export function SessionCountdown({ sessionCreatedAt, onExpired }: SessionCountdo
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [sessionCreatedAt, onExpired]);
+  }, [sessionStartedAt, sessionDurationSeconds, onExpired]);
 
   const formatTime = (ms: number) => {
     const totalSeconds = Math.floor(ms / 1000);
@@ -56,8 +61,9 @@ export function SessionCountdown({ sessionCreatedAt, onExpired }: SessionCountdo
 
   const getUrgencyLevel = () => {
     if (isExpired) return 'expired';
-    if (timeRemaining < 30000) return 'critical'; // Less than 30 seconds
-    if (timeRemaining < 60000) return 'warning'; // Less than 1 minute
+    const percentRemaining = (timeRemaining / (sessionDurationSeconds * 1000)) * 100;
+    if (percentRemaining < 10) return 'critical'; // Less than 10% time remaining
+    if (percentRemaining < 25) return 'warning'; // Less than 25% time remaining
     return 'normal';
   };
 
@@ -65,23 +71,21 @@ export function SessionCountdown({ sessionCreatedAt, onExpired }: SessionCountdo
 
   return (
     <div className="flex items-center gap-2">
-      {urgency === 'expired' ? (
+      {isExpired ? (
         <Badge variant="destructive" className="animate-pulse">
           <AlertCircle className="h-3 w-3 mr-1" />
-          Session Expired
+          {label} Expired
         </Badge>
       ) : (
         <>
-          <span className="text-sm text-muted-foreground">Time to accept:</span>
+          <Clock className="h-3 w-3 text-muted-foreground" />
+          <span className="text-sm text-muted-foreground">{label}:</span>
           <Badge 
             variant={urgency === 'critical' ? 'destructive' : urgency === 'warning' ? 'secondary' : 'outline'}
             className={urgency === 'critical' ? 'animate-pulse' : ''}
           >
             {formatTime(timeRemaining)}
           </Badge>
-          {urgency === 'critical' && (
-            <AlertCircle className="h-4 w-4 text-destructive animate-pulse" />
-          )}
         </>
       )}
     </div>

@@ -103,10 +103,15 @@ export default function ExplorePage() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {practitioners.map((practitioner) => {
               const isOnline = practitioner.isOnline;
+              const isInService = practitioner.inService;
+              const isAvailable = isOnline && !isInService;
+              
               return (
               <Card
                 key={practitioner.userId}
-                className={`hover-elevate transition-all cursor-pointer overflow-hidden ${!isOnline ? 'opacity-50 grayscale' : ''}`}
+                className={`hover-elevate transition-all cursor-pointer overflow-hidden ${
+                  isInService ? 'ring-2 ring-orange-500' : !isOnline ? 'opacity-50 grayscale' : ''
+                }`}
                 onClick={() => setLocation(`/p/${practitioner.userId}`)}
                 data-testid={`card-practitioner-${practitioner.userId}`}
               >
@@ -115,7 +120,7 @@ export default function ExplorePage() {
                     <img
                       src={practitioner.profile.avatarUrl}
                       alt={practitioner.profile.displayName}
-                      className="w-full h-full object-cover"
+                      className={`w-full h-full object-cover ${isInService ? 'saturate-150' : ''}`}
                     />
                   ) : (
                     <div className="w-full h-full bg-muted flex items-center justify-center">
@@ -127,10 +132,17 @@ export default function ExplorePage() {
                     </div>
                   )}
                   <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
-                  {isOnline && (
+                  {isInService && (
+                    <div className="absolute top-4 right-4">
+                      <Badge className="bg-orange-500 text-white animate-pulse" data-testid="badge-in-service">
+                        In Service
+                      </Badge>
+                    </div>
+                  )}
+                  {!isInService && isOnline && (
                     <div className="absolute top-4 right-4">
                       <Badge className="bg-green-500 text-white" data-testid="badge-online">
-                        Online
+                        Available
                       </Badge>
                     </div>
                   )}
@@ -169,11 +181,11 @@ export default function ExplorePage() {
                 </div>
                 <CardContent className="p-6">
                   <Button 
-                    className="w-full" 
-                    disabled={!isOnline}
+                    className={`w-full ${isInService ? 'bg-orange-500 hover:bg-orange-500' : ''}`}
+                    disabled={!isAvailable}
                     data-testid={`button-start-${practitioner.userId}`}
                   >
-                    {isOnline ? 'Start Session' : 'Offline'}
+                    {isInService ? 'Currently In Service' : isOnline ? 'Start Session' : 'Offline'}
                   </Button>
                 </CardContent>
               </Card>

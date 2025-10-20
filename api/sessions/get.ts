@@ -3,19 +3,20 @@ import { handleCors } from '../_lib/cors.js';
 import { requireAuth } from '../_lib/auth.js';
 import { storage } from '../_lib/database.js';
 
-// 3 minutes 45 seconds timeout
-const SESSION_TIMEOUT_MS = 3 * 60 * 1000 + 45 * 1000;
-
-async function checkAndCancelExpiredSessions(sessions: any[]) {
+// Check if room timer has expired and end session if needed
+async function checkAndEndExpiredRoomTimers(sessions: any[]) {
   const updatedSessions = [];
   
   for (const session of sessions) {
-    // Only check timeout for sessions in waiting phase
-    if (session.phase === 'waiting' && session.createdAt) {
-      const elapsed = Date.now() - new Date(session.createdAt).getTime();
+    // Only check room_timer phase sessions
+    if (session.phase === 'room_timer' && session.waitingStartedAt && session.waitingSeconds) {
+      const startTime = new Date(session.waitingStartedAt).getTime();
+      const now = Date.now();
+      const elapsed = now - startTime;
+      const roomTimerDurationMs = session.waitingSeconds * 1000;
       
-      if (elapsed > SESSION_TIMEOUT_MS) {
-        // Cancel the session
+      if (elapsed > roomTimerDurationMs) {
+        // Room timer expired - end the session
         await storage.updateSession(session.id, {
           phase: 'ended',
           endedAt: new Date().toISOString(),
@@ -26,8 +27,8 @@ async function checkAndCancelExpiredSessions(sessions: any[]) {
           inService: false 
         });
         
-        console.log(`Auto-canceled expired session ${session.id} after ${Math.floor(elapsed / 1000)}s`);
-        updatedSessions.push({ ...session, phase: 'ended', expired: true });
+        console.log(`Room timer expired for session ${session.id} after ${Math.floor(elapsed / 1000)}s`);
+        updatedSessions.push({ ...session, phase: 'ended', roomTimerExpired: true });
       } else {
         updatedSessions.push(session);
       }
@@ -62,14 +63,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         return res.status(403).json({ error: 'Only practitioners can access this endpoint' });
       }
 
-      // Get all sessions for this practitioner (waiting and live phases)
+      // Get all sessions for this practitioner (room_timer and live phases)
       const sessions = await storage.getSessionsForPractitioner(userId);
       
-      // Check and auto-cancel expired sessions
-      const updatedSessions = await checkAndCancelExpiredSessions(sessions);
+      // Check and end expired room timers
+      const updatedSessions = await checkAndEndExpiredRoomTimers(sessions);
       
       // Filter out expired sessions from the response
-      const activeSessions = updatedSessions.filter(s => s.phase !== 'ended' || !s.expired);
+      const activeSessions = updatedSessions.filter(s => s.phase !== 'ended' || !s.roomTimerExpired);
       
       return res.json(activeSessions);
     }

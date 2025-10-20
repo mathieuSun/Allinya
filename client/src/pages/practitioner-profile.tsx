@@ -8,10 +8,10 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Star, Loader2, Clock, User2, ImageIcon, VideoIcon } from 'lucide-react';
+import { Star, Loader2, Clock, User2, ImageIcon, VideoIcon, AlertCircle } from 'lucide-react';
 import { apiRequest, queryClient } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
-import type { RuntimeProfile } from '@shared/schema';
+import type { RuntimeProfile, PractitionerWithProfile } from '@shared/schema';
 
 const DURATION_OPTIONS = [
   { value: 300, label: '5 minutes', minutes: 5 },
@@ -30,11 +30,17 @@ export default function PractitionerProfilePage() {
 
   const practitionerId = params?.id;
 
-  // Fetch practitioner profile
-  const { data: practitioner, isLoading } = useQuery<RuntimeProfile>({
+  // Fetch practitioner profile with status
+  const { data: practitionerData, isLoading } = useQuery<PractitionerWithProfile>({
     queryKey: [`/api/practitioners/${practitionerId}`],
     enabled: !!practitionerId,
+    refetchInterval: 5000, // Check status every 5 seconds
   });
+  
+  const practitioner = practitionerData?.profile;
+  const isOnline = practitionerData?.isOnline || false;
+  const isInService = practitionerData?.inService || false;
+  const isAvailable = isOnline && !isInService;
 
   // Start session mutation
   const startSessionMutation = useMutation({
@@ -216,11 +222,17 @@ export default function PractitionerProfilePage() {
       {/* Sticky CTA */}
       <div className="fixed bottom-0 left-0 right-0 border-t border-border backdrop-blur-lg bg-background/80 p-4">
         <div className="max-w-4xl mx-auto">
+          {isInService && (
+            <div className="mb-2 flex items-center justify-center gap-2 text-orange-500">
+              <AlertCircle className="h-5 w-5" />
+              <span className="font-medium">This practitioner is currently in a session</span>
+            </div>
+          )}
           <Button
             size="lg"
-            className="w-full text-lg"
+            className={`w-full text-lg ${isInService ? 'bg-orange-500 hover:bg-orange-500' : ''}`}
             onClick={handleStartClick}
-            disabled={startSessionMutation.isPending}
+            disabled={!isAvailable || startSessionMutation.isPending}
             data-testid="button-start-session"
           >
             {startSessionMutation.isPending ? (
@@ -228,6 +240,10 @@ export default function PractitionerProfilePage() {
                 <Loader2 className="mr-2 h-5 w-5 animate-spin" />
                 Starting Session...
               </>
+            ) : isInService ? (
+              'Currently In Service'
+            ) : !isOnline ? (
+              'Practitioner Offline'
             ) : (
               'Start Session'
             )}

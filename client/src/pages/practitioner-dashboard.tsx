@@ -254,15 +254,19 @@ export default function PractitionerDashboard() {
                             <Clock className="h-3 w-3" />
                             {Math.floor(session.liveSeconds / 60)} minute session
                           </div>
-                          <div className="mt-1">
-                            <SessionCountdown 
-                              sessionCreatedAt={session.createdAt || new Date().toISOString()} 
-                              onExpired={() => {
-                                // Refresh sessions to remove expired ones
-                                queryClient.invalidateQueries({ queryKey: ['/api/sessions/practitioner'] });
-                              }}
-                            />
-                          </div>
+                          {session.phase === 'room_timer' && session.waitingStartedAt && (
+                            <div className="mt-1">
+                              <SessionCountdown 
+                                sessionStartedAt={session.waitingStartedAt}
+                                sessionDurationSeconds={session.waitingSeconds || session.liveSeconds}
+                                label="Room timer"
+                                onExpired={() => {
+                                  // Refresh sessions when room timer expires
+                                  queryClient.invalidateQueries({ queryKey: ['/api/sessions/practitioner'] });
+                                }}
+                              />
+                            </div>
+                          )}
                         </div>
                       </div>
                       <div className="flex gap-2">
