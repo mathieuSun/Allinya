@@ -95,10 +95,8 @@ export default function PractitionerDashboard() {
   // Toggle online status
   const toggleOnlineMutation = useMutation({
     mutationFn: async (online: boolean) => {
-      // Use the user ID from the profile since we're already authenticated
-      const userId = profile?.id;
-      if (!userId) throw new Error('User ID not found');
-      return apiRequest('PATCH', `/api/practitioners/${userId}/status`, { isOnline: online });
+      // Use the PUT endpoint at /api/practitioners/status 
+      return apiRequest('PUT', '/api/practitioners/status', { isOnline: online });
     },
     onSuccess: (data: any) => {
       queryClient.invalidateQueries({ queryKey: ['/api/practitioners/status'] });

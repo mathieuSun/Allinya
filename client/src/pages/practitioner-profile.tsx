@@ -30,9 +30,9 @@ export default function PractitionerProfilePage() {
 
   const practitionerId = params?.id;
 
-  // Fetch practitioner profile with status
+  // Fetch practitioner profile with status (using query parameter)
   const { data: practitionerData, isLoading } = useQuery<PractitionerWithProfile>({
-    queryKey: [`/api/practitioners/${practitionerId}`],
+    queryKey: [`/api/practitioners/get?id=${practitionerId}`],
     enabled: !!practitionerId,
     refetchInterval: 5000, // Check status every 5 seconds
   });
