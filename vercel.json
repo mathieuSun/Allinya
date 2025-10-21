@@ -1,5 +1,5 @@
 {
-  "buildCommand": "npm run build",
+  "buildCommand": "npm run build && node build-for-vercel.js",
   "outputDirectory": "dist/public",
   "installCommand": "npm install",
   "framework": "vite",
@@ -113,11 +113,6 @@
       "destination": "/index.html"
     }
   ],
-  "functions": {
-    "api/**/*.ts": {
-      "maxDuration": 60
-    }
-  },
   "env": {
     "NODE_ENV": "production"
   },
