@@ -15,34 +15,30 @@ export const storage = {
       return undefined;
     }
     
-    return toCamelCase(data);
+    return data;
   },
 
   async createProfile(profile: any) {
-    const snakeCaseProfile = toSnakeCase(profile);
-    
     const { data, error } = await supabase
       .from('profiles')
       .insert({
-        ...snakeCaseProfile,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
+        ...profile,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
       })
       .select()
       .single();
     
     if (error) throw error;
-    return toCamelCase(data);
+    return data;
   },
 
   async updateProfile(id: string, updates: any) {
-    const snakeCaseUpdates = toSnakeCase(updates);
-    
     const { data, error} = await supabase
       .from('profiles')
       .update({
-        ...snakeCaseUpdates,
-        updated_at: new Date().toISOString()
+        ...updates,
+        updatedAt: new Date().toISOString()
       })
       .eq('id', id)
       .select()
@@ -52,14 +48,14 @@ export const storage = {
       console.error('Supabase update error:', error);
       throw error;
     }
-    return toCamelCase(data);
+    return data;
   },
 
   async getPractitioner(userId: string) {
     const { data, error } = await supabase
       .from('practitioners')
       .select('*')
-      .eq('user_id', userId)
+      .eq('"userId"', userId)
       .single();
     
     if (error) {
@@ -67,36 +63,32 @@ export const storage = {
       return undefined;
     }
     
-    return toCamelCase(data);
+    return data;
   },
 
   async createPractitioner(practitioner: any) {
-    const snakeCasePractitioner = toSnakeCase(practitioner);
-    
     const { data, error } = await supabase
       .from('practitioners')
       .insert({
-        ...snakeCasePractitioner,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
+        ...practitioner,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
       })
       .select()
       .single();
     
     if (error) throw error;
-    return toCamelCase(data);
+    return data;
   },
 
   async updatePractitioner(userId: string, updates: any) {
-    const snakeCaseUpdates = toSnakeCase(updates);
-    
     const { data, error } = await supabase
       .from('practitioners')
       .update({
-        ...snakeCaseUpdates,
-        updated_at: new Date().toISOString()
+        ...updates,
+        updatedAt: new Date().toISOString()
       })
-      .eq('user_id', userId)
+      .eq('"userId"', userId)
       .select()
       .single();
     
@@ -104,14 +96,14 @@ export const storage = {
       console.error('Supabase updatePractitioner error:', error);
       throw error;
     }
-    return toCamelCase(data);
+    return data;
   },
 
   async getAllPractitioners() {
     const { data: practitioners, error: practError } = await supabase
       .from('practitioners')
       .select('*')
-      .order('is_online', { ascending: false })
+      .order('"isOnline"', { ascending: false })
       .order('rating', { ascending: false });
     
     if (practError) {
@@ -124,7 +116,7 @@ export const storage = {
     }
     
     const userIds = practitioners
-      .map((p: any) => p.user_id)
+      .map((p: any) => p.userId)
       .filter((id: any) => id != null && id !== 'undefined');
     
     if (userIds.length === 0) {
@@ -143,10 +135,10 @@ export const storage = {
     
     const profileMap = new Map((profiles || []).map((p: any) => [p.id, p]));
     const result = practitioners
-      .filter((pract: any) => pract.user_id != null && pract.user_id !== 'undefined')
+      .filter((pract: any) => pract.userId != null && pract.userId !== 'undefined')
       .map((pract: any) => ({
-        ...toCamelCase(pract),
-        profile: toCamelCase(profileMap.get(pract.user_id) || {})
+        ...pract,
+        profile: profileMap.get(pract.userId) || {}
       }));
     
     return result;
@@ -156,7 +148,7 @@ export const storage = {
     const { data: practitioners, error: practError } = await supabase
       .from('practitioners')
       .select('*')
-      .eq('is_online', true);
+      .eq('"isOnline"', true);
     
     if (practError) {
       console.error('Error fetching online practitioners:', practError);
@@ -168,7 +160,7 @@ export const storage = {
     }
     
     const userIds = practitioners
-      .map((p: any) => p.user_id)
+      .map((p: any) => p.userId)
       .filter((id: any) => id != null);
     
     if (userIds.length === 0) {
@@ -187,10 +179,10 @@ export const storage = {
     
     const profileMap = new Map((profiles || []).map((p: any) => [p.id, p]));
     const result = practitioners
-      .filter((pract: any) => pract.user_id != null)
+      .filter((pract: any) => pract.userId != null)
       .map((pract: any) => ({
-        ...toCamelCase(pract),
-        profile: toCamelCase(profileMap.get(pract.user_id) || {})
+        ...pract,
+        profile: profileMap.get(pract.userId) || {}
       }));
     
     return result;
@@ -221,11 +213,11 @@ export const storage = {
       return undefined;
     }
     
-    const guestProfile = await this.getProfile(session.guest_id);
-    const practitionerData = await this.getPractitionerWithProfile(session.practitioner_id);
+    const guestProfile = await this.getProfile(session.guestId);
+    const practitionerData = await this.getPractitionerWithProfile(session.practitionerId);
     
     return {
-      ...toCamelCase(session),
+      ...session,
       guest: guestProfile,
       practitioner: practitionerData
     };
@@ -235,8 +227,8 @@ export const storage = {
     const { data: sessions, error } = await supabase
       .from('sessions')
       .select('*')
-      .eq('practitioner_id', practitionerId)
-      .order('created_at', { ascending: false });
+      .eq('"practitionerId"', practitionerId)
+      .order('"createdAt"', { ascending: false });
     
     if (error) {
       console.error('Error fetching sessions:', error);
@@ -245,11 +237,11 @@ export const storage = {
     
     const sessionsWithParticipants = await Promise.all(
       sessions.map(async (session: any) => {
-        const guestProfile = await this.getProfile(session.guest_id);
-        const practitionerData = await this.getPractitionerWithProfile(session.practitioner_id);
+        const guestProfile = await this.getProfile(session.guestId);
+        const practitionerData = await this.getPractitionerWithProfile(session.practitionerId);
         
         return {
-          ...toCamelCase(session),
+          ...session,
           guest: guestProfile,
           practitioner: practitionerData
         };
@@ -263,43 +255,39 @@ export const storage = {
     const { data, error } = await supabase
       .from('sessions')
       .select('*')
-      .eq('practitioner_id', practitionerId)
+      .eq('"practitionerId"', practitionerId)
       .in('phase', ['waiting', 'room_timer', 'live'])
-      .order('created_at', { ascending: false });
+      .order('"createdAt"', { ascending: false });
     
     if (error) {
       console.error('Error fetching active sessions for practitioner:', error);
       return [];
     }
     
-    return (data || []).map(toCamelCase);
+    return data || [];
   },
 
   async createSession(session: any) {
-    const snakeCaseSession = toSnakeCase(session);
-    
     const { data, error } = await supabase
       .from('sessions')
       .insert({
-        ...snakeCaseSession,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
+        ...session,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
       })
       .select()
       .single();
     
     if (error) throw error;
-    return toCamelCase(data);
+    return data;
   },
 
   async updateSession(id: string, updates: any) {
-    const snakeCaseUpdates = toSnakeCase(updates);
-    
     const { data, error } = await supabase
       .from('sessions')
       .update({
-        ...snakeCaseUpdates,
-        updated_at: new Date().toISOString()
+        ...updates,
+        updatedAt: new Date().toISOString()
       })
       .eq('id', id)
       .select()
@@ -309,36 +297,34 @@ export const storage = {
       console.error('Supabase updateSession error:', error);
       throw error;
     }
-    return toCamelCase(data);
+    return data;
   },
 
   async createReview(review: any) {
-    const snakeCaseReview = toSnakeCase(review);
-    
     const { data, error } = await supabase
       .from('reviews')
       .insert({
-        ...snakeCaseReview,
-        created_at: new Date().toISOString()
+        ...review,
+        createdAt: new Date().toISOString()
       })
       .select()
       .single();
     
     if (error) throw error;
-    return toCamelCase(data);
+    return data;
   },
 
   async getSessionReviews(sessionId: string) {
     const { data, error } = await supabase
       .from('reviews')
       .select('*')
-      .eq('session_id', sessionId);
+      .eq('"sessionId"', sessionId);
     
     if (error) {
       console.error('Error fetching reviews:', error);
       return [];
     }
     
-    return (data || []).map(toCamelCase);
+    return data || [];
   }
 };

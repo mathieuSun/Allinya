@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["../../api/_lib/auth.ts"],
-  "sourcesContent": ["import type { VercelRequest, VercelResponse } from '@vercel/node';\nimport { supabase } from './supabase';\n\nexport interface AuthContext {\n  userId: string;\n}\n\nexport async function requireAuth(\n  req: VercelRequest,\n  res: VercelResponse\n): Promise<AuthContext | null> {\n  try {\n    const authHeader = req.headers.authorization;\n    \n    if (!authHeader || typeof authHeader !== 'string' || !authHeader.startsWith('Bearer ')) {\n      res.status(401).json({ error: 'Unauthorized' });\n      return null;\n    }\n\n    const token = authHeader.substring(7);\n    \n    const { data: { user }, error } = await supabase.auth.getUser(token);\n\n    if (error || !user) {\n      res.status(401).json({ error: 'Invalid token' });\n      return null;\n    }\n\n    return { userId: user.id };\n  } catch (error) {\n    res.status(401).json({ error: 'Unauthorized' });\n    return null;\n  }\n}"],
-  "mappings": "AACA,SAAS,gBAAgB;AAMzB,eAAsB,YACpB,KACA,KAC6B;AAC7B,MAAI;AACF,UAAM,aAAa,IAAI,QAAQ;AAE/B,QAAI,CAAC,cAAc,OAAO,eAAe,YAAY,CAAC,WAAW,WAAW,SAAS,GAAG;AACtF,UAAI,OAAO,GAAG,EAAE,KAAK,EAAE,OAAO,eAAe,CAAC;AAC9C,aAAO;AAAA,IACT;AAEA,UAAM,QAAQ,WAAW,UAAU,CAAC;AAEpC,UAAM,EAAE,MAAM,EAAE,KAAK,GAAG,MAAM,IAAI,MAAM,SAAS,KAAK,QAAQ,KAAK;AAEnE,QAAI,SAAS,CAAC,MAAM;AAClB,UAAI,OAAO,GAAG,EAAE,KAAK,EAAE,OAAO,gBAAgB,CAAC;AAC/C,aAAO;AAAA,IACT;AAEA,WAAO,EAAE,QAAQ,KAAK,GAAG;AAAA,EAC3B,SAAS,OAAO;AACd,QAAI,OAAO,GAAG,EAAE,KAAK,EAAE,OAAO,eAAe,CAAC;AAC9C,WAAO;AAAA,EACT;AACF;",
-  "names": []
-}

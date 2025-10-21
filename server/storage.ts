@@ -164,10 +164,11 @@ export class DbStorage implements IStorage {
   }
 
   async getPractitioner(userId: string): Promise<RuntimePractitioner | undefined> {
+    // PostgREST automatically converts camelCase to snake_case, so use snake_case in queries
     const { data, error } = await supabase
       .from('practitioners')
       .select('*')
-      .eq('userId', userId)
+      .eq('user_id', userId)
       .single();
     
     if (error) {
@@ -175,7 +176,7 @@ export class DbStorage implements IStorage {
       return undefined;
     }
     
-    // Convert any snake_case fields to camelCase
+    // Convert snake_case response to camelCase
     return snakeToCamel(data) as RuntimePractitioner;
   }
 
@@ -196,13 +197,16 @@ export class DbStorage implements IStorage {
   }
 
   async updatePractitioner(userId: string, updates: Partial<RuntimePractitioner>): Promise<RuntimePractitioner> {
+    // Convert camelCase updates to snake_case for PostgREST
+    const snakeUpdates = camelToSnake(updates);
+    
     const { data, error } = await supabase
       .from('practitioners')
       .update({
-        ...updates,
-        updatedAt: new Date().toISOString()
+        ...snakeUpdates,
+        updated_at: new Date().toISOString()
       })
-      .eq('userId', userId)
+      .eq('user_id', userId)
       .select()
       .single();
     
@@ -216,11 +220,11 @@ export class DbStorage implements IStorage {
 
   async getAllPractitioners(): Promise<PractitionerWithProfile[]> {
     try {
-      // PostgREST schema cache workaround: Fetch practitioners and profiles separately
+      // PostgREST automatically converts camelCase to snake_case, so use snake_case in queries
       const { data: practitioners, error: practError } = await supabase
         .from('practitioners')
         .select('*')
-        .order('isOnline', { ascending: false, nullsFirst: false })
+        .order('is_online', { ascending: false, nullsFirst: false })
         .order('rating', { ascending: false });
       
       if (practError) {
@@ -236,8 +240,9 @@ export class DbStorage implements IStorage {
       }
       
       // Get all user IDs (filter out any undefined/null values)
+      // PostgREST returns snake_case keys even though DB has camelCase
       const userIds = practitioners
-        .map(p => p.userId)
+        .map(p => p.user_id)
         .filter(id => id != null && id !== 'undefined');
       
       if (userIds.length === 0) {
@@ -256,14 +261,18 @@ export class DbStorage implements IStorage {
         throw profileError;
       }
       
-      // Manually join the data
-      const profileMap = new Map((profiles || []).map(p => [p.id, p]));
+      // Manually join the data - convert profiles to camelCase too
+      const profileMap = new Map((profiles || []).map(p => [p.id, snakeToCamel(p)]));
       const result = practitioners
-        .filter(pract => pract.userId != null && pract.userId !== 'undefined')
-        .map(pract => ({
-          ...pract,
-          profile: profileMap.get(pract.userId) || {}
-        }));
+        .filter(pract => pract.user_id != null && pract.user_id !== 'undefined')
+        .map(pract => {
+          // Convert snake_case response to camelCase
+          const practCamelCase = snakeToCamel(pract) as RuntimePractitioner;
+          return {
+            ...practCamelCase,
+            profile: profileMap.get(pract.user_id) || {}
+          };
+        });
       
       return result as PractitionerWithProfile[];
     } catch (error) {
@@ -274,11 +283,11 @@ export class DbStorage implements IStorage {
 
   async getOnlinePractitioners(): Promise<PractitionerWithProfile[]> {
     try {
-      // PostgREST schema cache workaround: Fetch practitioners and profiles separately
+      // PostgREST automatically converts camelCase to snake_case, so use snake_case in queries
       const { data: practitioners, error: practError } = await supabase
         .from('practitioners')
         .select('*')
-        .eq('isOnline', true);
+        .eq('is_online', true);
       
       if (practError) {
         console.error('Error fetching online practitioners:', practError);
@@ -290,8 +299,9 @@ export class DbStorage implements IStorage {
       }
       
       // Get all user IDs (filter out any undefined/null values)
+      // PostgREST returns snake_case keys even though DB has camelCase
       const userIds = practitioners
-        .map(p => p.userId)
+        .map(p => p.user_id)
         .filter(id => id != null && id !== 'undefined');
       
       if (userIds.length === 0) {
@@ -309,14 +319,18 @@ export class DbStorage implements IStorage {
         throw profileError;
       }
       
-      // Manually join the data
-      const profileMap = new Map((profiles || []).map(p => [p.id, p]));
+      // Manually join the data - convert profiles to camelCase too
+      const profileMap = new Map((profiles || []).map(p => [p.id, snakeToCamel(p)]));
       const result = practitioners
-        .filter(pract => pract.userId != null && pract.userId !== 'undefined')
-        .map(pract => ({
-          ...pract,
-          profile: profileMap.get(pract.userId) || {}
-        }));
+        .filter(pract => pract.user_id != null && pract.user_id !== 'undefined')
+        .map(pract => {
+          // Convert snake_case response to camelCase
+          const practCamelCase = snakeToCamel(pract) as RuntimePractitioner;
+          return {
+            ...practCamelCase,
+            profile: profileMap.get(pract.user_id) || {}
+          };
+        });
       
       return result as PractitionerWithProfile[];
     } catch (error) {
@@ -326,11 +340,11 @@ export class DbStorage implements IStorage {
   }
 
   async getPractitionerWithProfile(userId: string): Promise<PractitionerWithProfile | undefined> {
-    // PostgREST schema cache workaround: Fetch practitioners and profiles separately
+    // PostgREST automatically converts camelCase to snake_case, so use snake_case in queries
     const { data: practitioner, error: practError } = await supabase
       .from('practitioners')
       .select('*')
-      .eq('userId', userId)
+      .eq('user_id', userId)
       .single();
     
     if (practError) {
@@ -354,10 +368,12 @@ export class DbStorage implements IStorage {
       return undefined;
     }
     
-    // Manually combine the data
+    // Convert snake_case response to camelCase and manually combine the data
+    const practCamelCase = snakeToCamel(practitioner) as RuntimePractitioner;
+    const profileCamelCase = profile ? snakeToCamel(profile) : {};
     const result = {
-      ...practitioner,
-      profile: profile || {}
+      ...practCamelCase,
+      profile: profileCamelCase
     };
     
     return result as PractitionerWithProfile;
