@@ -9,19 +9,19 @@ export interface TestUser {
   id: string; // UUID
   email: string;
   password: string;
-  full_name: string;
+  fullName: string;
   role: 'guest' | 'practitioner';
-  created_at: Date;
-  updated_at: Date;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 export interface TestPractitioner extends TestUser {
   role: 'practitioner';
   bio: string;
   specialties: string[];
-  hourly_rate: number;
+  hourlyRate: number;
   rating: number;
-  is_online: boolean;
+  isOnline: boolean;
 }
 
 export class UserFactory {
@@ -30,10 +30,10 @@ export class UserFactory {
       id: faker.string.uuid(),
       email: faker.internet.email(),
       password: 'Test123!@#',
-      full_name: faker.person.fullName(),
+      fullName: faker.person.fullName(),
       role: 'guest',
-      created_at: new Date(),
-      updated_at: new Date(),
+      createdAt: new Date(),
+      updatedAt: new Date(),
       ...overrides,
     };
   }
@@ -61,15 +61,15 @@ export class UserFactory {
       id: faker.string.uuid(),
       email: faker.internet.email(),
       password: 'Test123!@#',
-      full_name: faker.person.fullName(),
+      fullName: faker.person.fullName(),
       role: 'practitioner',
       bio: faker.lorem.paragraph(),
       specialties: selectedSpecialties,
-      hourly_rate: faker.number.int({ min: 50, max: 200 }),
+      hourlyRate: faker.number.int({ min: 50, max: 200 }),
       rating: faker.number.float({ min: 3.5, max: 5, multipleOf: 0.1 }),
-      is_online: faker.datatype.boolean(),
-      created_at: new Date(),
-      updated_at: new Date(),
+      isOnline: faker.datatype.boolean(),
+      createdAt: new Date(),
+      updatedAt: new Date(),
       ...overrides,
     };
   }

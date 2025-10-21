@@ -56,7 +56,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     res.json({
       user: authData.user,
       session: authData.session,
-      access_token: authData.session.access_token,
+      accessToken: authData.session.access_token,
       profile
     });
   } catch (error: any) {

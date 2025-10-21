@@ -155,7 +155,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         email, 
         password, 
         role,
-        full_name: fullName || email.split('@')[0]
+        fullName: fullName || email.split('@')[0]
       })
     });
 

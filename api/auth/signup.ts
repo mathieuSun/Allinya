@@ -12,10 +12,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
   
   try {
-    const { email, password, full_name, role } = z.object({
+    const { email, password, fullName, role } = z.object({
       email: z.string().email(),
       password: z.string().min(6),
-      full_name: z.string().min(1),
+      fullName: z.string().min(1),
       role: z.enum(['guest', 'practitioner'])
     }).parse(req.body);
 
@@ -25,7 +25,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       password,
       options: {
         data: {
-          full_name
+          fullName
         }
       }
     });
@@ -42,7 +42,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const profile = await storage.createProfile({
       id: authData.user.id,
       role,
-      displayName: full_name,
+      displayName: fullName,
       country: null,
       bio: null,
       avatarUrl: null,
@@ -66,7 +66,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     res.json({
       user: authData.user,
       session: authData.session,
-      access_token: authData.session?.access_token,
+      accessToken: authData.session?.access_token,
       profile
     });
   } catch (error: any) {

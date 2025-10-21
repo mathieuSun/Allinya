@@ -7,93 +7,93 @@ import { faker } from '@faker-js/faker';
 
 export interface TestSession {
   id: string; // UUID
-  guest_id: string; // UUID
-  practitioner_id: string; // UUID
-  status: 'waiting_room' | 'live' | 'ended';
-  agora_channel: string;
-  ready_guest: boolean;
-  ready_practitioner: boolean;
-  live_started_at: Date | null;
-  ended_at: Date | null;
-  created_at: Date;
-  updated_at: Date;
+  guestId: string; // UUID
+  practitionerId: string; // UUID
+  status: 'waitingRoom' | 'live' | 'ended';
+  agoraChannel: string;
+  readyGuest: boolean;
+  readyPractitioner: boolean;
+  liveStartedAt: Date | null;
+  endedAt: Date | null;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 export interface TestReview {
   id: string; // UUID
-  session_id: string; // UUID
-  reviewer_id: string; // UUID
+  sessionId: string; // UUID
+  reviewerId: string; // UUID
   rating: number;
   comment: string;
-  created_at: Date;
-  updated_at: Date;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 export class SessionFactory {
   static createSession(overrides?: Partial<TestSession>): TestSession {
-    const status = overrides?.status || faker.helpers.arrayElement(['waiting_room', 'live', 'ended']);
+    const status = overrides?.status || faker.helpers.arrayElement(['waitingRoom', 'live', 'ended']);
     
-    let live_started_at: Date | null = null;
-    let ended_at: Date | null = null;
+    let liveStartedAt: Date | null = null;
+    let endedAt: Date | null = null;
     
     if (status === 'live') {
-      live_started_at = faker.date.recent({ days: 1 });
+      liveStartedAt = faker.date.recent({ days: 1 });
     } else if (status === 'ended') {
-      live_started_at = faker.date.recent({ days: 1 });
-      ended_at = new Date(live_started_at.getTime() + faker.number.int({ min: 300000, max: 3600000 })); // 5-60 minutes
+      liveStartedAt = faker.date.recent({ days: 1 });
+      endedAt = new Date(liveStartedAt.getTime() + faker.number.int({ min: 300000, max: 3600000 })); // 5-60 minutes
     }
     
     return {
       id: faker.string.uuid(),
-      guest_id: faker.string.uuid(),
-      practitioner_id: faker.string.uuid(),
+      guestId: faker.string.uuid(),
+      practitionerId: faker.string.uuid(),
       status,
-      agora_channel: faker.string.alphanumeric(10),
-      ready_guest: status !== 'waiting_room' || faker.datatype.boolean(),
-      ready_practitioner: status !== 'waiting_room' || faker.datatype.boolean(),
-      live_started_at,
-      ended_at,
-      created_at: new Date(),
-      updated_at: new Date(),
+      agoraChannel: faker.string.alphanumeric(10),
+      readyGuest: status !== 'waitingRoom' || faker.datatype.boolean(),
+      readyPractitioner: status !== 'waitingRoom' || faker.datatype.boolean(),
+      liveStartedAt,
+      endedAt,
+      createdAt: new Date(),
+      updatedAt: new Date(),
       ...overrides,
     };
   }
   
   static createWaitingRoomSession(overrides?: Partial<TestSession>): TestSession {
     return this.createSession({
-      status: 'waiting_room',
-      ready_guest: false,
-      ready_practitioner: false,
-      live_started_at: null,
-      ended_at: null,
+      status: 'waitingRoom',
+      readyGuest: false,
+      readyPractitioner: false,
+      liveStartedAt: null,
+      endedAt: null,
       ...overrides,
     });
   }
   
   static createLiveSession(overrides?: Partial<TestSession>): TestSession {
-    const live_started_at = faker.date.recent({ days: 1 });
+    const liveStartedAt = faker.date.recent({ days: 1 });
     
     return this.createSession({
       status: 'live',
-      ready_guest: true,
-      ready_practitioner: true,
-      live_started_at,
-      ended_at: null,
+      readyGuest: true,
+      readyPractitioner: true,
+      liveStartedAt,
+      endedAt: null,
       ...overrides,
     });
   }
   
   static createEndedSession(overrides?: Partial<TestSession>): TestSession {
-    const live_started_at = faker.date.recent({ days: 2 });
+    const liveStartedAt = faker.date.recent({ days: 2 });
     const sessionDuration = faker.number.int({ min: 300000, max: 3600000 }); // 5-60 minutes
-    const ended_at = new Date(live_started_at.getTime() + sessionDuration);
+    const endedAt = new Date(liveStartedAt.getTime() + sessionDuration);
     
     return this.createSession({
       status: 'ended',
-      ready_guest: true,
-      ready_practitioner: true,
-      live_started_at,
-      ended_at,
+      readyGuest: true,
+      readyPractitioner: true,
+      liveStartedAt,
+      endedAt,
       ...overrides,
     });
   }
@@ -101,12 +101,12 @@ export class SessionFactory {
   static createReview(overrides?: Partial<TestReview>): TestReview {
     return {
       id: faker.string.uuid(),
-      session_id: faker.string.uuid(),
-      reviewer_id: faker.string.uuid(),
+      sessionId: faker.string.uuid(),
+      reviewerId: faker.string.uuid(),
       rating: faker.number.int({ min: 1, max: 5 }),
       comment: faker.lorem.sentences(2),
-      created_at: new Date(),
-      updated_at: new Date(),
+      createdAt: new Date(),
+      updatedAt: new Date(),
       ...overrides,
     };
   }
@@ -122,25 +122,25 @@ export class SessionFactory {
   // Helper to create a complete session flow
   static createCompleteSessionFlow(guestId: string, practitionerId: string) {
     const sessionId = faker.string.uuid();
-    const live_started_at = faker.date.recent({ days: 1 });
-    const ended_at = new Date(live_started_at.getTime() + 1800000); // 30 minutes
+    const liveStartedAt = faker.date.recent({ days: 1 });
+    const endedAt = new Date(liveStartedAt.getTime() + 1800000); // 30 minutes
     
     return {
       session: this.createEndedSession({
         id: sessionId,
-        guest_id: guestId,
-        practitioner_id: practitionerId,
-        live_started_at,
-        ended_at,
+        guestId: guestId,
+        practitionerId: practitionerId,
+        liveStartedAt,
+        endedAt,
       }),
       guestReview: this.createReview({
-        session_id: sessionId,
-        reviewer_id: guestId,
+        sessionId: sessionId,
+        reviewerId: guestId,
         rating: faker.number.int({ min: 4, max: 5 }),
       }),
       practitionerReview: this.createReview({
-        session_id: sessionId,
-        reviewer_id: practitionerId,
+        sessionId: sessionId,
+        reviewerId: practitionerId,
         rating: faker.number.int({ min: 4, max: 5 }),
       }),
     };

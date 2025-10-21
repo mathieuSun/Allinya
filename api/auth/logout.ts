@@ -16,9 +16,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     if (authHeader && typeof authHeader === 'string' && authHeader.startsWith('Bearer ')) {
       token = authHeader.substring(7);
-    } else if ((req.body as any)?.refresh_token) {
+    } else if ((req.body as any)?.refreshToken) {
       // Fall back to refresh token from body if provided
-      token = (req.body as any).refresh_token;
+      token = (req.body as any).refreshToken;
     }
 
     if (token) {

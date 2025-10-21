@@ -14,7 +14,7 @@ describe('Authentication API', () => {
   const testUser = {
     email: faker.internet.email(),
     password: 'TestPassword123!',
-    full_name: faker.person.fullName(),
+    fullName: faker.person.fullName(),
     role: 'guest',
   };
   
@@ -27,7 +27,7 @@ describe('Authentication API', () => {
       
       expect(response.body).toMatchObject({
         email: testUser.email,
-        full_name: testUser.full_name,
+        fullName: testUser.fullName,
         role: testUser.role,
       });
       expect(response.body.id).toBeDefined();
@@ -70,7 +70,7 @@ describe('Authentication API', () => {
     const loginUser = {
       email: faker.internet.email(),
       password: 'LoginPassword123!',
-      full_name: faker.person.fullName(),
+      fullName: faker.person.fullName(),
       role: 'guest',
     };
     
@@ -92,7 +92,7 @@ describe('Authentication API', () => {
       
       expect(response.body).toMatchObject({
         email: loginUser.email,
-        full_name: loginUser.full_name,
+        fullName: loginUser.fullName,
         role: loginUser.role,
       });
     });
@@ -169,7 +169,7 @@ describe('Authentication API', () => {
       
       expect(response.body).toMatchObject({
         email: testUser.email,
-        full_name: testUser.full_name,
+        fullName: testUser.fullName,
         role: testUser.role,
       });
     });

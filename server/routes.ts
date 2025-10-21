@@ -98,10 +98,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // POST /api/auth/signup - Create new user account
   app.post('/api/auth/signup', async (req: Request, res: Response) => {
     try {
-      const { email, password, full_name, role } = z.object({
+      const { email, password, fullName, role } = z.object({
         email: z.string().email(),
         password: z.string().min(6),
-        full_name: z.string().min(1),
+        fullName: z.string().min(1),
         role: z.enum(['guest', 'practitioner'])
       }).parse(req.body);
 
@@ -111,7 +111,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         password,
         options: {
           data: {
-            full_name
+            fullName
           }
         }
       });
@@ -128,7 +128,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const profile = await storage.createProfile({
         id: authData.user.id,
         role,
-        displayName: full_name,
+        displayName: fullName,
         country: null,
         bio: null,
         avatarUrl: null,
@@ -152,7 +152,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({
         user: authData.user,
         session: authData.session,
-        access_token: authData.session?.access_token,
+        accessToken: authData.session?.access_token,
         profile
       });
     } catch (error: any) {
@@ -233,7 +233,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({
         user: authData.user,
         session: authData.session,
-        access_token: authData.session.access_token,
+        accessToken: authData.session.access_token,
         profile
       });
     } catch (error: any) {
@@ -254,9 +254,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       if (authHeader && authHeader.startsWith('Bearer ')) {
         token = authHeader.substring(7);
-      } else if (req.body.refresh_token) {
+      } else if (req.body.refreshToken) {
         // Fall back to refresh token from body if provided
-        token = req.body.refresh_token;
+        token = req.body.refreshToken;
       }
 
       if (token) {
