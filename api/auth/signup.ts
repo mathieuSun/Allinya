@@ -12,12 +12,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
   
   try {
+    // Ensure body is parsed correctly in Vercel
+    const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
+    
     const { email, password, fullName, role } = z.object({
       email: z.string().email(),
       password: z.string().min(6),
       fullName: z.string().min(1),
       role: z.enum(['guest', 'practitioner'])
-    }).parse(req.body);
+    }).parse(body);
 
     // Create user in Supabase Auth
     const { data: authData, error: authError } = await supabase.auth.signUp({
