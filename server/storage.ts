@@ -10,14 +10,16 @@ import { createClient } from '@supabase/supabase-js';
 import { supabaseConfig } from './config';
 
 // Use Supabase service role key for backend operations
-// Add no-cache header to force fresh schema fetch to avoid PostgREST cache issues
+// Add no-cache header and force schema reload to avoid PostgREST cache issues
 const supabase = createClient(supabaseConfig.url, supabaseConfig.serviceRoleKey, {
   db: {
     schema: 'public'
   },
   global: {
     headers: {
-      'Cache-Control': 'no-cache',
+      'Cache-Control': 'no-cache, no-store, must-revalidate',
+      'Pragma': 'no-cache',
+      'Expires': '0',
       'Prefer': 'return=representation'
     }
   }
@@ -90,34 +92,6 @@ export interface IStorage {
   getSessionReviews(sessionId: string): Promise<RuntimeReview[]>;
 }
 
-// Helper function to convert camelCase to snake_case
-function toSnakeCase(obj: any): any {
-  if (obj === null || obj === undefined) return obj;
-  if (obj instanceof Date) return obj.toISOString();
-  if (Array.isArray(obj)) return obj.map(toSnakeCase);
-  if (typeof obj !== 'object') return obj;
-  
-  const converted: any = {};
-  for (const key in obj) {
-    const snakeKey = key.replace(/([A-Z])/g, '_$1').toLowerCase();
-    converted[snakeKey] = toSnakeCase(obj[key]);
-  }
-  return converted;
-}
-
-// Helper function to convert snake_case to camelCase
-function toCamelCase(obj: any): any {
-  if (obj === null || obj === undefined) return obj;
-  if (Array.isArray(obj)) return obj.map(toCamelCase);
-  if (typeof obj !== 'object') return obj;
-  
-  const converted: any = {};
-  for (const key in obj) {
-    const camelKey = key.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase());
-    converted[camelKey] = toCamelCase(obj[key]);
-  }
-  return converted;
-}
 
 export class DbStorage implements IStorage {
   async getProfile(id: string): Promise<RuntimeProfile | undefined> {
@@ -132,36 +106,30 @@ export class DbStorage implements IStorage {
       return undefined;
     }
     
-    return toCamelCase(data) as RuntimeProfile;
+    return data as RuntimeProfile;
   }
 
   async createProfile(profile: InsertProfileInput): Promise<RuntimeProfile> {
-    // Convert camelCase to snake_case for database
-    const snakeCaseProfile = toSnakeCase(profile);
-    
     const { data, error } = await supabase
       .from('profiles')
       .insert({
-        ...snakeCaseProfile,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
+        ...profile,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
       })
       .select()
       .single();
     
     if (error) throw error;
-    return toCamelCase(data) as RuntimeProfile;
+    return data as RuntimeProfile;
   }
 
   async updateProfile(id: string, updates: Partial<RuntimeProfile>): Promise<RuntimeProfile> {
-    // Convert camelCase to snake_case for database
-    const snakeCaseUpdates = toSnakeCase(updates);
-    
     const { data, error} = await supabase
       .from('profiles')
       .update({
-        ...snakeCaseUpdates,
-        updated_at: new Date().toISOString()
+        ...updates,
+        updatedAt: new Date().toISOString()
       })
       .eq('id', id)
       .select()
@@ -171,14 +139,14 @@ export class DbStorage implements IStorage {
       console.error('Supabase update error:', error);
       throw error;
     }
-    return toCamelCase(data) as RuntimeProfile;
+    return data as RuntimeProfile;
   }
 
   async getPractitioner(userId: string): Promise<RuntimePractitioner | undefined> {
     const { data, error } = await supabase
       .from('practitioners')
       .select('*')
-      .eq('user_id', userId)
+      .eq('userId', userId)
       .single();
     
     if (error) {
@@ -186,38 +154,32 @@ export class DbStorage implements IStorage {
       return undefined;
     }
     
-    return toCamelCase(data) as RuntimePractitioner;
+    return data as RuntimePractitioner;
   }
 
   async createPractitioner(practitioner: InsertPractitionerInput): Promise<RuntimePractitioner> {
-    // Convert camelCase to snake_case for database
-    const snakeCasePractitioner = toSnakeCase(practitioner);
-    
     const { data, error } = await supabase
       .from('practitioners')
       .insert({
-        ...snakeCasePractitioner,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
+        ...practitioner,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
       })
       .select()
       .single();
     
     if (error) throw error;
-    return toCamelCase(data) as RuntimePractitioner;
+    return data as RuntimePractitioner;
   }
 
   async updatePractitioner(userId: string, updates: Partial<RuntimePractitioner>): Promise<RuntimePractitioner> {
-    // Convert camelCase to snake_case for database
-    const snakeCaseUpdates = toSnakeCase(updates);
-    
     const { data, error } = await supabase
       .from('practitioners')
       .update({
-        ...snakeCaseUpdates,
-        updated_at: new Date().toISOString()
+        ...updates,
+        updatedAt: new Date().toISOString()
       })
-      .eq('user_id', userId)
+      .eq('userId', userId)
       .select()
       .single();
     
@@ -225,7 +187,7 @@ export class DbStorage implements IStorage {
       console.error('Supabase updatePractitioner error:', error);
       throw error;
     }
-    return toCamelCase(data) as RuntimePractitioner;
+    return data as RuntimePractitioner;
   }
 
   async getAllPractitioners(): Promise<PractitionerWithProfile[]> {
@@ -234,7 +196,7 @@ export class DbStorage implements IStorage {
       const { data: practitioners, error: practError } = await supabase
         .from('practitioners')
         .select('*')
-        .order('is_online', { ascending: false })  // Use 'is_online' instead of 'online'
+        .order('isOnline', { ascending: false })
         .order('rating', { ascending: false });
       
       if (practError) {
@@ -251,7 +213,7 @@ export class DbStorage implements IStorage {
       
       // Get all user IDs (filter out any undefined/null values)
       const userIds = practitioners
-        .map(p => p.user_id)
+        .map(p => p.userId)
         .filter(id => id != null && id !== 'undefined');
       
       if (userIds.length === 0) {
@@ -273,10 +235,10 @@ export class DbStorage implements IStorage {
       // Manually join the data
       const profileMap = new Map((profiles || []).map(p => [p.id, p]));
       const result = practitioners
-        .filter(pract => pract.user_id != null && pract.user_id !== 'undefined')
+        .filter(pract => pract.userId != null && pract.userId !== 'undefined')
         .map(pract => ({
-          ...toCamelCase(pract),
-          profile: toCamelCase(profileMap.get(pract.user_id) || {})
+          ...pract,
+          profile: profileMap.get(pract.userId) || {}
         }));
       
       return result as PractitionerWithProfile[];
@@ -292,7 +254,7 @@ export class DbStorage implements IStorage {
       const { data: practitioners, error: practError } = await supabase
         .from('practitioners')
         .select('*')
-        .eq('is_online', true);  // Use 'is_online' instead of 'online'
+        .eq('isOnline', true);
       
       if (practError) {
         console.error('Error fetching online practitioners:', practError);
@@ -305,7 +267,7 @@ export class DbStorage implements IStorage {
       
       // Get all user IDs (filter out any undefined/null values)
       const userIds = practitioners
-        .map(p => p.user_id)
+        .map(p => p.userId)
         .filter(id => id != null && id !== 'undefined');
       
       if (userIds.length === 0) {
@@ -326,10 +288,10 @@ export class DbStorage implements IStorage {
       // Manually join the data
       const profileMap = new Map((profiles || []).map(p => [p.id, p]));
       const result = practitioners
-        .filter(pract => pract.user_id != null && pract.user_id !== 'undefined')
+        .filter(pract => pract.userId != null && pract.userId !== 'undefined')
         .map(pract => ({
-          ...toCamelCase(pract),
-          profile: toCamelCase(profileMap.get(pract.user_id) || {})
+          ...pract,
+          profile: profileMap.get(pract.userId) || {}
         }));
       
       return result as PractitionerWithProfile[];
@@ -344,7 +306,7 @@ export class DbStorage implements IStorage {
     const { data: practitioner, error: practError } = await supabase
       .from('practitioners')
       .select('*')
-      .eq('user_id', userId)
+      .eq('userId', userId)
       .single();
     
     if (practError) {
@@ -370,8 +332,8 @@ export class DbStorage implements IStorage {
     
     // Manually combine the data
     const result = {
-      ...toCamelCase(practitioner),
-      profile: toCamelCase(profile || {})
+      ...practitioner,
+      profile: profile || {}
     };
     
     return result as PractitionerWithProfile;
@@ -382,8 +344,8 @@ export class DbStorage implements IStorage {
       .from('sessions')
       .select(`
         *,
-        practitioner:profiles!practitioner_id (*),
-        guest:profiles!guest_id (*)
+        practitioner:profiles!practitionerId (*),
+        guest:profiles!guestId (*)
       `)
       .eq('id', id)
       .single();
@@ -393,7 +355,7 @@ export class DbStorage implements IStorage {
       return undefined;
     }
     
-    return toCamelCase(data) as SessionWithParticipants;
+    return data as SessionWithParticipants;
   }
 
   async getSessionsForPractitioner(practitionerId: string): Promise<SessionWithParticipants[]> {
@@ -401,99 +363,93 @@ export class DbStorage implements IStorage {
       .from('sessions')
       .select(`
         *,
-        practitioner:profiles!practitioner_id (*),
-        guest:profiles!guest_id (*)
+        practitioner:profiles!practitionerId (*),
+        guest:profiles!guestId (*)
       `)
-      .eq('practitioner_id', practitionerId)
+      .eq('practitionerId', practitionerId)
       .in('phase', ['waiting', 'live'])
-      .order('created_at', { ascending: false });
+      .order('createdAt', { ascending: false });
     
     if (error) {
       console.error('Error fetching sessions for practitioner:', error);
       return [];
     }
     
-    return toCamelCase(data || []) as SessionWithParticipants[];
+    return (data || []) as SessionWithParticipants[];
   }
 
   async getActivePractitionerSessions(practitionerId: string): Promise<RuntimeSession[]> {
     const { data, error } = await supabase
       .from('sessions')
       .select('*')
-      .eq('practitioner_id', practitionerId)
+      .eq('practitionerId', practitionerId)
       .in('phase', ['waiting', 'room_timer', 'live'])
-      .order('created_at', { ascending: false });
+      .order('createdAt', { ascending: false });
     
     if (error) {
       console.error('Error fetching active sessions for practitioner:', error);
       return [];
     }
     
-    return toCamelCase(data || []) as RuntimeSession[];
+    return (data || []) as RuntimeSession[];
   }
 
   async createSession(session: InsertSessionInput): Promise<RuntimeSession> {
-    const snakeCaseSession = toSnakeCase(session);
-    
     // Generate a unique channel name for Agora video
     const agoraChannel = `session_${Date.now()}_${Math.random().toString(36).substring(7)}`;
     
     const { data, error } = await supabase
       .from('sessions')
       .insert({
-        ...snakeCaseSession,
-        agora_channel: agoraChannel, // Add the required agora_channel field
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
+        ...session,
+        agoraChannel: agoraChannel,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
       })
       .select()
       .single();
     
     if (error) throw error;
-    return toCamelCase(data) as RuntimeSession;
+    return data as RuntimeSession;
   }
 
   async updateSession(id: string, updates: Partial<RuntimeSession>): Promise<RuntimeSession> {
-    const snakeCaseUpdates = toSnakeCase(updates);
-    
     const { data, error } = await supabase
       .from('sessions')
       .update({
-        ...snakeCaseUpdates,
-        updated_at: new Date().toISOString()
+        ...updates,
+        updatedAt: new Date().toISOString()
       })
       .eq('id', id)
       .select()
       .single();
     
     if (error) throw error;
-    return toCamelCase(data) as RuntimeSession;
+    return data as RuntimeSession;
   }
 
   async createReview(review: InsertReviewInput): Promise<RuntimeReview> {
-    const snakeCaseReview = toSnakeCase(review);
-    
     const { data, error } = await supabase
       .from('reviews')
       .insert({
-        ...snakeCaseReview,
-        created_at: new Date().toISOString()
+        ...review,
+        createdAt: new Date().toISOString()
       })
       .select()
       .single();
     
     if (error) throw error;
-    return toCamelCase(data) as RuntimeReview;
+    return data as RuntimeReview;
   }
 
   async getSessionReviews(sessionId: string): Promise<RuntimeReview[]> {
     const { data, error } = await supabase
       .from('reviews')
       .select('*')
-      .eq('session_id', sessionId);
+      .eq('sessionId', sessionId);
     
     if (error) throw error;
-    return toCamelCase(data) as RuntimeReview[];
+    return data as RuntimeReview[];
   }
 }
 

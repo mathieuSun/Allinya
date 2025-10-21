@@ -7,82 +7,82 @@ import { z } from "zod";
 export const profiles = pgTable("profiles", {
   id: uuid("id").primaryKey(),
   role: text("role", { enum: ["guest", "practitioner"] }).notNull(),
-  display_name: text("display_name").notNull(),
+  displayName: text("displayName").notNull(),
   country: text("country"),
   bio: text("bio"),
-  avatar_url: text("avatar_url"),
-  gallery_urls: text("gallery_urls").array().default(sql`array[]::text[]`),
-  video_url: text("video_url"),
+  avatarUrl: text("avatarUrl"),
+  galleryUrls: text("galleryUrls").array().default(sql`array[]::text[]`),
+  videoUrl: text("videoUrl"),
   specialties: text("specialties").array().default(sql`array[]::text[]`),
-  created_at: timestamp("created_at", { withTimezone: true }).defaultNow(),
-  updated_at: timestamp("updated_at", { withTimezone: true }).defaultNow(),
+  createdAt: timestamp("createdAt", { withTimezone: true }).defaultNow(),
+  updatedAt: timestamp("updatedAt", { withTimezone: true }).defaultNow(),
 });
 
-// Practitioners table - presence and rating info (all columns use snake_case in database)
+// Practitioners table - presence and rating info  
 export const practitioners = pgTable("practitioners", {
-  user_id: uuid("user_id").primaryKey().references(() => profiles.id, { onDelete: "cascade" }),
-  is_online: boolean("is_online").notNull().default(false),
-  in_service: boolean("in_service").notNull().default(false),
+  userId: uuid("userId").primaryKey().references(() => profiles.id, { onDelete: "cascade" }),
+  isOnline: boolean("isOnline").notNull().default(false),
+  inService: boolean("inService").notNull().default(false),
   rating: numeric("rating", { precision: 2, scale: 1 }).default("0.0"),
-  review_count: integer("review_count").default(0),
-  created_at: timestamp("created_at", { withTimezone: true }).defaultNow(),
-  updated_at: timestamp("updated_at", { withTimezone: true }).defaultNow(),
+  reviewCount: integer("reviewCount").default(0),
+  createdAt: timestamp("createdAt", { withTimezone: true }).defaultNow(),
+  updatedAt: timestamp("updatedAt", { withTimezone: true }).defaultNow(),
 });
 
-// Sessions table - matches actual database structure
+// Sessions table
 export const sessions = pgTable("sessions", {
   id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
-  practitioner_id: uuid("practitioner_id").notNull().references(() => profiles.id),
-  guest_id: uuid("guest_id").notNull().references(() => profiles.id),
-  is_group: boolean("is_group").notNull().default(false),
+  practitionerId: uuid("practitionerId").notNull().references(() => profiles.id),
+  guestId: uuid("guestId").notNull().references(() => profiles.id),
+  isGroup: boolean("isGroup").notNull().default(false),
   phase: text("phase", { enum: ["waiting", "room_timer", "live", "ended"] }).notNull().default("waiting"),
-  waiting_seconds: integer("waiting_seconds").notNull().default(60),
-  live_seconds: integer("live_seconds").notNull().default(900),
-  waiting_started_at: timestamp("waiting_started_at", { withTimezone: true }),
-  live_started_at: timestamp("live_started_at", { withTimezone: true }),
-  ended_at: timestamp("ended_at", { withTimezone: true }),
-  acknowledged_practitioner: boolean("acknowledged_practitioner").notNull().default(false),
-  ready_practitioner: boolean("ready_practitioner").notNull().default(false),
-  ready_guest: boolean("ready_guest").notNull().default(false),
-  agora_channel: text("agora_channel"),
-  agora_uid_guest: text("agora_uid_guest"),
-  agora_uid_practitioner: text("agora_uid_practitioner"),
-  created_at: timestamp("created_at", { withTimezone: true }).defaultNow(),
-  updated_at: timestamp("updated_at", { withTimezone: true }).defaultNow(),
+  waitingSeconds: integer("waitingSeconds").notNull().default(60),
+  liveSeconds: integer("liveSeconds").notNull().default(900),
+  waitingStartedAt: timestamp("waitingStartedAt", { withTimezone: true }),
+  liveStartedAt: timestamp("liveStartedAt", { withTimezone: true }),
+  endedAt: timestamp("endedAt", { withTimezone: true }),
+  acknowledgedPractitioner: boolean("acknowledgedPractitioner").notNull().default(false),
+  readyPractitioner: boolean("readyPractitioner").notNull().default(false),
+  readyGuest: boolean("readyGuest").notNull().default(false),
+  agoraChannel: text("agoraChannel"),
+  agoraUidGuest: text("agoraUidGuest"),
+  agoraUidPractitioner: text("agoraUidPractitioner"),
+  createdAt: timestamp("createdAt", { withTimezone: true }).defaultNow(),
+  updatedAt: timestamp("updatedAt", { withTimezone: true }).defaultNow(),
 });
 
 // Reviews table - guest reviews after sessions
 export const reviews = pgTable("reviews", {
   id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
-  session_id: uuid("session_id").notNull().references(() => sessions.id, { onDelete: "cascade" }),
-  guest_id: uuid("guest_id").notNull().references(() => profiles.id),
-  practitioner_id: uuid("practitioner_id").notNull().references(() => profiles.id),
+  sessionId: uuid("sessionId").notNull().references(() => sessions.id, { onDelete: "cascade" }),
+  guestId: uuid("guestId").notNull().references(() => profiles.id),
+  practitionerId: uuid("practitionerId").notNull().references(() => profiles.id),
   rating: integer("rating"),
   comment: text("comment"),
-  created_at: timestamp("created_at", { withTimezone: true }).defaultNow(),
+  createdAt: timestamp("createdAt", { withTimezone: true }).defaultNow(),
 });
 
-// Insert schemas - omit auto-generated fields using snake_case column names
+// Insert schemas - omit auto-generated fields
 export const insertProfileSchema = createInsertSchema(profiles).omit({
   id: true,
-  created_at: true,
-  updated_at: true,
+  createdAt: true,
+  updatedAt: true,
 });
 
 export const insertPractitionerSchema = createInsertSchema(practitioners).omit({
-  created_at: true,
-  updated_at: true,
+  createdAt: true,
+  updatedAt: true,
 });
 
 export const insertSessionSchema = createInsertSchema(sessions).omit({
   id: true,
-  created_at: true,
-  updated_at: true,
+  createdAt: true,
+  updatedAt: true,
 });
 
 export const insertReviewSchema = createInsertSchema(reviews).omit({
   id: true,
-  created_at: true,
+  createdAt: true,
 });
 
 // Types
@@ -98,9 +98,7 @@ export type Session = typeof sessions.$inferSelect;
 export type InsertReview = z.infer<typeof insertReviewSchema>;
 export type Review = typeof reviews.$inferSelect;
 
-// Runtime types after camelCase conversion (what the API actually returns)
-// These represent the data after conversion from snake_case database columns
-
+// Runtime types (now match database columns directly with camelCase)
 export type RuntimeProfile = {
   id: string;
   role: "guest" | "practitioner";
@@ -116,9 +114,9 @@ export type RuntimeProfile = {
 };
 
 export type RuntimePractitioner = {
-  userId: string;  // converted from 'user_id' in database
-  isOnline: boolean;  // converted from 'is_online' in database
-  inService: boolean;  // converted from 'in_service' in database
+  userId: string;
+  isOnline: boolean;
+  inService: boolean;
   rating: string | null;
   reviewCount: number | null;
   createdAt: string | null;
@@ -127,30 +125,30 @@ export type RuntimePractitioner = {
 
 export type RuntimeSession = {
   id: string;
-  practitionerId: string;  // converted from 'practitioner_id' in database
-  guestId: string;  // converted from 'guest_id' in database
-  isGroup: boolean;  // converted from 'is_group' in database  
+  practitionerId: string;
+  guestId: string;
+  isGroup: boolean;
   phase: "waiting" | "room_timer" | "live" | "ended";
-  waitingSeconds: number;  // converted from 'waiting_seconds' in database
-  liveSeconds: number;  // converted from 'live_seconds' in database
-  waitingStartedAt: string | null;  // converted from 'waiting_started_at' in database
-  liveStartedAt: string | null;  // converted from 'live_started_at' in database
-  endedAt: string | null;  // converted from 'ended_at' in database
-  acknowledgedPractitioner: boolean;  // converted from 'acknowledged_practitioner' in database
-  readyPractitioner: boolean;  // converted from 'ready_practitioner' in database
-  readyGuest: boolean;  // converted from 'ready_guest' in database
-  agoraChannel: string | null;  // converted from 'agora_channel' in database
-  agoraUidGuest: string | null;  // converted from 'agora_uid_guest' in database
-  agoraUidPractitioner: string | null;  // converted from 'agora_uid_practitioner' in database
+  waitingSeconds: number;
+  liveSeconds: number;
+  waitingStartedAt: string | null;
+  liveStartedAt: string | null;
+  endedAt: string | null;
+  acknowledgedPractitioner: boolean;
+  readyPractitioner: boolean;
+  readyGuest: boolean;
+  agoraChannel: string | null;
+  agoraUidGuest: string | null;
+  agoraUidPractitioner: string | null;
   createdAt: string | null;
   updatedAt: string | null;
 };
 
 export type RuntimeReview = {
   id: string;
-  sessionId: string;  // converted from 'session_id' in database
-  guestId: string;  // converted from 'guest_id' in database
-  practitionerId: string;  // converted from 'practitioner_id' in database
+  sessionId: string;
+  guestId: string;
+  practitionerId: string;
   rating: number | null;
   comment: string | null;
   createdAt: string | null;
