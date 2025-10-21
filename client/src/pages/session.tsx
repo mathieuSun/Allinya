@@ -119,7 +119,7 @@ export default function SessionPage() {
           // Show notifications for important events
           const updatedSession = payload.new as any;
           
-          if (updatedSession.phase === 'live' && session.phase === 'room_timer') {
+          if (updatedSession.status === 'live' && session.status === 'room_timer') {
             // CRITICAL: Transition from Room Timer to Live Video phase
             toast({
               title: '🎥 Session Starting!',
@@ -157,7 +157,7 @@ export default function SessionPage() {
             playNotificationSound();
           }
           
-          if (updatedSession.phase === 'ended') {
+          if (updatedSession.status === 'ended') {
             toast({
               title: '📱 Session Ended',
               description: 'The session has been completed',
@@ -178,7 +178,7 @@ export default function SessionPage() {
     if (!session) return;
 
     const updateTimer = () => {
-      if (session.phase === 'room_timer') {
+      if (session.status === 'room_timer') {
         // CRITICAL: Room Timer Phase - completely separate from Live Video Timer
         const startedAt = session.waitingStartedAt || null;
         const remaining = calculateRemainingTime(startedAt, session.waitingSeconds);
@@ -194,7 +194,7 @@ export default function SessionPage() {
           // Room timer expired - end session
           endSessionMutation.mutate();
         }
-      } else if (session.phase === 'live') {
+      } else if (session.status === 'live') {
         const startedAt = session.liveStartedAt || null;
         const remaining = calculateRemainingTime(startedAt, session.liveSeconds);
         setRemainingTime(remaining);
@@ -240,7 +240,7 @@ export default function SessionPage() {
   const hasAcknowledged = session.acknowledgedPractitioner;
 
   // Room Timer Phase - CRITICAL: Separate from Live Video Timer
-  if (session.phase === 'room_timer') {
+  if (session.status === 'room_timer') {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center p-4">
         <Card className="w-full max-w-2xl">
@@ -391,7 +391,7 @@ export default function SessionPage() {
   }
 
   // Live Video Room
-  if (session.phase === 'live') {
+  if (session.status === 'live') {
     // Determine the UID for the current user
     const uid = isGuest ? session.agoraUidGuest : session.agoraUidPractitioner;
     
@@ -417,7 +417,7 @@ export default function SessionPage() {
   }
 
   // End Screen
-  if (session.phase === 'ended') {
+  if (session.status === 'ended') {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center p-4">
         <Card className="w-full max-w-md">

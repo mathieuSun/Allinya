@@ -24,10 +24,12 @@ export const profiles = pgTable("profiles", {
 // Practitioners table - presence and rating info
 // All columns validated for camelCase and uniqueness  
 export const practitioners = pgTable("practitioners", {
-  userId: createColumn("practitioners", "userId", uuid("userId").primaryKey().references(() => profiles.id, { onDelete: "cascade" })),
+  id: createColumn("practitioners", "id", uuid("id").primaryKey().default(sql`gen_random_uuid()`)),
+  userId: createColumn("practitioners", "userId", uuid("userId").notNull().references(() => profiles.id, { onDelete: "cascade" })),
+  specialties: createColumn("practitioners", "specialties", text("specialties").array().default(sql`ARRAY[]::text[]`)),
+  hourlyRate: createColumn("practitioners", "hourlyRate", numeric("hourlyRate", { precision: 10, scale: 2 })),
   isOnline: createColumn("practitioners", "isOnline", boolean("isOnline").notNull().default(false)),
   inService: createColumn("practitioners", "inService", boolean("inService").notNull().default(false)),
-  rating: createColumn("practitioners", "rating", numeric("rating", { precision: 2, scale: 1 }).default("0.0")),
   reviewCount: createColumn("practitioners", "reviewCount", integer("reviewCount").default(0)),
   createdAt: createColumn("practitioners", "createdAt", timestamp("createdAt", { withTimezone: true }).defaultNow()),
   updatedAt: createColumn("practitioners", "updatedAt", timestamp("updatedAt", { withTimezone: true }).defaultNow()),
@@ -37,10 +39,10 @@ export const practitioners = pgTable("practitioners", {
 // Enforces strict camelCase for all session-related columns
 export const sessions = pgTable("sessions", {
   id: createColumn("sessions", "id", uuid("id").primaryKey().default(sql`gen_random_uuid()`)),
-  practitionerId: createColumn("sessions", "practitionerId", uuid("practitionerId").notNull().references(() => profiles.id)),
+  practitionerId: createColumn("sessions", "practitionerId", uuid("practitionerId").notNull().references(() => practitioners.id)),
   guestId: createColumn("sessions", "guestId", uuid("guestId").notNull().references(() => profiles.id)),
+  status: createColumn("sessions", "status", text("status", { enum: ["waiting", "room_timer", "live", "ended"] }).notNull().default("waiting")),
   isGroup: createColumn("sessions", "isGroup", boolean("isGroup").notNull().default(false)),
-  phase: createColumn("sessions", "phase", text("phase", { enum: ["waiting", "room_timer", "live", "ended"] }).notNull().default("waiting")),
   waitingSeconds: createColumn("sessions", "waitingSeconds", integer("waitingSeconds").notNull().default(60)),
   liveSeconds: createColumn("sessions", "liveSeconds", integer("liveSeconds").notNull().default(900)),
   waitingStartedAt: createColumn("sessions", "waitingStartedAt", timestamp("waitingStartedAt", { withTimezone: true })),
@@ -76,6 +78,7 @@ export const insertProfileSchema = createInsertSchema(profiles).omit({
 });
 
 export const insertPractitionerSchema = createInsertSchema(practitioners).omit({
+  id: true,
   createdAt: true,
   updatedAt: true,
 });
@@ -120,10 +123,12 @@ export type RuntimeProfile = {
 };
 
 export type RuntimePractitioner = {
+  id: string;
   userId: string;
+  specialties: string[] | null;
+  hourlyRate: string | null;
   isOnline: boolean;
   inService: boolean;
-  rating: string | null;
   reviewCount: number | null;
   createdAt: string | null;
   updatedAt: string | null;
@@ -133,8 +138,8 @@ export type RuntimeSession = {
   id: string;
   practitionerId: string;
   guestId: string;
+  status: "waiting" | "room_timer" | "live" | "ended";
   isGroup: boolean;
-  phase: "waiting" | "room_timer" | "live" | "ended";
   waitingSeconds: number;
   liveSeconds: number;
   waitingStartedAt: string | null;

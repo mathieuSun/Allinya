@@ -60,7 +60,7 @@ export default function PractitionerDashboard() {
   // Update pending sessions and show notifications for new ones
   useEffect(() => {
     if (sessions) {
-      const pending = sessions.filter(s => s.phase === 'waiting');
+      const pending = sessions.filter(s => s.status === 'waiting');
       setPendingSessions(pending);
       
       // Check if there are NEW sessions (count increased)
@@ -163,7 +163,7 @@ export default function PractitionerDashboard() {
     },
   });
 
-  const activeSessions = sessions?.filter(s => s.phase === 'live') || [];
+  const activeSessions = sessions?.filter(s => s.status === 'live') || [];
 
   return (
     <div className="min-h-screen bg-background">
@@ -314,7 +314,7 @@ export default function PractitionerDashboard() {
                             <Clock className="h-3 w-3" />
                             {Math.floor(session.liveSeconds / 60)} minute session
                           </div>
-                          {session.phase === 'room_timer' && session.waitingStartedAt && (
+                          {session.status === 'room_timer' && session.waitingStartedAt && (
                             <div className="mt-1">
                               <SessionCountdown 
                                 sessionStartedAt={session.waitingStartedAt}

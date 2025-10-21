@@ -89,11 +89,11 @@ type InsertPractitionerInput = {
 type InsertSessionInput = {
   practitionerId: string;
   guestId: string;
-  phase?: "waiting" | "room_timer" | "live" | "ended";
+  status?: "waiting" | "room_timer" | "live" | "ended";
   liveSeconds?: number;
-  startedAt?: string | null;
-  practitionerReady?: boolean;
-  guestReady?: boolean;
+  waitingSeconds?: number;
+  readyPractitioner?: boolean;
+  readyGuest?: boolean;
   acknowledgedPractitioner?: boolean;
   agoraChannel?: string | null;
 };

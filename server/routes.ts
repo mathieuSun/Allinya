@@ -635,7 +635,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let isPractitioner = false;
       if (session.practitionerId) {
         const practitioner = await storage.getPractitionerById(session.practitionerId);
-        isPractitioner = practitioner && practitioner.userId === userId;
+        isPractitioner = !!(practitioner && practitioner.userId === userId);
       }
       
       if (userId !== session.guestId && !isPractitioner) {
@@ -697,7 +697,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let isPractitioner = false;
       if (session.practitionerId) {
         const practitioner = await storage.getPractitionerById(session.practitionerId);
-        isPractitioner = practitioner && practitioner.userId === userId;
+        isPractitioner = !!(practitioner && practitioner.userId === userId);
       }
       
       if (userId !== session.guestId && !isPractitioner) {
@@ -771,7 +771,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let isPractitioner = false;
       if (session.practitionerId) {
         const practitioner = await storage.getPractitionerById(session.practitionerId);
-        isPractitioner = practitioner && practitioner.userId === userId;
+        isPractitioner = !!(practitioner && practitioner.userId === userId);
       }
       
       if (userId !== session.guestId && !isPractitioner) {
@@ -907,7 +907,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let isPractitioner = false;
       if (session.practitionerId) {
         const practitioner = await storage.getPractitionerById(session.practitionerId);
-        isPractitioner = practitioner && practitioner.userId === userId;
+        isPractitioner = !!(practitioner && practitioner.userId === userId);
       }
       
       const isGuest = userId === session.guestId;
