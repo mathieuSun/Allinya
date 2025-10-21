@@ -345,12 +345,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         id: userId,
         role,
         displayName: 'New User',
-        country: null,
         bio: null,
         avatarUrl: null,
         galleryUrls: [],
-        videoUrl: null,
-        specialties: [],
+        videoUrl: null
+        // Skip country and specialties - schema cache issues
       });
 
       // If practitioner, create practitioner record
