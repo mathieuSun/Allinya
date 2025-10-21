@@ -1,0 +1,71 @@
+OCT 21 14:34:33.69
+POST
+400
+www.allinya.app
+/api/auth/signup
+Signup error: ZodError: [ { "code": "invalid_type", "expected": "string", "received": "undefined", "path": [ "email" ], "message": "Required" }, { "code": "invalid_type", "expected": "string", "received": "undefined", "path": [ "password" ], "message": "Required" }, { "code": "invalid_type", "expected": "string", "received": "undefined", "path": [ "fullName" ], "message": "Required" }, { "expected": "'guest' | 'practitioner'", "received": "undefined", "code": "invalid_type", "path": [ "role" ], "message": "Required" } ] at get error [as error] (file:///var/task/node_modules/zod/v3/types.js:39:31) at ZodObject.parse (file:///var/task/node_modules/zod/v3/types.js:114:22) at Object.handler (/vercel/path0/api/auth/signup.ts:20:8) at r (/opt/rust/nodejs.js:2:15577) at Server.<anonymous> (/opt/rust/nodejs.js:2:11600) at process.processTicksAndRejections (node:internal/process/task_queues:95:5) at async Server.<anonymous> (/opt/rust/nodejs.js:16:7788) { issues: [ { code: 'invalid_type', expected: 'string', received: 'undefined', path: [Array], message: 'Required' }, { code: 'invalid_type', expected: 'string', received: 'undefined', path: [Array], message: 'Required' }, { code: 'invalid_type', expected: 'string', received: 'undefined', path: [Array], message: 'Required' }, { expected: "'guest' | 'practitioner'", received: 'undefined', code: 'invalid_type', path: [Array], message: 'Required' } ], addIssue: [Function (anonymous)], addIssues: [Function (anonymous)], errors: [ { code: 'invalid_type', expected: 'string', received: 'undefined', path: [Array], message: 'Required' }, { code: 'invalid_type', expected: 'string', received: 'undefined', path: [Array], message: 'Required' }, { code: 'invalid_type', expected: 'string', received: 'undefined', path: [Array], message: 'Required' }, { expected: "'guest' | 'practitioner'", received: 'undefined', code: 'invalid_type', path: [Array], message: 'Required' } ] }
+OCT 21 14:34:24.38
+POST
+400
+www.allinya.app
+/api/auth/login
+Login error: ZodError: [ { "code": "invalid_type", "expected": "string", "received": "undefined", "path": [ "email" ], "message": "Required" }, { "code": "invalid_type", "expected": "string", "received": "undefined", "path": [ "password" ], "message": "Required" } ] at get error [as error] (file:///var/task/node_modules/zod/v3/types.js:39:31) at ZodObject.parse (file:///var/task/node_modules/zod/v3/types.js:114:22) at Object.handler (/vercel/path0/api/auth/login.ts:18:8) at r (/opt/rust/nodejs.js:2:15577) at Server.<anonymous> (/opt/rust/nodejs.js:2:11600) at process.processTicksAndRejections (node:internal/process/task_queues:95:5) at async Server.<anonymous> (/opt/rust/nodejs.js:16:7788) { issues: [ { code: 'invalid_type', expected: 'string', received: 'undefined', path: [Array], message: 'Required' }, { code: 'invalid_type', expected: 'string', received: 'undefined', path: [Array], message: 'Required' } ], addIssue: [Function (anonymous)], addIssues: [Function (anonymous)], errors: [ { code: 'invalid_type', expected: 'string', received: 'undefined', path: [Array], message: 'Required' }, { code: 'invalid_type', expected: 'string', received: 'undefined', path: [Array], message: 'Required' } ] }
+OCT 21 14:34:07.18
+GET
+200
+www.allinya.app
+/api/version
+OCT 21 14:34:04.57
+GET
+200
+www.allinya.app
+/api/cache-bust
+OCT 21 14:33:55.87
+POST
+400
+www.allinya.app
+/api/auth/signup
+Signup error: ZodError: [ { "code": "invalid_type", "expected": "string", "received": "undefined", "path": [ "email" ], "message": "Required" }, { "code": "invalid_type", "expected": "string", "received": "undefined", "path": [ "password" ], "message": "Required" }, { "code": "invalid_type", "expected": "string", "received": "undefined", "path": [ "fullName" ], "message": "Required" }, { "expected": "'guest' | 'practitioner'", "received": "undefined", "code": "invalid_type", "path": [ "role" ], "message": "Required" } ] at get error [as error] (file:///var/task/node_modules/zod/v3/types.js:39:31) at ZodObject.parse (file:///var/task/node_modules/zod/v3/types.js:114:22) at Object.handler (/vercel/path0/api/auth/signup.ts:20:8) at r (/opt/rust/nodejs.js:2:15577) at Server.<anonymous> (/opt/rust/nodejs.js:2:11600) at process.processTicksAndRejections (node:internal/process/task_queues:95:5) at async Server.<anonymous> (/opt/rust/nodejs.js:16:7788) { issues: [ { code: 'invalid_type', expected: 'string', received: 'undefined', path: [Array], message: 'Required' }, { code: 'invalid_type', expected: 'string', received: 'undefined', path: [Array], message: 'Required' }, { code: 'invalid_type', expected: 'string', received: 'undefined', path: [Array], message: 'Required' }, { expected: "'guest' | 'practitioner'", received: 'undefined', code: 'invalid_type', path: [Array], message: 'Required' } ], addIssue: [Function (anonymous)], addIssues: [Function (anonymous)], errors: [ { code: 'invalid_type', expected: 'string', received: 'undefined', path: [Array], message: 'Required' }, { code: 'invalid_type', expected: 'string', received: 'undefined', path: [Array], message: 'Required' }, { code: 'invalid_type', expected: 'string', received: 'undefined', path: [Array], message: 'Required' }, { expected: "'guest' | 'practitioner'", received: 'undefined', code: 'invalid_type', path: [Array], message: 'Required' } ] }
+OCT 21 14:33:47.17
+GET
+200
+www.allinya.app
+/api/version
+OCT 21 14:20:52.23
+GET
+200
+www.allinya.app
+/api/version
+OCT 21 14:20:41.95
+POST
+400
+www.allinya.app
+/api/auth/login
+Login error: ZodError: [ { "code": "invalid_type", "expected": "string", "received": "undefined", "path": [ "email" ], "message": "Required" }, { "code": "invalid_type", "expected": "string", "received": "undefined", "path": [ "password" ], "message": "Required" } ] at get error [as error] (file:///var/task/node_modules/zod/v3/types.js:39:31) at ZodObject.parse (file:///var/task/node_modules/zod/v3/types.js:114:22) at Object.handler (/vercel/path0/api/auth/login.ts:18:8) at r (/opt/rust/nodejs.js:2:15577) at Server.<anonymous> (/opt/rust/nodejs.js:2:11600) at process.processTicksAndRejections (node:internal/process/task_queues:95:5) at async Server.<anonymous> (/opt/rust/nodejs.js:16:7788) { issues: [ { code: 'invalid_type', expected: 'string', received: 'undefined', path: [Array], message: 'Required' }, { code: 'invalid_type', expected: 'string', received: 'undefined', path: [Array], message: 'Required' } ], addIssue: [Function (anonymous)], addIssues: [Function (anonymous)], errors: [ { code: 'invalid_type', expected: 'string', received: 'undefined', path: [Array], message: 'Required' }, { code: 'invalid_type', expected: 'string', received: 'undefined', path: [Array], message: 'Required' } ] }
+OCT 21 14:20:40.53
+POST
+400
+www.allinya.app
+/api/auth/login
+Login error: ZodError: [ { "code": "invalid_type", "expected": "string", "received": "undefined", "path": [ "email" ], "message": "Required" }, { "code": "invalid_type", "expected": "string", "received": "undefined", "path": [ "password" ], "message": "Required" } ] at get error [as error] (file:///var/task/node_modules/zod/v3/types.js:39:31) at ZodObject.parse (file:///var/task/node_modules/zod/v3/types.js:114:22) at Object.handler (/vercel/path0/api/auth/login.ts:18:8) at r (/opt/rust/nodejs.js:2:15577) at Server.<anonymous> (/opt/rust/nodejs.js:2:11600) at process.processTicksAndRejections (node:internal/process/task_queues:95:5) at async Server.<anonymous> (/opt/rust/nodejs.js:16:7788) { issues: [ { code: 'invalid_type', expected: 'string', received: 'undefined', path: [Array], message: 'Required' }, { code: 'invalid_type', expected: 'string', received: 'undefined', path: [Array], message: 'Required' } ], addIssue: [Function (anonymous)], addIssues: [Function (anonymous)], errors: [ { code: 'invalid_type', expected: 'string', received: 'undefined', path: [Array], message: 'Required' }, { code: 'invalid_type', expected: 'string', received: 'undefined', path: [Array], message: 'Required' } ] }
+OCT 21 14:20:25.88
+POST
+400
+www.allinya.app
+/api/auth/login
+Login error: ZodError: [ { "code": "invalid_type", "expected": "string", "received": "undefined", "path": [ "email" ], "message": "Required" }, { "code": "invalid_type", "expected": "string", "received": "undefined", "path": [ "password" ], "message": "Required" } ] at get error [as error] (file:///var/task/node_modules/zod/v3/types.js:39:31) at ZodObject.parse (file:///var/task/node_modules/zod/v3/types.js:114:22) at Object.handler (/vercel/path0/api/auth/login.ts:18:8) at r (/opt/rust/nodejs.js:2:15577) at Server.<anonymous> (/opt/rust/nodejs.js:2:11600) at process.processTicksAndRejections (node:internal/process/task_queues:95:5) at async Server.<anonymous> (/opt/rust/nodejs.js:16:7788) { issues: [ { code: 'invalid_type', expected: 'string', received: 'undefined', path: [Array], message: 'Required' }, { code: 'invalid_type', expected: 'string', received: 'undefined', path: [Array], message: 'Required' } ], addIssue: [Function (anonymous)], addIssues: [Function (anonymous)], errors: [ { code: 'invalid_type', expected: 'string', received: 'undefined', path: [Array], message: 'Required' }, { code: 'invalid_type', expected: 'string', received: 'undefined', path: [Array], message: 'Required' } ] }
+OCT 21 14:19:52.22
+GET
+200
+www.allinya.app
+/api/version
+OCT 21 14:19:50.41
+GET
+200
+www.allinya.app
+/api/cache-bust
+OCT 21 14:19:43.65
+GET
+200
+www.allinya.app
+/api/version
