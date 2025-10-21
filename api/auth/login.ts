@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { handleCors } from '../_lib/cors.js';
 import { supabase } from '../_lib/supabase.js';
 import { storage } from '../_lib/database.js';
+import { snakeToCamel } from '../_lib/utils.js';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (handleCors(req, res)) return;
@@ -69,10 +70,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     console.log(`Login successful for ${email} with role: ${profile.role}`);
 
+    // Convert Supabase response to camelCase to comply with system rules
+    // Deep convert all nested objects
+    const camelCaseUser = snakeToCamel(JSON.parse(JSON.stringify(authData.user)));
+    const camelCaseSession = snakeToCamel(JSON.parse(JSON.stringify(authData.session)));
+
     // Return user data and access token
     res.json({
-      user: authData.user,
-      session: authData.session,
+      user: camelCaseUser,
+      session: camelCaseSession,
       accessToken: authData.session.access_token,
       profile
     });

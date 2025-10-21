@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { handleCors } from '../_lib/cors.js';
 import { supabase } from '../_lib/supabase.js';
 import { storage } from '../_lib/database.js';
+import { snakeToCamel } from '../_lib/utils.js';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (handleCors(req, res)) return;
@@ -56,16 +57,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     // Create profile for the new user
+    // Note: Omitting country and specialties temporarily as Supabase schema cache may be stale
     const profile = await storage.createProfile({
       id: authData.user.id,
       role,
       displayName: fullName,
-      country: null,
       bio: null,
       avatarUrl: null,
       galleryUrls: [],
-      videoUrl: null,
-      specialties: []
+      videoUrl: null
     });
 
     // If practitioner, create practitioner record
@@ -79,11 +79,21 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       });
     }
 
+    // Guard against null values as suggested by architect
+    if (!authData.user || !authData.session) {
+      return res.status(400).json({ error: 'Failed to create user account' });
+    }
+    
+    // Convert Supabase response to camelCase to comply with system rules
+    // Deep convert all nested objects
+    const camelCaseUser = snakeToCamel(JSON.parse(JSON.stringify(authData.user)));
+    const camelCaseSession = snakeToCamel(JSON.parse(JSON.stringify(authData.session)));
+    
     // Return user data and access token
     res.json({
-      user: authData.user,
-      session: authData.session,
-      accessToken: authData.session?.access_token,
+      user: camelCaseUser,
+      session: camelCaseSession,
+      accessToken: authData.session.access_token,
       profile
     });
   } catch (error: any) {

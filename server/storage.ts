@@ -151,13 +151,31 @@ export class DbStorage implements IStorage {
   }
 
   async createProfile(profile: InsertProfileInput): Promise<RuntimeProfile> {
+    // Clean up the profile object - remove undefined/null optional fields
+    const cleanProfile: any = {
+      id: profile.id,
+      // TODO: Remove userId duplication once Supabase schema cache refreshes
+      // The profiles table incorrectly has both 'id' and 'userId' columns
+      // Only 'id' should exist per the canonical schema
+      userId: profile.id,  // TEMPORARY WORKAROUND: duplicate id to userId
+      role: profile.role,
+      displayName: profile.displayName,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+    
+    // Only add non-null optional fields
+    if (profile.bio !== undefined && profile.bio !== null) cleanProfile.bio = profile.bio;
+    if (profile.avatarUrl !== undefined && profile.avatarUrl !== null) cleanProfile.avatarUrl = profile.avatarUrl;
+    if (profile.galleryUrls && profile.galleryUrls.length > 0) cleanProfile.galleryUrls = profile.galleryUrls;
+    if (profile.videoUrl !== undefined && profile.videoUrl !== null) cleanProfile.videoUrl = profile.videoUrl;
+    // Temporarily skip country and specialties until Supabase schema cache refreshes
+    // if (profile.country !== undefined && profile.country !== null) cleanProfile.country = profile.country;
+    // if (profile.specialties && profile.specialties.length > 0) cleanProfile.specialties = profile.specialties;
+    
     const { data, error } = await supabase
       .from('profiles')
-      .insert({
-        ...profile,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-      })
+      .insert(cleanProfile)
       .select()
       .single();
     

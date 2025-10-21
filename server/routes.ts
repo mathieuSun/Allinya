@@ -168,10 +168,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
+      // Convert Supabase responses to camelCase to comply with system rules
+      const camelCaseUser = snakeToCamel(authData.user);
+      const camelCaseSession = authData.session ? snakeToCamel(authData.session) : null;
+      
       // Return user data and access token
       res.json({
-        user: authData.user,
-        session: authData.session,
+        user: camelCaseUser,
+        session: camelCaseSession,
         accessToken: authData.session?.access_token,
         profile
       });
