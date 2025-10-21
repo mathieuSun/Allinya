@@ -1,6 +1,12 @@
 # Don't ignore api-handlers - they're needed by the catch-all handler
 # api-handlers/
 
+# Ignore non-function files in api directory
+api/bundled.js
+api/index.js
+api/production.js
+api/tsconfig.json
+
 # Ignore server files (not needed for Vercel runtime)
 server/
 
