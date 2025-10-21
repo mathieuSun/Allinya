@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "buildCommand": "npm run build && node build-for-vercel.js",
+  "buildCommand": "vite build && node build-for-vercel.js",
   "outputDirectory": "dist/public",
   "installCommand": "npm install",
   "framework": "vite",
