@@ -7,11 +7,12 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Bell, Clock, Video, Check, X, Loader2, Power, PowerOff } from 'lucide-react';
+import { Bell, Clock, Video, Check, X, Loader2, Power, PowerOff, Users } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { apiRequest, queryClient } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
 import { SessionCountdown } from '@/components/SessionCountdown';
+import { getPractitionerStatusText, getPractitionerStatusStyle } from '@/lib/practitioner-utils';
 import type { SessionWithParticipants } from '@shared/schema';
 
 export default function PractitionerDashboard() {
@@ -93,27 +94,45 @@ export default function PractitionerDashboard() {
     }
   }, [sessions, toast, hasLoadedSessions, previousSessionCount]);
 
-  // Toggle online status
-  const toggleOnlineMutation = useMutation({
-    mutationFn: async (online: boolean) => {
+  // Toggle online status (cycles through all three states)
+  const toggleStatusMutation = useMutation({
+    mutationFn: async (newStatus: { isOnline: boolean; inService: boolean }) => {
       // Use the PUT endpoint at /api/practitioners/status 
-      return apiRequest('PUT', '/api/practitioners/status', { isOnline: online });
+      return apiRequest('PUT', '/api/practitioners/status', newStatus);
     },
     onSuccess: (data: any) => {
       queryClient.invalidateQueries({ queryKey: ['/api/practitioners/get-status'] });
       queryClient.invalidateQueries({ queryKey: ['/api/practitioners'] }); // Also refresh the explore page
+      const statusText = getPractitionerStatusText(data.isOnline, data.inService);
       toast({ 
-        title: data.message || (data.isOnline ? 'You are now online' : 'You are now offline'),
+        title: `Status changed to: ${statusText}`,
       });
     },
     onError: (error: any) => {
       toast({
         title: 'Failed to update status',
-        description: error.message || 'Unable to update online status',
+        description: error.message || 'Unable to update status',
         variant: 'destructive',
       });
     },
   });
+  
+  // Calculate next status based on current state
+  const getNextStatus = () => {
+    const isOnline = practitionerStatus?.isOnline ?? false;
+    const inService = practitionerStatus?.inService ?? false;
+    
+    if (!isOnline) {
+      // Offline → Online
+      return { isOnline: true, inService: false };
+    } else if (!inService) {
+      // Online → In Service
+      return { isOnline: true, inService: true };
+    } else {
+      // In Service → Offline
+      return { isOnline: false, inService: false };
+    }
+  };
 
   // Accept session
   const acceptSessionMutation = useMutation({
@@ -162,26 +181,53 @@ export default function PractitionerDashboard() {
             </div>
             <div className="flex items-center gap-4">
               <Button
-                variant={practitionerStatus?.isOnline ? 'default' : 'outline'}
-                onClick={() => {
-                  // Ensure we have a boolean value - default to false if undefined
-                  const currentStatus = practitionerStatus?.isOnline ?? false;
-                  toggleOnlineMutation.mutate(!currentStatus);
-                }}
-                disabled={toggleOnlineMutation.isPending}
-                data-testid="button-toggle-online"
+                variant={(() => {
+                  const isOnline = practitionerStatus?.isOnline ?? false;
+                  const inService = practitionerStatus?.inService ?? false;
+                  if (!isOnline) return 'outline';
+                  if (inService) return 'default';
+                  return 'default';
+                })()}
+                className={(() => {
+                  const isOnline = practitionerStatus?.isOnline ?? false;
+                  const inService = practitionerStatus?.inService ?? false;
+                  const styles = getPractitionerStatusStyle(isOnline, inService);
+                  if (!isOnline) return '';
+                  if (inService) return 'bg-blue-500 hover:bg-blue-600';
+                  return 'bg-green-500 hover:bg-green-600';
+                })()}
+                onClick={() => toggleStatusMutation.mutate(getNextStatus())}
+                disabled={toggleStatusMutation.isPending}
+                data-testid="button-toggle-status"
               >
-                {practitionerStatus?.isOnline ? (
-                  <>
-                    <Power className="mr-2 h-4 w-4" />
-                    Online
-                  </>
-                ) : (
-                  <>
-                    <PowerOff className="mr-2 h-4 w-4" />
-                    Offline
-                  </>
-                )}
+                {(() => {
+                  const isOnline = practitionerStatus?.isOnline ?? false;
+                  const inService = practitionerStatus?.inService ?? false;
+                  const statusText = getPractitionerStatusText(isOnline, inService);
+                  
+                  if (!isOnline) {
+                    return (
+                      <>
+                        <PowerOff className="mr-2 h-4 w-4" />
+                        {statusText}
+                      </>
+                    );
+                  }
+                  if (inService) {
+                    return (
+                      <>
+                        <Users className="mr-2 h-4 w-4" />
+                        {statusText}
+                      </>
+                    );
+                  }
+                  return (
+                    <>
+                      <Power className="mr-2 h-4 w-4" />
+                      {statusText}
+                    </>
+                  );
+                })()}
               </Button>
               <Button variant="outline" onClick={() => setLocation('/profile')} data-testid="button-profile">
                 My Profile
@@ -207,15 +253,29 @@ export default function PractitionerDashboard() {
           <CardContent className="py-6">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
-                <div className={`h-3 w-3 rounded-full ${practitionerStatus?.isOnline ? 'bg-green-500' : 'bg-gray-400'} animate-pulse`} />
+                <div className={`h-3 w-3 rounded-full ${
+                  (() => {
+                    const isOnline = practitionerStatus?.isOnline ?? false;
+                    const inService = practitionerStatus?.inService ?? false;
+                    const styles = getPractitionerStatusStyle(isOnline, inService);
+                    return styles.dotColor;
+                  })()
+                } animate-pulse`} />
                 <div>
                   <p className="font-semibold">
-                    You are {practitionerStatus?.isOnline ? 'online' : 'offline'}
+                    Status: {getPractitionerStatusText(
+                      practitionerStatus?.isOnline ?? false,
+                      practitionerStatus?.inService ?? false
+                    )}
                   </p>
                   <p className="text-sm text-muted-foreground">
-                    {practitionerStatus?.isOnline 
-                      ? 'Guests can request sessions with you'
-                      : 'Go online to receive session requests'}
+                    {(() => {
+                      const isOnline = practitionerStatus?.isOnline ?? false;
+                      const inService = practitionerStatus?.inService ?? false;
+                      if (!isOnline) return 'Go online to receive session requests';
+                      if (inService) return 'Currently in a healing session';
+                      return 'Guests can request sessions with you';
+                    })()}
                   </p>
                 </div>
               </div>

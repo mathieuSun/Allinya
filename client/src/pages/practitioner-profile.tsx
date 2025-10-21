@@ -11,6 +11,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Star, Loader2, Clock, User2, ImageIcon, VideoIcon, AlertCircle } from 'lucide-react';
 import { apiRequest, queryClient } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
+import { getPractitionerStatusText, getPractitionerStatusStyle, isPractitionerAvailable } from '@/lib/practitioner-utils';
 import type { RuntimeProfile, PractitionerWithProfile } from '@shared/schema';
 
 const DURATION_OPTIONS = [
@@ -40,7 +41,9 @@ export default function PractitionerProfilePage() {
   const practitioner = practitionerData?.profile;
   const isOnline = practitionerData?.isOnline || false;
   const isInService = practitionerData?.inService || false;
-  const isAvailable = isOnline && !isInService;
+  const isAvailable = isPractitionerAvailable(isOnline, isInService);
+  const statusText = getPractitionerStatusText(isOnline, isInService);
+  const statusStyle = getPractitionerStatusStyle(isOnline, isInService);
 
   // Start session mutation
   const startSessionMutation = useMutation({
@@ -222,15 +225,18 @@ export default function PractitionerProfilePage() {
       {/* Sticky CTA */}
       <div className="fixed bottom-0 left-0 right-0 border-t border-border backdrop-blur-lg bg-background/80 p-4">
         <div className="max-w-4xl mx-auto">
-          {isInService && (
-            <div className="mb-2 flex items-center justify-center gap-2 text-orange-500">
+          {!isAvailable && (
+            <div className={`mb-2 flex items-center justify-center gap-2 ${statusStyle.textColor}`}>
               <AlertCircle className="h-5 w-5" />
-              <span className="font-medium">This practitioner is currently in a session</span>
+              <span className="font-medium">Practitioner Status: {statusText}</span>
             </div>
           )}
           <Button
             size="lg"
-            className={`w-full text-lg ${isInService ? 'bg-orange-500 hover:bg-orange-500' : ''}`}
+            className={`w-full text-lg ${
+              isInService ? 'bg-blue-500 hover:bg-blue-600' : 
+              !isOnline ? 'bg-gray-500 hover:bg-gray-600' : ''
+            }`}
             onClick={handleStartClick}
             disabled={!isAvailable || startSessionMutation.isPending}
             data-testid="button-start-session"
@@ -240,12 +246,10 @@ export default function PractitionerProfilePage() {
                 <Loader2 className="mr-2 h-5 w-5 animate-spin" />
                 Starting Session...
               </>
-            ) : isInService ? (
-              'Currently In Service'
-            ) : !isOnline ? (
-              'Practitioner Offline'
-            ) : (
+            ) : isAvailable ? (
               'Start Session'
+            ) : (
+              statusText
             )}
           </Button>
         </div>

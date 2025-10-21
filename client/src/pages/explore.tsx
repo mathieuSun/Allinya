@@ -9,6 +9,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Star, Loader2, LogOut } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
+import { getPractitionerStatusText, getPractitionerStatusStyle, isPractitionerAvailable } from '@/lib/practitioner-utils';
 import type { PractitionerWithProfile } from '@shared/schema';
 
 export default function ExplorePage() {
@@ -104,13 +105,15 @@ export default function ExplorePage() {
             {practitioners.map((practitioner) => {
               const isOnline = practitioner.isOnline;
               const isInService = practitioner.inService;
-              const isAvailable = isOnline && !isInService;
+              const isAvailable = isPractitionerAvailable(isOnline, isInService);
+              const statusText = getPractitionerStatusText(isOnline, isInService);
+              const statusStyle = getPractitionerStatusStyle(isOnline, isInService);
               
               return (
               <Card
                 key={practitioner.userId}
                 className={`hover-elevate transition-all cursor-pointer overflow-hidden ${
-                  isInService ? 'ring-2 ring-orange-500' : !isOnline ? 'opacity-50 grayscale' : ''
+                  isInService ? 'ring-2 ring-blue-500' : !isOnline ? 'opacity-50 grayscale' : ''
                 }`}
                 onClick={() => setLocation(`/p/${practitioner.userId}`)}
                 data-testid={`card-practitioner-${practitioner.userId}`}
@@ -132,27 +135,14 @@ export default function ExplorePage() {
                     </div>
                   )}
                   <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
-                  {isInService && (
-                    <div className="absolute top-4 right-4">
-                      <Badge className="bg-orange-500 text-white animate-pulse" data-testid="badge-in-service">
-                        In Service
-                      </Badge>
-                    </div>
-                  )}
-                  {!isInService && isOnline && (
-                    <div className="absolute top-4 right-4">
-                      <Badge className="bg-green-500 text-white" data-testid="badge-online">
-                        Available
-                      </Badge>
-                    </div>
-                  )}
-                  {!isOnline && (
-                    <div className="absolute top-4 right-4">
-                      <Badge variant="secondary" className="bg-gray-500 text-white" data-testid="badge-offline">
-                        Offline
-                      </Badge>
-                    </div>
-                  )}
+                  <div className="absolute top-4 right-4">
+                    <Badge 
+                      className={`${statusStyle.badgeClass} ${isInService ? 'animate-pulse' : ''}`} 
+                      data-testid={`badge-status-${practitioner.userId}`}
+                    >
+                      {statusText}
+                    </Badge>
+                  </div>
                   <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
                     <h3 className="text-2xl font-semibold mb-2" data-testid={`text-practitioner-name-${practitioner.userId}`}>
                       {practitioner.profile.displayName}
@@ -181,11 +171,11 @@ export default function ExplorePage() {
                 </div>
                 <CardContent className="p-6">
                   <Button 
-                    className={`w-full ${isInService ? 'bg-orange-500 hover:bg-orange-500' : ''}`}
+                    className={`w-full ${isInService ? 'bg-blue-500 hover:bg-blue-600' : ''}`}
                     disabled={!isAvailable}
                     data-testid={`button-start-${practitioner.userId}`}
                   >
-                    {isInService ? 'Currently In Service' : isOnline ? 'Start Session' : 'Offline'}
+                    {isAvailable ? 'Start Session' : statusText}
                   </Button>
                 </CardContent>
               </Card>
