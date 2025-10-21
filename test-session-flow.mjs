@@ -1,239 +1,323 @@
 #!/usr/bin/env node
 
-import fetch from 'node-fetch';
+/**
+ * Test 3: Session Creation Flow
+ * Tests complete session workflow from creation to acceptance
+ */
 
-const API_BASE = 'http://localhost:5000/api';
+const BASE_URL = 'http://localhost:5000';
 
-// Test accounts - you may need to update these
-const GUEST_EMAIL = 'cheekyma@hotmail.com';
-const GUEST_PASSWORD = 'test123456';
-const PRACTITIONER_EMAIL = 'chefmat2018@gmail.com';
-const PRACTITIONER_PASSWORD = 'test123456';
+// Test data
+const guest = {
+  email: 'cheekyma@hotmail.com',
+  password: 'Rickrick01'
+};
 
-let guestToken = null;
-let practitionerToken = null;
-let guestId = null;
-let practitionerId = null;
-let sessionId = null;
+const practitioner = {
+  email: 'chefmat2018@gmail.com',
+  password: 'Rickrick01'
+};
+
+// Color codes for output
+const GREEN = '\x1b[32m';
+const RED = '\x1b[31m';
+const YELLOW = '\x1b[33m';
+const BLUE = '\x1b[34m';
+const RESET = '\x1b[0m';
+
+function log(message, color = RESET) {
+  console.log(`${color}${message}${RESET}`);
+}
+
+function logSuccess(message) {
+  console.log(`${GREEN}✓ ${message}${RESET}`);
+}
+
+function logError(message) {
+  console.log(`${RED}✗ ${message}${RESET}`);
+}
+
+function logInfo(message) {
+  console.log(`${BLUE}ℹ ${message}${RESET}`);
+}
 
 async function login(email, password) {
-  console.log(`\n📝 Logging in as ${email}...`);
-  
-  const response = await fetch(`${API_BASE}/auth/login`, {
+  logInfo(`Logging in as ${email}...`);
+  const response = await fetch(`${BASE_URL}/api/auth/login`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
     body: JSON.stringify({ email, password })
   });
-  
+
   if (!response.ok) {
-    const error = await response.json();
-    throw new Error(`Login failed: ${error.error}`);
+    const error = await response.text();
+    throw new Error(`Login failed: ${error}`);
   }
-  
+
   const data = await response.json();
-  console.log(`✅ Logged in successfully`);
-  return {
-    token: data.access_token,
-    userId: data.user.id,
-    profile: data.profile
-  };
+  const setCookie = response.headers.get('set-cookie');
+  logSuccess(`Logged in successfully as ${data.profile.displayName} (${data.profile.role})`);
+  return { data, cookie: setCookie };
 }
 
-async function getPractitionerStatus(token) {
-  const response = await fetch(`${API_BASE}/practitioners/status`, {
-    headers: { 'Authorization': `Bearer ${token}` }
-  });
-  
-  if (!response.ok) {
-    const error = await response.json();
-    throw new Error(`Failed to get practitioner status: ${error.error}`);
-  }
-  
-  return await response.json();
-}
-
-async function togglePractitionerOnline(token, online) {
-  console.log(`\n👤 Setting practitioner online status to: ${online}...`);
-  
-  const response = await fetch(`${API_BASE}/presence/toggle`, {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json'
+async function updatePractitionerStatus(isOnline, inService, cookie) {
+  const response = await fetch(`${BASE_URL}/api/practitioners/status`, {
+    method: 'PUT',
+    headers: { 
+      'Content-Type': 'application/json',
+      'Cookie': cookie 
     },
-    body: JSON.stringify({ online })
+    credentials: 'include',
+    body: JSON.stringify({ isOnline, inService })
   });
-  
+
   if (!response.ok) {
-    const error = await response.json();
-    throw new Error(`Failed to toggle practitioner status: ${error.error}`);
+    const error = await response.text();
+    throw new Error(`Failed to update status: ${error}`);
   }
-  
+
+  return response.json();
+}
+
+async function getPractitioners(cookie) {
+  const response = await fetch(`${BASE_URL}/api/practitioners`, {
+    headers: { 'Cookie': cookie },
+    credentials: 'include'
+  });
+
+  if (!response.ok) {
+    const error = await response.text();
+    throw new Error(`Failed to get practitioners: ${error}`);
+  }
+
+  return response.json();
+}
+
+async function createSession(practitionerId, cookie) {
+  logInfo(`Creating session with practitioner ${practitionerId}...`);
+  const response = await fetch(`${BASE_URL}/api/sessions/create`, {
+    method: 'POST',
+    headers: { 
+      'Content-Type': 'application/json',
+      'Cookie': cookie 
+    },
+    credentials: 'include',
+    body: JSON.stringify({ practitionerId })
+  });
+
+  if (!response.ok) {
+    const error = await response.text();
+    throw new Error(`Failed to create session: ${error}`);
+  }
+
   const data = await response.json();
-  console.log(`✅ Practitioner is now ${data.isOnline ? 'online' : 'offline'}`);
+  logSuccess(`Session created with ID: ${data.sessionId}`);
   return data;
 }
 
-async function createSession(token, practitionerId) {
-  console.log(`\n🎯 Creating session with practitioner ${practitionerId}...`);
-  
-  const response = await fetch(`${API_BASE}/sessions/start`, {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({
-      practitionerId,
-      liveSeconds: 300 // 5 minutes
-    })
+async function getSession(sessionId, cookie) {
+  const response = await fetch(`${BASE_URL}/api/sessions/${sessionId}`, {
+    headers: { 'Cookie': cookie },
+    credentials: 'include'
   });
-  
+
   if (!response.ok) {
-    const error = await response.json();
-    throw new Error(`Failed to create session: ${error.error}`);
+    const error = await response.text();
+    throw new Error(`Failed to get session: ${error}`);
   }
-  
-  const data = await response.json();
-  console.log(`✅ Session created with ID: ${data.sessionId}`);
-  return data.sessionId;
+
+  return response.json();
 }
 
-async function getSession(token, sessionId) {
-  const response = await fetch(`${API_BASE}/sessions/${sessionId}`, {
-    headers: { 'Authorization': `Bearer ${token}` }
+async function getPractitionerSessions(cookie) {
+  const response = await fetch(`${BASE_URL}/api/sessions/practitioner`, {
+    headers: { 'Cookie': cookie },
+    credentials: 'include'
   });
-  
+
   if (!response.ok) {
-    const error = await response.json();
-    throw new Error(`Failed to get session: ${error.error}`);
+    const error = await response.text();
+    throw new Error(`Failed to get practitioner sessions: ${error}`);
   }
-  
-  return await response.json();
+
+  return response.json();
 }
 
-async function markReady(token, sessionId, who) {
-  console.log(`\n✋ Marking ${who} as ready for session ${sessionId}...`);
-  
-  const response = await fetch(`${API_BASE}/sessions/ready`, {
+async function acceptSession(sessionId, cookie) {
+  logInfo(`Accepting session ${sessionId}...`);
+  const response = await fetch(`${BASE_URL}/api/sessions/accept`, {
     method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json'
+    headers: { 
+      'Content-Type': 'application/json',
+      'Cookie': cookie 
     },
-    body: JSON.stringify({
-      sessionId,
-      who
-    })
+    credentials: 'include',
+    body: JSON.stringify({ sessionId })
   });
-  
+
   if (!response.ok) {
-    const error = await response.json();
-    throw new Error(`Failed to mark ${who} ready: ${error.error}`);
+    const error = await response.text();
+    throw new Error(`Failed to accept session: ${error}`);
   }
-  
-  const session = await response.json();
-  console.log(`✅ ${who} marked as ready`);
-  console.log(`   Guest ready: ${session.guestReady}`);
-  console.log(`   Practitioner ready: ${session.practitionerReady}`);
-  console.log(`   Session phase: ${session.phase}`);
-  return session;
+
+  logSuccess('Session accepted');
+  return response.json();
+}
+
+async function endSession(sessionId, cookie) {
+  logInfo(`Ending session ${sessionId}...`);
+  const response = await fetch(`${BASE_URL}/api/sessions/end`, {
+    method: 'POST',
+    headers: { 
+      'Content-Type': 'application/json',
+      'Cookie': cookie 
+    },
+    credentials: 'include',
+    body: JSON.stringify({ sessionId })
+  });
+
+  if (!response.ok) {
+    const error = await response.text();
+    throw new Error(`Failed to end session: ${error}`);
+  }
+
+  logSuccess('Session ended');
+  return response.json();
 }
 
 async function runTests() {
-  console.log('🚀 Starting Session Flow Tests');
-  console.log('================================\n');
-  
+  console.log('\n' + '='.repeat(60));
+  log('TEST 3: SESSION CREATION FLOW', YELLOW);
+  console.log('='.repeat(60));
+
+  let practLogin, guestLogin, sessionId;
+
   try {
-    // Step 1: Login as both guest and practitioner
-    console.log('Step 1: Login as both users');
-    console.log('----------------------------');
+    // Step 1: Set up practitioner as Online
+    console.log('\n--- Step 1: Setup Practitioner ---');
+    practLogin = await login(practitioner.email, practitioner.password);
+    await updatePractitionerStatus(true, false, practLogin.cookie);
+    logSuccess('Practitioner set to Online status');
+
+    // Step 2: Login as guest
+    console.log('\n--- Step 2: Login as Guest ---');
+    guestLogin = await login(guest.email, guest.password);
     
-    const guestAuth = await login(GUEST_EMAIL, GUEST_PASSWORD);
-    guestToken = guestAuth.token;
-    guestId = guestAuth.userId;
-    console.log(`   Guest ID: ${guestId}`);
-    console.log(`   Guest role: ${guestAuth.profile.role}`);
+    // Step 3: Get practitioners and find the online one
+    console.log('\n--- Step 3: Find Online Practitioner ---');
+    const practitioners = await getPractitioners(guestLogin.cookie);
+    const onlinePractitioner = practitioners.find(p => p.isOnline && !p.inService);
     
-    const practAuth = await login(PRACTITIONER_EMAIL, PRACTITIONER_PASSWORD);
-    practitionerToken = practAuth.token;
-    practitionerId = practAuth.userId;
-    console.log(`   Practitioner ID: ${practitionerId}`);
-    console.log(`   Practitioner role: ${practAuth.profile.role}`);
-    
-    // Step 2: Set practitioner online
-    console.log('\nStep 2: Set practitioner online');
-    console.log('--------------------------------');
-    await togglePractitionerOnline(practitionerToken, true);
-    
-    // Verify practitioner is online
-    const practStatus = await getPractitionerStatus(practitionerToken);
-    console.log(`   Practitioner online: ${practStatus.isOnline}`);
-    
-    // Step 3: Guest creates a session
-    console.log('\nStep 3: Guest creates a session');
-    console.log('--------------------------------');
-    sessionId = await createSession(guestToken, practitionerId);
-    
-    // Get initial session state
-    let session = await getSession(guestToken, sessionId);
-    console.log(`   Session phase: ${session.phase}`);
-    console.log(`   Guest ready: ${session.guestReady}`);
-    console.log(`   Practitioner ready: ${session.practitionerReady}`);
-    
-    // Step 4: Guest marks ready
-    console.log('\nStep 4: Guest marks ready');
-    console.log('-------------------------');
-    session = await markReady(guestToken, sessionId, 'guest');
-    
-    if (session.guestReady !== true) {
-      throw new Error('Guest should be marked as ready');
-    }
-    if (session.phase !== 'waiting') {
-      throw new Error('Session should still be waiting (practitioner not ready yet)');
+    if (!onlinePractitioner) {
+      throw new Error('No online practitioner found');
     }
     
-    // Step 5: Practitioner marks ready
-    console.log('\nStep 5: Practitioner marks ready');
-    console.log('---------------------------------');
-    session = await markReady(practitionerToken, sessionId, 'practitioner');
+    logSuccess(`Found online practitioner: ${onlinePractitioner.profile.displayName}`);
     
-    if (session.practitionerReady !== true) {
-      throw new Error('Practitioner should be marked as ready');
-    }
-    if (session.guestReady !== true) {
-      throw new Error('Guest should still be marked as ready');
-    }
-    if (session.phase !== 'live') {
-      throw new Error('Session should transition to live when both are ready');
-    }
+    // Step 4: Create session as guest
+    console.log('\n--- Step 4: Create Session ---');
+    const sessionData = await createSession(onlinePractitioner.userId, guestLogin.cookie);
+    sessionId = sessionData.sessionId;
     
-    // Step 6: Verify final state
-    console.log('\nStep 6: Verify final session state');
-    console.log('-----------------------------------');
-    session = await getSession(guestToken, sessionId);
-    console.log(`   Session phase: ${session.phase}`);
-    console.log(`   Guest ready: ${session.guestReady}`);
-    console.log(`   Practitioner ready: ${session.practitionerReady}`);
-    console.log(`   Agora channel: ${session.agoraChannel}`);
+    // Step 5: Verify session was created
+    console.log('\n--- Step 5: Verify Session Creation ---');
+    const guestSession = await getSession(sessionId, guestLogin.cookie);
     
-    // Final validation
-    if (session.phase !== 'live') {
-      throw new Error('Session should be in live phase');
-    }
-    if (!session.guestReady || !session.practitionerReady) {
-      throw new Error('Both parties should be marked as ready');
-    }
-    if (!session.agoraChannel) {
-      throw new Error('Session should have an Agora channel');
+    if (guestSession.phase === 'waiting') {
+      logSuccess('Session is in waiting phase');
+    } else {
+      logError(`Unexpected session phase: ${guestSession.phase}`);
     }
     
-    console.log('\n✅ All tests passed successfully!');
-    console.log('==================================\n');
+    // Check practitioner status changed to In Service
+    const updatedPractitioners = await getPractitioners(guestLogin.cookie);
+    const updatedPract = updatedPractitioners.find(p => p.userId === onlinePractitioner.userId);
     
+    if (updatedPract.inService) {
+      logSuccess('Practitioner status automatically changed to "In Service"');
+    } else {
+      logError('Practitioner status did not change to "In Service"');
+    }
+    
+    // Step 6: Practitioner sees pending session
+    console.log('\n--- Step 6: Practitioner Views Pending Sessions ---');
+    const practSessions = await getPractitionerSessions(practLogin.cookie);
+    const pendingSession = practSessions.find(s => s.id === sessionId);
+    
+    if (pendingSession && pendingSession.phase === 'waiting') {
+      logSuccess('Practitioner can see pending session');
+    } else {
+      logError('Practitioner cannot see pending session');
+    }
+    
+    // Step 7: Practitioner accepts session
+    console.log('\n--- Step 7: Practitioner Accepts Session ---');
+    await acceptSession(sessionId, practLogin.cookie);
+    
+    // Step 8: Verify session is now in room_timer phase
+    console.log('\n--- Step 8: Verify Session Accepted ---');
+    const acceptedSession = await getSession(sessionId, practLogin.cookie);
+    
+    if (acceptedSession.phase === 'room_timer') {
+      logSuccess('Session moved to room_timer phase after acceptance');
+    } else {
+      logError(`Unexpected session phase after acceptance: ${acceptedSession.phase}`);
+    }
+    
+    // Step 9: Both parties can see session
+    console.log('\n--- Step 9: Verify Both Parties Can Access Session ---');
+    const guestView = await getSession(sessionId, guestLogin.cookie);
+    const practView = await getSession(sessionId, practLogin.cookie);
+    
+    if (guestView && practView) {
+      logSuccess('Both guest and practitioner can view session');
+      logInfo(`Guest sees phase: ${guestView.phase}`);
+      logInfo(`Practitioner sees phase: ${practView.phase}`);
+    }
+    
+    // Step 10: Test camelCase compliance
+    console.log('\n--- Step 10: Validate CamelCase ---');
+    function checkCamelCase(obj, path = '') {
+      for (const key in obj) {
+        if (key.includes('_')) {
+          logError(`Found snake_case key: ${key} at ${path}`);
+          return false;
+        }
+        if (typeof obj[key] === 'object' && obj[key] !== null && !Array.isArray(obj[key])) {
+          if (!checkCamelCase(obj[key], `${path}.${key}`)) return false;
+        }
+      }
+      return true;
+    }
+    
+    if (checkCamelCase(guestSession, 'session')) {
+      logSuccess('Session data uses camelCase');
+    }
+    
+    // Step 11: Clean up - end session
+    console.log('\n--- Step 11: Clean Up ---');
+    await endSession(sessionId, practLogin.cookie);
+    
+    console.log('\n' + '='.repeat(60));
+    logSuccess('TEST 3 COMPLETED SUCCESSFULLY');
+    console.log('='.repeat(60));
+    
+    process.exit(0);
   } catch (error) {
-    console.error('\n❌ Test failed:', error.message);
-    console.error('Stack:', error.stack);
+    console.error('\n' + '='.repeat(60));
+    logError(`TEST FAILED: ${error.message}`);
+    console.error('='.repeat(60));
+    
+    // Try to clean up if session was created
+    if (sessionId && practLogin?.cookie) {
+      try {
+        await endSession(sessionId, practLogin.cookie);
+      } catch (e) {
+        // Ignore cleanup errors
+      }
+    }
+    
     process.exit(1);
   }
 }

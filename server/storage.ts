@@ -25,6 +25,26 @@ const supabase = createClient(supabaseConfig.url, supabaseConfig.serviceRoleKey,
   }
 });
 
+// Helper function to convert snake_case to camelCase
+function snakeToCamel(obj: any): any {
+  if (obj === null || obj === undefined) return obj;
+  if (typeof obj !== 'object') return obj;
+  if (obj instanceof Date) return obj;
+  if (Array.isArray(obj)) {
+    return obj.map(item => snakeToCamel(item));
+  }
+  
+  const converted: any = {};
+  for (const key in obj) {
+    if (!obj.hasOwnProperty(key)) continue;
+    
+    // Convert snake_case to camelCase
+    const camelKey = key.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase());
+    converted[camelKey] = snakeToCamel(obj[key]);
+  }
+  return converted;
+}
+
 // Define camelCase input types for the storage interface
 type InsertProfileInput = {
   id: string;
@@ -106,7 +126,8 @@ export class DbStorage implements IStorage {
       return undefined;
     }
     
-    return data as RuntimeProfile;
+    // Convert any snake_case fields to camelCase
+    return snakeToCamel(data) as RuntimeProfile;
   }
 
   async createProfile(profile: InsertProfileInput): Promise<RuntimeProfile> {
@@ -154,7 +175,8 @@ export class DbStorage implements IStorage {
       return undefined;
     }
     
-    return data as RuntimePractitioner;
+    // Convert any snake_case fields to camelCase
+    return snakeToCamel(data) as RuntimePractitioner;
   }
 
   async createPractitioner(practitioner: InsertPractitionerInput): Promise<RuntimePractitioner> {
@@ -169,7 +191,8 @@ export class DbStorage implements IStorage {
       .single();
     
     if (error) throw error;
-    return data as RuntimePractitioner;
+    // Convert any snake_case fields to camelCase
+    return snakeToCamel(data) as RuntimePractitioner;
   }
 
   async updatePractitioner(userId: string, updates: Partial<RuntimePractitioner>): Promise<RuntimePractitioner> {
@@ -187,7 +210,8 @@ export class DbStorage implements IStorage {
       console.error('Supabase updatePractitioner error:', error);
       throw error;
     }
-    return data as RuntimePractitioner;
+    // Convert any snake_case fields to camelCase
+    return snakeToCamel(data) as RuntimePractitioner;
   }
 
   async getAllPractitioners(): Promise<PractitionerWithProfile[]> {
@@ -196,7 +220,7 @@ export class DbStorage implements IStorage {
       const { data: practitioners, error: practError } = await supabase
         .from('practitioners')
         .select('*')
-        .order('isOnline', { ascending: false })
+        .order('isOnline', { ascending: false, nullsFirst: false })
         .order('rating', { ascending: false });
       
       if (practError) {

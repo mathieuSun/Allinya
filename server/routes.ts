@@ -24,6 +24,26 @@ const supabase = createClient(supabaseConfig.url, supabaseConfig.serviceRoleKey)
 const BUILD_TIMESTAMP = Date.now().toString();
 const BUILD_VERSION = "1.0.0";
 
+// Helper function to convert snake_case to camelCase
+function snakeToCamel(obj: any): any {
+  if (obj === null || obj === undefined) return obj;
+  if (typeof obj !== 'object') return obj;
+  if (obj instanceof Date) return obj;
+  if (Array.isArray(obj)) {
+    return obj.map(item => snakeToCamel(item));
+  }
+  
+  const converted: any = {};
+  for (const key in obj) {
+    if (!obj.hasOwnProperty(key)) continue;
+    
+    // Convert snake_case to camelCase
+    const camelKey = key.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase());
+    converted[camelKey] = snakeToCamel(obj[key]);
+  }
+  return converted;
+}
+
 export async function registerRoutes(app: Express): Promise<Server> {
   // Initialize Supabase Storage buckets on startup
   await supabaseStorage.initializeBuckets();
@@ -229,12 +249,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.log(`Profile auto-created for ${email} with role: ${role}`);
       }
 
-      // Return user data and access token
+      // Return user data and access token (convert snake_case to camelCase)
       res.json({
-        user: authData.user,
-        session: authData.session,
+        user: snakeToCamel(authData.user),
+        session: snakeToCamel(authData.session),
         accessToken: authData.session.access_token,
-        profile
+        profile: snakeToCamel(profile)
       });
     } catch (error: any) {
       console.error('Login error:', error);

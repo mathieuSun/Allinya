@@ -66,6 +66,9 @@ export function validateObjectKeys(obj: any, context = 'root'): void {
     // Skip prototype properties
     if (!obj.hasOwnProperty(key)) continue;
     
+    // Skip numeric keys (used by Express in params for wildcard routes)
+    if (/^\d+$/.test(key)) continue;
+    
     // Check for snake_case
     if (key.includes('_')) {
       throw new Error(
