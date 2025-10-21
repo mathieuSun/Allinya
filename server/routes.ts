@@ -422,8 +422,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // GET /api/practitioners/status - Get practitioner status
-  app.get('/api/practitioners/status', requireAuth, async (req: Request, res: Response) => {
+  // GET /api/practitioners/get-status - Get current practitioner status
+  app.get('/api/practitioners/get-status', requireAuth, async (req: Request, res: Response) => {
     try {
       const userId = req.user!.id;
       const practitioner = await storage.getPractitioner(userId);
@@ -435,6 +435,50 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(practitioner);
     } catch (error: any) {
       res.status(400).json({ error: error.message });
+    }
+  });
+
+  // PUT /api/practitioners/status - Update practitioner status (isOnline and inService)
+  app.put('/api/practitioners/status', requireAuth, async (req: Request, res: Response) => {
+    try {
+      console.log('PUT /api/practitioners/status - Request body:', req.body);
+      
+      const { isOnline, inService } = z.object({
+        isOnline: z.boolean(),
+        inService: z.boolean()
+      }).parse(req.body);
+
+      const userId = req.user!.id;
+      console.log('Updating status for user:', userId, 'to:', { isOnline, inService });
+
+      // Verify user is a practitioner
+      const profile = await storage.getProfile(userId);
+      if (!profile || profile.role !== 'practitioner') {
+        return res.status(403).json({ error: 'Only practitioners can update their status' });
+      }
+
+      // Validate state transition: can't be offline and in service at the same time
+      if (!isOnline && inService) {
+        console.log('Auto-correcting invalid state: offline + in service');
+        // Auto-correct invalid state
+        const corrected = await storage.updatePractitioner(userId, { 
+          isOnline: true, 
+          inService: true 
+        });
+        console.log('Returning corrected status:', corrected);
+        return res.json(corrected);
+      }
+
+      // Update practitioner status
+      const practitioner = await storage.updatePractitioner(userId, { isOnline, inService });
+      console.log('Updated practitioner status:', practitioner);
+      res.json(practitioner);
+    } catch (error: any) {
+      console.error('Update practitioner status error:', error);
+      if (error.name === 'ZodError') {
+        return res.status(400).json({ error: 'Invalid input', details: error.errors });
+      }
+      res.status(400).json({ error: error.message || 'Failed to update status' });
     }
   });
 

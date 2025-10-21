@@ -45,6 +45,26 @@ function snakeToCamel(obj: any): any {
   return converted;
 }
 
+// Helper function to convert camelCase to snake_case
+function camelToSnake(obj: any): any {
+  if (obj === null || obj === undefined) return obj;
+  if (typeof obj !== 'object') return obj;
+  if (obj instanceof Date) return obj;
+  if (Array.isArray(obj)) {
+    return obj.map(item => camelToSnake(item));
+  }
+  
+  const converted: any = {};
+  for (const key in obj) {
+    if (!obj.hasOwnProperty(key)) continue;
+    
+    // Convert camelCase to snake_case
+    const snakeKey = key.replace(/[A-Z]/g, letter => `_${letter.toLowerCase()}`);
+    converted[snakeKey] = camelToSnake(obj[key]);
+  }
+  return converted;
+}
+
 // Define camelCase input types for the storage interface
 type InsertProfileInput = {
   id: string;
