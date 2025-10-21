@@ -70,12 +70,11 @@ type InsertProfileInput = {
   id: string;
   role: "guest" | "practitioner";
   displayName: string;
-  country?: string | null;
   bio?: string | null;
   avatarUrl?: string | null;
   galleryUrls?: string[] | null;
   videoUrl?: string | null;
-  specialties?: string[] | null;
+  // Removed country and specialties - schema cache issues
 };
 
 type InsertPractitionerInput = {
@@ -152,35 +151,35 @@ export class DbStorage implements IStorage {
   }
 
   async createProfile(profile: InsertProfileInput): Promise<RuntimeProfile> {
-    // Clean up the profile object - remove undefined/null optional fields
-    const cleanProfile: any = {
+    // CRITICAL FIX: Explicitly set userId to match id
+    // The database has both id and userId columns, and userId must be set
+    const dbProfile: any = {
       id: profile.id,
-      // TODO: Remove user_id duplication once Supabase schema cache refreshes
-      // The profiles table incorrectly has both 'id' and 'user_id' columns
-      // Only 'id' should exist per the canonical schema
-      user_id: profile.id,  // TEMPORARY WORKAROUND: duplicate id to user_id (snake_case for DB)
+      userId: profile.id,  // MUST explicitly set userId to avoid NOT NULL constraint
       role: profile.role,
-      display_name: profile.displayName,  // Convert to snake_case for DB
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
+      displayName: profile.displayName,
+      bio: profile.bio || null,
+      avatarUrl: profile.avatarUrl || null,
+      galleryUrls: profile.galleryUrls || [],
+      videoUrl: profile.videoUrl || null,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
     };
     
-    // Only add non-null optional fields (using snake_case for DB)
-    if (profile.bio !== undefined && profile.bio !== null) cleanProfile.bio = profile.bio;
-    if (profile.avatarUrl !== undefined && profile.avatarUrl !== null) cleanProfile.avatar_url = profile.avatarUrl;
-    if (profile.galleryUrls && profile.galleryUrls.length > 0) cleanProfile.gallery_urls = profile.galleryUrls;
-    if (profile.videoUrl !== undefined && profile.videoUrl !== null) cleanProfile.video_url = profile.videoUrl;
-    // Temporarily skip country and specialties until Supabase schema cache refreshes
-    // if (profile.country !== undefined && profile.country !== null) cleanProfile.country = profile.country;
-    // if (profile.specialties && profile.specialties.length > 0) cleanProfile.specialties = profile.specialties;
+    console.log('DEBUG: Sending to database:', JSON.stringify(dbProfile, null, 2));
     
     const { data, error } = await supabase
       .from('profiles')
-      .insert(cleanProfile)
+      .insert(dbProfile)
       .select()
       .single();
     
-    if (error) throw error;
+    if (error) {
+      console.error('DEBUG: Database error:', error);
+      throw error;
+    }
+    
+    // Data is already in camelCase from Supabase view
     return data as RuntimeProfile;
   }
 

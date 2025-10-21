@@ -149,12 +149,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         id: authData.user.id,
         role,
         displayName: fullName,
-        country: null,
         bio: null,
         avatarUrl: null,
         galleryUrls: [],
-        videoUrl: null,
-        specialties: []
+        videoUrl: null
+        // Skip country and specialties - schema cache issues
       });
 
       // If practitioner, create practitioner record
@@ -230,12 +229,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
           id: authData.user.id,
           role,
           displayName: displayName.charAt(0).toUpperCase() + displayName.slice(1),
-          country: null,
           bio: null,
           avatarUrl: null,
           galleryUrls: [],
-          videoUrl: null,
-          specialties: [],
+          videoUrl: null
+          // Skip country and specialties - schema cache issues
         });
 
         // If practitioner, create practitioner record
