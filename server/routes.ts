@@ -9,6 +9,7 @@ import { agoraConfig, supabaseConfig } from "./config";
 import { supabaseStorage, type StorageBucket } from "./supabaseStorage";
 import { createClient } from '@supabase/supabase-js';
 import type { SessionWithParticipants } from "@shared/schema";
+import { strictCamelCaseValidator, validateResponseWrapper } from "./middleware/camelCaseValidator";
 
 // Import Agora token builder (CommonJS module)
 const require = createRequire(import.meta.url);
@@ -27,8 +28,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Initialize Supabase Storage buckets on startup
   await supabaseStorage.initializeBuckets();
 
+  // CRITICAL: Apply strict camelCase validation to ALL API routes
+  // This middleware enforces system rules for all requests and responses
+  app.use('/api/*', strictCamelCaseValidator);
+
   // Apply aggressive no-cache headers to all API responses for iOS WebKit
   app.use((req: Request, res: Response, next) => {
+    // Wrap response to validate all outgoing data
+    validateResponseWrapper(res);
+    
     // Set aggressive cache headers for all API routes
     res.set({
       'Cache-Control': 'no-cache, no-store, must-revalidate, private, max-age=0',

@@ -2,64 +2,70 @@ import { sql } from "drizzle-orm";
 import { pgTable, text, uuid, boolean, integer, timestamp, numeric } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
+import { createColumn, validateTableSchema } from "./schemaUtils";
+import type { StrictCamelCase } from "./typeGuards";
 
 // Profiles table - supports both guest and practitioner roles
+// All columns are validated for camelCase and duplicate prevention
 export const profiles = pgTable("profiles", {
-  id: uuid("id").primaryKey(),
-  role: text("role", { enum: ["guest", "practitioner"] }).notNull(),
-  displayName: text("displayName").notNull(),
-  country: text("country"),
-  bio: text("bio"),
-  avatarUrl: text("avatarUrl"),
-  galleryUrls: text("galleryUrls").array().default(sql`array[]::text[]`),
-  videoUrl: text("videoUrl"),
-  specialties: text("specialties").array().default(sql`array[]::text[]`),
-  createdAt: timestamp("createdAt", { withTimezone: true }).defaultNow(),
-  updatedAt: timestamp("updatedAt", { withTimezone: true }).defaultNow(),
+  id: createColumn("profiles", "id", uuid("id").primaryKey()),
+  role: createColumn("profiles", "role", text("role", { enum: ["guest", "practitioner"] }).notNull()),
+  displayName: createColumn("profiles", "displayName", text("displayName").notNull()),
+  country: createColumn("profiles", "country", text("country")),
+  bio: createColumn("profiles", "bio", text("bio")),
+  avatarUrl: createColumn("profiles", "avatarUrl", text("avatarUrl")),
+  galleryUrls: createColumn("profiles", "galleryUrls", text("galleryUrls").array().default(sql`array[]::text[]`)),
+  videoUrl: createColumn("profiles", "videoUrl", text("videoUrl")),
+  specialties: createColumn("profiles", "specialties", text("specialties").array().default(sql`array[]::text[]`)),
+  createdAt: createColumn("profiles", "createdAt", timestamp("createdAt", { withTimezone: true }).defaultNow()),
+  updatedAt: createColumn("profiles", "updatedAt", timestamp("updatedAt", { withTimezone: true }).defaultNow()),
 });
 
-// Practitioners table - presence and rating info  
+// Practitioners table - presence and rating info
+// All columns validated for camelCase and uniqueness  
 export const practitioners = pgTable("practitioners", {
-  userId: uuid("userId").primaryKey().references(() => profiles.id, { onDelete: "cascade" }),
-  isOnline: boolean("isOnline").notNull().default(false),
-  inService: boolean("inService").notNull().default(false),
-  rating: numeric("rating", { precision: 2, scale: 1 }).default("0.0"),
-  reviewCount: integer("reviewCount").default(0),
-  createdAt: timestamp("createdAt", { withTimezone: true }).defaultNow(),
-  updatedAt: timestamp("updatedAt", { withTimezone: true }).defaultNow(),
+  userId: createColumn("practitioners", "userId", uuid("userId").primaryKey().references(() => profiles.id, { onDelete: "cascade" })),
+  isOnline: createColumn("practitioners", "isOnline", boolean("isOnline").notNull().default(false)),
+  inService: createColumn("practitioners", "inService", boolean("inService").notNull().default(false)),
+  rating: createColumn("practitioners", "rating", numeric("rating", { precision: 2, scale: 1 }).default("0.0")),
+  reviewCount: createColumn("practitioners", "reviewCount", integer("reviewCount").default(0)),
+  createdAt: createColumn("practitioners", "createdAt", timestamp("createdAt", { withTimezone: true }).defaultNow()),
+  updatedAt: createColumn("practitioners", "updatedAt", timestamp("updatedAt", { withTimezone: true }).defaultNow()),
 });
 
 // Sessions table
+// Enforces strict camelCase for all session-related columns
 export const sessions = pgTable("sessions", {
-  id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
-  practitionerId: uuid("practitionerId").notNull().references(() => profiles.id),
-  guestId: uuid("guestId").notNull().references(() => profiles.id),
-  isGroup: boolean("isGroup").notNull().default(false),
-  phase: text("phase", { enum: ["waiting", "room_timer", "live", "ended"] }).notNull().default("waiting"),
-  waitingSeconds: integer("waitingSeconds").notNull().default(60),
-  liveSeconds: integer("liveSeconds").notNull().default(900),
-  waitingStartedAt: timestamp("waitingStartedAt", { withTimezone: true }),
-  liveStartedAt: timestamp("liveStartedAt", { withTimezone: true }),
-  endedAt: timestamp("endedAt", { withTimezone: true }),
-  acknowledgedPractitioner: boolean("acknowledgedPractitioner").notNull().default(false),
-  readyPractitioner: boolean("readyPractitioner").notNull().default(false),
-  readyGuest: boolean("readyGuest").notNull().default(false),
-  agoraChannel: text("agoraChannel"),
-  agoraUidGuest: text("agoraUidGuest"),
-  agoraUidPractitioner: text("agoraUidPractitioner"),
-  createdAt: timestamp("createdAt", { withTimezone: true }).defaultNow(),
-  updatedAt: timestamp("updatedAt", { withTimezone: true }).defaultNow(),
+  id: createColumn("sessions", "id", uuid("id").primaryKey().default(sql`gen_random_uuid()`)),
+  practitionerId: createColumn("sessions", "practitionerId", uuid("practitionerId").notNull().references(() => profiles.id)),
+  guestId: createColumn("sessions", "guestId", uuid("guestId").notNull().references(() => profiles.id)),
+  isGroup: createColumn("sessions", "isGroup", boolean("isGroup").notNull().default(false)),
+  phase: createColumn("sessions", "phase", text("phase", { enum: ["waiting", "room_timer", "live", "ended"] }).notNull().default("waiting")),
+  waitingSeconds: createColumn("sessions", "waitingSeconds", integer("waitingSeconds").notNull().default(60)),
+  liveSeconds: createColumn("sessions", "liveSeconds", integer("liveSeconds").notNull().default(900)),
+  waitingStartedAt: createColumn("sessions", "waitingStartedAt", timestamp("waitingStartedAt", { withTimezone: true })),
+  liveStartedAt: createColumn("sessions", "liveStartedAt", timestamp("liveStartedAt", { withTimezone: true })),
+  endedAt: createColumn("sessions", "endedAt", timestamp("endedAt", { withTimezone: true })),
+  acknowledgedPractitioner: createColumn("sessions", "acknowledgedPractitioner", boolean("acknowledgedPractitioner").notNull().default(false)),
+  readyPractitioner: createColumn("sessions", "readyPractitioner", boolean("readyPractitioner").notNull().default(false)),
+  readyGuest: createColumn("sessions", "readyGuest", boolean("readyGuest").notNull().default(false)),
+  agoraChannel: createColumn("sessions", "agoraChannel", text("agoraChannel")),
+  agoraUidGuest: createColumn("sessions", "agoraUidGuest", text("agoraUidGuest")),
+  agoraUidPractitioner: createColumn("sessions", "agoraUidPractitioner", text("agoraUidPractitioner")),
+  createdAt: createColumn("sessions", "createdAt", timestamp("createdAt", { withTimezone: true }).defaultNow()),
+  updatedAt: createColumn("sessions", "updatedAt", timestamp("updatedAt", { withTimezone: true }).defaultNow()),
 });
 
 // Reviews table - guest reviews after sessions
+// Validates all review columns for camelCase compliance
 export const reviews = pgTable("reviews", {
-  id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
-  sessionId: uuid("sessionId").notNull().references(() => sessions.id, { onDelete: "cascade" }),
-  guestId: uuid("guestId").notNull().references(() => profiles.id),
-  practitionerId: uuid("practitionerId").notNull().references(() => profiles.id),
-  rating: integer("rating"),
-  comment: text("comment"),
-  createdAt: timestamp("createdAt", { withTimezone: true }).defaultNow(),
+  id: createColumn("reviews", "id", uuid("id").primaryKey().default(sql`gen_random_uuid()`)),
+  sessionId: createColumn("reviews", "sessionId", uuid("sessionId").notNull().references(() => sessions.id, { onDelete: "cascade" })),
+  guestId: createColumn("reviews", "guestId", uuid("guestId").notNull().references(() => profiles.id)),
+  practitionerId: createColumn("reviews", "practitionerId", uuid("practitionerId").notNull().references(() => profiles.id)),
+  rating: createColumn("reviews", "rating", integer("rating")),
+  comment: createColumn("reviews", "comment", text("comment")),
+  createdAt: createColumn("reviews", "createdAt", timestamp("createdAt", { withTimezone: true }).defaultNow()),
 });
 
 // Insert schemas - omit auto-generated fields
