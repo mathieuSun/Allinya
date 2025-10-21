@@ -163,7 +163,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           userId: authData.user.id,
           isOnline: false,
           inService: false,
-          rating: "0.0",
+          // rating: "0.0", // Temporarily commented due to schema cache issue
           reviewCount: 0
         });
       }
@@ -245,7 +245,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             userId: authData.user.id,
             isOnline: false,
             inService: false,
-            rating: "0.0",
+            // rating: "0.0", // Temporarily commented due to schema cache issue
             reviewCount: 0,
           });
         }
@@ -361,7 +361,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           userId,
           isOnline: false,
           inService: false,
-          rating: "0.0",
+          // rating: "0.0", // Temporarily commented due to schema cache issue
           reviewCount: 0,
         });
       }
