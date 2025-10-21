@@ -114,6 +114,7 @@ export interface IStorage {
 
   // Practitioner operations
   getPractitioner(userId: string): Promise<RuntimePractitioner | undefined>;
+  getPractitionerById(id: string): Promise<RuntimePractitioner | undefined>;
   createPractitioner(practitioner: InsertPractitionerInput): Promise<RuntimePractitioner>;
   updatePractitioner(userId: string, updates: Partial<RuntimePractitioner>): Promise<RuntimePractitioner>;
   getAllPractitioners(): Promise<PractitionerWithProfile[]>;
@@ -201,12 +202,28 @@ export class DbStorage implements IStorage {
     return data as RuntimeProfile;
   }
 
+  async getPractitionerById(id: string): Promise<RuntimePractitioner | undefined> {
+    const { data, error } = await supabase
+      .from('practitioners')
+      .select('*')
+      .eq('id', id)
+      .single();
+    
+    if (error) {
+      console.error('Error fetching practitioner by ID:', error);
+      return undefined;
+    }
+    
+    // Convert any snake_case fields to camelCase
+    return snakeToCamel(data) as RuntimePractitioner;
+  }
+
   async getPractitioner(userId: string): Promise<RuntimePractitioner | undefined> {
     // PostgREST automatically converts camelCase to snake_case, so use snake_case in queries
     const { data, error } = await supabase
       .from('practitioners')
       .select('*')
-      .eq('user_id', userId)
+      .eq('userId', userId)
       .single();
     
     if (error) {
@@ -235,16 +252,14 @@ export class DbStorage implements IStorage {
   }
 
   async updatePractitioner(userId: string, updates: Partial<RuntimePractitioner>): Promise<RuntimePractitioner> {
-    // Convert camelCase updates to snake_case for PostgREST
-    const snakeUpdates = camelToSnake(updates);
-    
+    // Use camelCase directly since database has camelCase columns
     const { data, error } = await supabase
       .from('practitioners')
       .update({
-        ...snakeUpdates,
-        updated_at: new Date().toISOString()
+        ...updates,
+        updatedAt: new Date().toISOString()
       })
-      .eq('user_id', userId)
+      .eq('userId', userId)
       .select()
       .single();
     
@@ -262,7 +277,7 @@ export class DbStorage implements IStorage {
       const { data: practitioners, error: practError } = await supabase
         .from('practitioners')
         .select('*')
-        .order('is_online', { ascending: false, nullsFirst: false })
+        .order('isOnline', { ascending: false, nullsFirst: false })
         .order('rating', { ascending: false });
       
       if (practError) {
@@ -278,9 +293,8 @@ export class DbStorage implements IStorage {
       }
       
       // Get all user IDs (filter out any undefined/null values)
-      // PostgREST returns snake_case keys even though DB has camelCase
       const userIds = practitioners
-        .map(p => p.user_id)
+        .map(p => p.userId)
         .filter(id => id != null && id !== 'undefined');
       
       if (userIds.length === 0) {
@@ -302,13 +316,13 @@ export class DbStorage implements IStorage {
       // Manually join the data - convert profiles to camelCase too
       const profileMap = new Map((profiles || []).map(p => [p.id, snakeToCamel(p)]));
       const result = practitioners
-        .filter(pract => pract.user_id != null && pract.user_id !== 'undefined')
+        .filter(pract => pract.userId != null && pract.userId !== 'undefined')
         .map(pract => {
           // Convert snake_case response to camelCase
           const practCamelCase = snakeToCamel(pract) as RuntimePractitioner;
           return {
             ...practCamelCase,
-            profile: profileMap.get(pract.user_id) || {}
+            profile: profileMap.get(pract.userId) || {}
           };
         });
       
@@ -325,7 +339,7 @@ export class DbStorage implements IStorage {
       const { data: practitioners, error: practError } = await supabase
         .from('practitioners')
         .select('*')
-        .eq('is_online', true);
+        .eq('isOnline', true);
       
       if (practError) {
         console.error('Error fetching online practitioners:', practError);
@@ -337,9 +351,8 @@ export class DbStorage implements IStorage {
       }
       
       // Get all user IDs (filter out any undefined/null values)
-      // PostgREST returns snake_case keys even though DB has camelCase
       const userIds = practitioners
-        .map(p => p.user_id)
+        .map(p => p.userId)
         .filter(id => id != null && id !== 'undefined');
       
       if (userIds.length === 0) {
@@ -360,13 +373,13 @@ export class DbStorage implements IStorage {
       // Manually join the data - convert profiles to camelCase too
       const profileMap = new Map((profiles || []).map(p => [p.id, snakeToCamel(p)]));
       const result = practitioners
-        .filter(pract => pract.user_id != null && pract.user_id !== 'undefined')
+        .filter(pract => pract.userId != null && pract.userId !== 'undefined')
         .map(pract => {
           // Convert snake_case response to camelCase
           const practCamelCase = snakeToCamel(pract) as RuntimePractitioner;
           return {
             ...practCamelCase,
-            profile: profileMap.get(pract.user_id) || {}
+            profile: profileMap.get(pract.userId) || {}
           };
         });
       
@@ -382,7 +395,7 @@ export class DbStorage implements IStorage {
     const { data: practitioner, error: practError } = await supabase
       .from('practitioners')
       .select('*')
-      .eq('user_id', userId)
+      .eq('userId', userId)
       .single();
     
     if (practError) {
@@ -418,22 +431,47 @@ export class DbStorage implements IStorage {
   }
 
   async getSession(id: string): Promise<SessionWithParticipants | undefined> {
-    const { data, error } = await supabase
+    // Fetch session without joins first
+    const { data: session, error: sessionError } = await supabase
       .from('sessions')
-      .select(`
-        *,
-        practitioner:profiles!practitionerId (*),
-        guest:profiles!guestId (*)
-      `)
+      .select('*')
       .eq('id', id)
       .single();
     
-    if (error) {
-      console.error('Error fetching session:', error);
+    if (sessionError) {
+      console.error('Error fetching session:', sessionError);
       return undefined;
     }
     
-    return data as SessionWithParticipants;
+    if (!session) return undefined;
+    
+    // Fetch practitioner profile separately (using practitioner's userId from practitioners table)
+    // Note: session.practitionerId is the practitioners table ID, not the user ID
+    const { data: practitionerRecord } = await supabase
+      .from('practitioners')
+      .select('userId')
+      .eq('id', session.practitionerId)
+      .single();
+    
+    const { data: practitioner } = practitionerRecord ? await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', practitionerRecord.userId)
+      .single() : { data: null };
+    
+    // Fetch guest profile separately
+    const { data: guest } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', session.guestId)
+      .single();
+    
+    // Combine the data manually
+    return {
+      ...session,
+      practitioner: practitioner || null,
+      guest: guest || null
+    } as SessionWithParticipants;
   }
 
   async getSessionsForPractitioner(practitionerId: string): Promise<SessionWithParticipants[]> {
@@ -445,7 +483,7 @@ export class DbStorage implements IStorage {
         guest:profiles!guestId (*)
       `)
       .eq('practitionerId', practitionerId)
-      .in('phase', ['waiting', 'live'])
+      .in('status', ['waiting', 'live'])
       .order('createdAt', { ascending: false });
     
     if (error) {
@@ -461,7 +499,7 @@ export class DbStorage implements IStorage {
       .from('sessions')
       .select('*')
       .eq('practitionerId', practitionerId)
-      .in('phase', ['waiting', 'room_timer', 'live'])
+      .in('status', ['waiting', 'room_timer', 'live'])
       .order('createdAt', { ascending: false });
     
     if (error) {

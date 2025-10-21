@@ -594,12 +594,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log('Creating session with ID:', sessionId);
       
       const session = await storage.createSession({
-        practitionerId: practitionerId,
+        practitionerId: practitioner.id,  // Use the practitioner table's ID, not the user ID
         guestId: guestId,
-        phase: 'waiting',
+        status: 'waiting',
         liveSeconds: liveSeconds,
-        practitionerReady: false,
-        guestReady: false,
+        readyPractitioner: false,
+        readyGuest: false,
         acknowledgedPractitioner: false,  // Add this field with default value
         agoraChannel: agoraChannel,
       });
@@ -607,7 +607,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log('Session created:', session);
 
       // Mark practitioner as in service
-      await storage.updatePractitioner(practitionerId, { inService: true });
+      await storage.updatePractitioner(practitioner.userId, { inService: true });
 
       res.json({ sessionId: session.id });
     } catch (error: any) {
@@ -631,8 +631,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ error: 'Session not found' });
       }
 
-      // Verify user is participant
-      if (userId !== session.guestId && userId !== session.practitionerId) {
+      // Verify user is participant (check practitioner's userId, not table ID)
+      let isPractitioner = false;
+      if (session.practitionerId) {
+        const practitioner = await storage.getPractitionerById(session.practitionerId);
+        isPractitioner = practitioner && practitioner.userId === userId;
+      }
+      
+      if (userId !== session.guestId && !isPractitioner) {
         return res.status(403).json({ error: 'Not a session participant' });
       }
 
@@ -658,9 +664,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         ? session.readyPractitioner === true
         : session.readyGuest === true;
 
-      if (bothReady && session.phase === 'waiting') {
+      if (bothReady && session.status === 'waiting') {
         // Auto-transition to live phase when both parties are ready
-        updates.phase = 'live';
+        updates.status = 'live';
         updates.liveStartedAt = new Date().toISOString();
         
         // Agora channel is already set when session is created
@@ -687,8 +693,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ error: 'Session not found' });
       }
 
-      // Verify user is participant
-      if (userId !== session.guestId && userId !== session.practitionerId) {
+      // Verify user is participant (check practitioner's userId, not table ID)
+      let isPractitioner = false;
+      if (session.practitionerId) {
+        const practitioner = await storage.getPractitionerById(session.practitionerId);
+        isPractitioner = practitioner && practitioner.userId === userId;
+      }
+      
+      if (userId !== session.guestId && !isPractitioner) {
         return res.status(403).json({ error: 'Not a session participant' });
       }
 
@@ -713,12 +725,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Verify user is the practitioner
-      if (userId !== session.practitionerId) {
+      // Note: session.practitionerId is the practitioners table ID, need to check practitioner's userId
+      const practitioner = await storage.getPractitionerById(session.practitionerId);
+      if (!practitioner || userId !== practitioner.userId) {
         return res.status(403).json({ error: 'Only the practitioner can acknowledge the session' });
       }
 
       // Verify session is in waiting phase
-      if (session.phase !== 'waiting') {
+      if (session.status !== 'waiting') {
         return res.status(400).json({ error: 'Session is not in waiting phase' });
       }
 
@@ -741,12 +755,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // POST /api/sessions/end - End a session
-  app.post('/api/sessions/end', requireAuth, async (req: Request, res: Response) => {
+  // POST /api/sessions/:id/end - End a session
+  app.post('/api/sessions/:id/end', requireAuth, async (req: Request, res: Response) => {
     try {
-      const { sessionId } = z.object({
-        sessionId: z.string().uuid(),
-      }).parse(req.body);
+      const sessionId = req.params.id;
 
       const userId = req.user!.id;
       const session = await storage.getSession(sessionId);
@@ -755,17 +767,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ error: 'Session not found' });
       }
 
-      // Verify user is participant
-      if (userId !== session.guestId && userId !== session.practitionerId) {
+      // Verify user is participant (check practitioner's userId, not table ID)
+      let isPractitioner = false;
+      if (session.practitionerId) {
+        const practitioner = await storage.getPractitionerById(session.practitionerId);
+        isPractitioner = practitioner && practitioner.userId === userId;
+      }
+      
+      if (userId !== session.guestId && !isPractitioner) {
         return res.status(403).json({ error: 'Not a session participant' });
       }
 
       const updatedSession = await storage.updateSession(sessionId, {
-        phase: 'ended'
+        status: 'ended',
+        endedAt: new Date().toISOString()
       });
 
-      // Mark practitioner as not in service
-      await storage.updatePractitioner(session.practitionerId, { inService: false });
+      // Mark practitioner as not in service (need to use userId, not practitioner table ID)
+      if (session.practitionerId) {
+        const practitioner = await storage.getPractitionerById(session.practitionerId);
+        if (practitioner) {
+          await storage.updatePractitioner(practitioner.userId, { inService: false });
+        }
+      }
 
       res.json(updatedSession);
     } catch (error: any) {
@@ -812,7 +836,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Verify session is in waiting phase
-      if (session.phase !== 'waiting') {
+      if (session.status !== 'waiting') {
         return res.status(400).json({ error: 'Session is not in waiting phase' });
       }
 
@@ -849,15 +873,78 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // End the session
       const updatedSession = await storage.updateSession(sessionId, {
-        phase: 'ended'
+        status: 'ended',
+        endedAt: new Date().toISOString()
       });
 
-      // Mark practitioner as not in service
-      await storage.updatePractitioner(session.practitionerId, { inService: false });
+      // Mark practitioner as not in service (need to use userId, not practitioner table ID)
+      if (session.practitionerId) {
+        const practitioner = await storage.getPractitionerById(session.practitionerId);
+        if (practitioner) {
+          await storage.updatePractitioner(practitioner.userId, { inService: false });
+        }
+      }
 
       res.json(updatedSession);
     } catch (error: any) {
       res.status(400).json({ error: error.message });
+    }
+  });
+
+  // GET /api/sessions/:id/token - Get Agora token for a session participant
+  app.get('/api/sessions/:id/token', requireAuth, async (req: Request, res: Response) => {
+    try {
+      const sessionId = req.params.id;
+      const userId = req.user!.id;
+
+      // Get the session
+      const session = await storage.getSession(sessionId);
+      if (!session) {
+        return res.status(404).json({ error: 'Session not found' });
+      }
+
+      // Verify user is a participant (check practitioner's userId, not table ID)
+      let isPractitioner = false;
+      if (session.practitionerId) {
+        const practitioner = await storage.getPractitionerById(session.practitionerId);
+        isPractitioner = practitioner && practitioner.userId === userId;
+      }
+      
+      const isGuest = userId === session.guestId;
+      
+      if (!isGuest && !isPractitioner) {
+        return res.status(403).json({ error: 'Not a session participant' });
+      }
+
+      // Session must be in live status
+      if (session.status !== 'live') {
+        return res.status(400).json({ error: 'Session is not live' });
+      }
+
+      // Generate appropriate UID and token
+      const channel = session.agoraChannel;
+      const uid = isGuest ? `g_${userId}` : `p_${userId}`;
+      const role = RtcRole.PUBLISHER;
+      const privilegeExpireTime = Math.floor(Date.now() / 1000) + 3600; // 1 hour
+
+      const token = RtcTokenBuilder.buildTokenWithUid(
+        process.env.AGORA_APP_ID!,
+        process.env.AGORA_APP_CERTIFICATE!,
+        channel,
+        uid,
+        role,
+        privilegeExpireTime
+      );
+
+      res.json({
+        token,
+        channelName: channel,
+        uid,
+        appId: process.env.AGORA_APP_ID
+      });
+    } catch (error: any) {
+      console.error('Token generation error:', error);
+      res.status(500).json({ error: 'Failed to generate token' });
     }
   });
 
