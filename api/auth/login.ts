@@ -12,8 +12,22 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
   
   try {
-    // Ensure body is parsed correctly in Vercel
-    const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
+    // Parse body - handle Vercel edge cases
+    let body: any;
+    
+    // If body is already parsed
+    if (req.body) {
+      body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
+    } 
+    // If body is undefined, read raw body from request
+    else {
+      const chunks: Uint8Array[] = [];
+      for await (const chunk of req as any) {
+        chunks.push(chunk);
+      }
+      const rawBody = Buffer.concat(chunks).toString('utf-8');
+      body = JSON.parse(rawBody || '{}');
+    }
     
     const { email, password } = z.object({
       email: z.string().email(),
